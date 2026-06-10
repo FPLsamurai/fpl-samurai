@@ -339,7 +339,55 @@ def player_base(el, team_map, pos_map, jp_names):
         "team": team_map.get(el["team"], {}).get("name_ja", "?"),
         "position": pos_map.get(el["element_type"], "?"),
         "team_id": el["team"],
+        "photo": str(el.get("photo", "")).split(".")[0],
     }
+
+
+def window_row(base, el, rows):
+    """
+    直近N試合ぶんの履歴(rows)から、全試合タブと同じ項目を計算する。
+    /90系はその期間の出場時間で計算。コスパはその期間のポイント÷現在コスト。
+    """
+    m = len(rows)
+    minutes = sum(r.get("minutes", 0) for r in rows)
+    s = lambda key: sum(r.get(key, 0) for r in rows)
+    sf = lambda key: sum(to_float(r.get(key)) for r in rows)
+    p90 = lambda v: round(v / minutes * 90, 2) if minutes > 0 else 0.0
+
+    goals = s("goals_scored")
+    points = s("total_points")
+    xg = sf("expected_goals")
+    xa = sf("expected_assists")
+    defcon = s("defensive_contribution")
+    saves = s("saves")
+    cost = el.get("now_cost", 0) / 10.0
+
+    return {**base, **{
+        "matches": m,
+        "cost": round(cost, 1),
+        "value": round(points / cost, 2) if cost > 0 else 0,
+        "points": points,
+        "ownership": round(to_float(el.get("selected_by_percent")), 1),
+        "goals": goals,
+        "assists": s("assists"),
+        "clean_sheets": s("clean_sheets"),
+        "starts": s("starts"),
+        "xg": round(xg, 2),
+        "xg90": p90(xg),
+        "g_minus_xg": round(goals - xg, 2),
+        "xa": round(xa, 2),
+        "xa90": p90(xa),
+        "defcon": defcon,
+        "defcon90": p90(defcon),
+        "bonus": s("bonus"),
+        "ppg": round(points / m, 1) if m else 0,
+        "saves": saves,
+        "saves90": p90(saves),
+        "pk_saved": s("penalties_saved"),
+        "yellow": s("yellow_cards"),
+        "red": s("red_cards"),
+        "xgi": round(sf("expected_goal_involvements"), 2),
+    }}
 
 
 def sum_history(rows):
@@ -405,29 +453,32 @@ def compute_player_tables(bootstrap, histories, team_map, pos_map, jp_names):
             "red": el.get("red_cards", 0),
         }})
 
-        # 直近N試合（出場した試合のうち直近）
+        # 直近N試合（出場した試合のうち直近）。全試合タブと同じ項目を期間内で計算
         played = [r for r in hist if r.get("minutes", 0) > 0]
         if played:
-            last3.append({**base, **sum_history(played[-3:])})
-            last5.append({**base, **sum_history(played[-5:])})
-            last10.append({**base, **sum_history(played[-10:])})
+            last3.append(window_row(base, el, played[-3:]))
+            last5.append(window_row(base, el, played[-5:]))
+            last10.append(window_row(base, el, played[-10:]))
 
         # ホーム / アウェイ別
         home = [r for r in hist if r.get("was_home") and r.get("minutes", 0) > 0]
         away = [r for r in hist if (not r.get("was_home")) and r.get("minutes", 0) > 0]
         if home:
-            home_rows.append({**base, **sum_history(home)})
+            home_rows.append(window_row(base, el, home))
         if away:
-            away_rows.append({**base, **sum_history(away)})
+            away_rows.append(window_row(base, el, away))
 
     def top(rows, key="xgi"):
         return _ranked(sorted(rows, key=lambda r: r[key], reverse=True)[:DISPLAY_LIMIT])
 
+    def full(rows):
+        # 高機能テーブル用：全選手（フィルタで絞れるように上限なし）、ポイント順
+        return _ranked(sorted(rows, key=lambda r: r["points"], reverse=True))
+
     return {
-        # 全試合は全選手（フィルタ・並べ替えで絞れるように上限なし）
-        "all": _ranked(sorted(all_rows, key=lambda r: r["points"], reverse=True)),
-        "last3": top(last3), "last5": top(last5), "last10": top(last10),
-        "home": top(home_rows), "away": top(away_rows),
+        "all": full(all_rows),
+        "last3": full(last3), "last5": full(last5), "last10": full(last10),
+        "home": full(home_rows), "away": full(away_rows),
     }
 
 
@@ -446,42 +497,55 @@ def compute_team_matches(bootstrap, fixtures, histories, team_map):
     振り分ける（シーズン途中の移籍に対応するため）。
     試合(fixture)のホーム/アウェイと was_home から所属チームを判定する。
     """
-    # fixture_id -> (home_team_id, away_team_id)
-    fixture_sides = {fx["id"]: (fx["team_h"], fx["team_a"]) for fx in fixtures}
+    # fixture_id -> (home_team_id, away_team_id, home_score, away_score)
+    finfo = {fx["id"]: (fx["team_h"], fx["team_a"],
+                        fx.get("team_h_score"), fx.get("team_a_score")) for fx in fixtures}
 
-    # team_id -> fixture_id -> {round, kickoff, xg_sum, xgc_list}
+    # team_id -> fixture_id -> 集計
     bucket = {}
 
     for pid, hist in histories.items():
         for r in hist:
-            if r.get("minutes", 0) < 90:   # フル出場(90分)だけ対象
-                continue
             fid = r.get("fixture")
-            sides = fixture_sides.get(fid)
-            if not sides:
+            info = finfo.get(fid)
+            if not info:
                 continue
-            # その試合での所属チーム（ホームならteam_h、アウェイならteam_a）
-            team_id = sides[0] if r.get("was_home") else sides[1]
+            home = bool(r.get("was_home"))
+            team_id = info[0] if home else info[1]   # その試合での所属チーム
             slot = bucket.setdefault(team_id, {}).setdefault(fid, {
-                "round": r.get("round"),
-                "kickoff": r.get("kickoff_time"),
-                "xg_sum": 0.0,
-                "xgc_list": [],
+                "round": r.get("round"), "kickoff": r.get("kickoff_time"),
+                "xg_sum": 0.0, "xgc_list": [], "conceded": None,
+                "points": 0, "goals": 0, "assists": 0,
+                "defcon": 0, "yellow": 0, "red": 0,
             })
-            slot["xg_sum"] += to_float(r.get("expected_goals"))
-            slot["xgc_list"].append(to_float(r.get("expected_goals_conceded")))
+            # 数えもの系は全選手（途中出場も含む）
+            slot["points"] += r.get("total_points", 0)
+            slot["goals"] += r.get("goals_scored", 0)
+            slot["assists"] += r.get("assists", 0)
+            slot["defcon"] += r.get("defensive_contribution", 0)
+            slot["yellow"] += r.get("yellow_cards", 0)
+            slot["red"] += r.get("red_cards", 0)
+            # 失点は試合のスコアから（1試合に1回だけ設定）
+            if slot["conceded"] is None:
+                hs, as_ = info[2], info[3]
+                if hs is not None and as_ is not None:
+                    slot["conceded"] = as_ if home else hs
+            # xG・被xG はフル出場(90分)の選手だけ
+            if r.get("minutes", 0) >= 90:
+                slot["xg_sum"] += to_float(r.get("expected_goals"))
+                slot["xgc_list"].append(to_float(r.get("expected_goals_conceded")))
 
     result = {}
-    for team_id, fixtures in bucket.items():
+    for team_id, fixtures_d in bucket.items():
         rows = []
-        for fid, s in fixtures.items():
+        for fid, s in fixtures_d.items():
             xgc = sum(s["xgc_list"]) / len(s["xgc_list"]) if s["xgc_list"] else 0.0
             rows.append({
-                "round": s["round"],
-                "kickoff": s["kickoff"],
-                "xg": round(s["xg_sum"], 2),
-                "xgc": round(xgc, 2),
-                "players": len(s["xgc_list"]),
+                "round": s["round"], "kickoff": s["kickoff"],
+                "xg": round(s["xg_sum"], 2), "xgc": round(xgc, 2),
+                "points": s["points"], "goals": s["goals"], "assists": s["assists"],
+                "conceded": s["conceded"] or 0, "defcon": s["defcon"],
+                "yellow": s["yellow"], "red": s["red"],
             })
         rows.sort(key=lambda x: (x["kickoff"] or ""))
         result[team_id] = rows
@@ -494,44 +558,57 @@ def compute_league_avg_xg(team_matches):
     return round(sum(values) / len(values), 3) if values else 1.0
 
 
-def compute_team_section(team_matches, team_map):
+def compute_team_section(team_matches, team_map, clean_sheets):
     """チームの節別・合計・直近フォームをまとめる"""
+    cs_by_team = {c["team"]: c for c in clean_sheets}
     by_gw, totals, recent = [], [], []
+    STAT_KEYS = ["points", "goals", "assists", "conceded", "defcon", "yellow", "red"]
 
     for team_id, rows in team_matches.items():
         name = team_map.get(team_id, {}).get("name_ja", "?")
 
-        # 節別（各試合）
+        # 節別（各試合：xG/被xG＋7指標）
         by_gw.append({
             "team": name,
-            "matches": [{"round": r["round"], "xg": r["xg"], "xgc": r["xgc"]} for r in rows],
+            "matches": [{"round": r["round"], "xg": r["xg"], "xgc": r["xgc"],
+                         **{k: r[k] for k in STAT_KEYS}} for r in rows],
         })
 
-        # 合計（GW別データの合計）
+        # 合計（GW別データの合計）＋無失点率
+        cs = cs_by_team.get(name, {})
         totals.append({
-            "team": name,
-            "matches": len(rows),
+            "team": name, "matches": len(rows),
+            "points": sum(r["points"] for r in rows),
+            "goals": sum(r["goals"] for r in rows),
+            "assists": sum(r["assists"] for r in rows),
+            "conceded": sum(r["conceded"] for r in rows),
+            "defcon": sum(r["defcon"] for r in rows),
+            "yellow": sum(r["yellow"] for r in rows),
+            "red": sum(r["red"] for r in rows),
             "xg_total": round(sum(r["xg"] for r in rows), 2),
             "xgc_total": round(sum(r["xgc"] for r in rows), 2),
-            "xg_avg": round(sum(r["xg"] for r in rows) / len(rows), 2) if rows else 0,
-            "xgc_avg": round(sum(r["xgc"] for r in rows) / len(rows), 2) if rows else 0,
+            "cs_pct": cs.get("rate_pct", 0),
+            "cs_count": cs.get("clean_sheets", 0),
         })
 
-        # 直近フォーム（平均）
+        # 直近フォーム（直近5試合の平均。xGのみ直近10も）
         def avg(vals):
             return round(sum(vals) / len(vals), 2) if vals else 0.0
-        recent.append({
-            "team": name,
-            "team_id": team_id,
-            "r5_xg": avg([r["xg"] for r in rows[-5:]]),
-            "r5_xgc": avg([r["xgc"] for r in rows[-5:]]),
+        last5 = rows[-5:]
+        rec = {
+            "team": name, "team_id": team_id,
+            "r5_xg": avg([r["xg"] for r in last5]),
+            "r5_xgc": avg([r["xgc"] for r in last5]),
             "r10_xg": avg([r["xg"] for r in rows[-10:]]),
             "r10_xgc": avg([r["xgc"] for r in rows[-10:]]),
-        })
+        }
+        for k in STAT_KEYS:
+            rec["r5_" + k] = avg([r[k] for r in last5])
+        recent.append(rec)
 
-    totals.sort(key=lambda r: r["xg_total"], reverse=True)
+    totals.sort(key=lambda r: r["points"], reverse=True)
     by_gw.sort(key=lambda r: r["team"])
-    recent.sort(key=lambda r: r["r10_xg"], reverse=True)
+    recent.sort(key=lambda r: r["r5_points"], reverse=True)
     return {"by_gw": by_gw, "totals": _ranked(totals), "recent": _ranked(recent)}
 
 
@@ -583,6 +660,63 @@ def compute_predictions(bootstrap, fixtures, team_matches, team_map, mu):
     }
 
 
+def compute_team_next3(fixtures, team_map, team_matches, mu):
+    """
+    チームごとの「次の3試合」。
+    f = 相手の直近10試合の平均被xG ÷ リーグ平均xG(μ)
+    （選手の得点期待値 = 選手のxG/90 × f として画面側で計算する係数）
+    オフシーズン（未消化試合なし）のときは空。
+    """
+    upcoming = [f for f in fixtures if not f.get("finished") and f.get("kickoff_time")]
+    upcoming.sort(key=lambda f: f["kickoff_time"])
+
+    def opp_factor(opp_id):
+        rows = team_matches.get(opp_id, [])
+        vals = [r["xgc"] for r in rows[-10:]]
+        if not vals or mu <= 0:
+            return 1.0  # データが無い相手は「平均的な相手」とみなす
+        return round((sum(vals) / len(vals)) / mu, 3)
+
+    out = {}
+    for f in upcoming:
+        for me, opp, home in ((f["team_h"], f["team_a"], True), (f["team_a"], f["team_h"], False)):
+            lst = out.setdefault(str(me), [])
+            if len(lst) < 3:
+                lst.append({
+                    "o": team_map.get(opp, {}).get("name_ja", "?"),
+                    "h": home,
+                    "f": opp_factor(opp),
+                })
+    return out
+
+
+def compute_set_pieces(bootstrap, team_map, jp_names):
+    """セットプレー担当者DB（公式データの担当順をチーム別に整理）"""
+    teams = {}
+    for el in bootstrap["elements"]:
+        for key, field in (("pens", "penalties_order"),
+                           ("fks", "direct_freekicks_order"),
+                           ("cks", "corners_and_indirect_freekicks_order")):
+            order = el.get(field)
+            if order:
+                slot = teams.setdefault(el["team"], {"pens": [], "fks": [], "cks": []})
+                name = el["web_name"]
+                ja = jp_names.get(name, "")
+                slot[key].append((order, ja or name))
+
+    out = []
+    for tid in sorted(teams, key=lambda t: team_map.get(t, {}).get("name_ja", "")):
+        e = teams[tid]
+        fmt = lambda lst: [n for _, n in sorted(lst)]
+        out.append({
+            "team": team_map.get(tid, {}).get("name_ja", "?"),
+            "pens": fmt(e["pens"]),
+            "fks": fmt(e["fks"]),
+            "cks": fmt(e["cks"]),
+        })
+    return out
+
+
 # ----------------------------------------------------------------------
 # メイン
 # ----------------------------------------------------------------------
@@ -615,7 +749,7 @@ def main():
     player_tables = compute_player_tables(bootstrap, histories, team_map, pos_map, jp_names)
     team_matches = compute_team_matches(bootstrap, fixtures, histories, team_map)
     mu = compute_league_avg_xg(team_matches)
-    team_section = compute_team_section(team_matches, team_map)
+    team_section = compute_team_section(team_matches, team_map, clean_sheets)
     predictions = compute_predictions(bootstrap, fixtures, team_matches, team_map, mu)
 
     latest = find_latest_finished_event(bootstrap)
@@ -632,6 +766,8 @@ def main():
         },
         "players": player_tables,
         "elements": build_element_map(bootstrap, team_map, pos_map, jp_names),
+        "team_next3": compute_team_next3(fixtures, team_map, team_matches, mu),
+        "set_pieces": compute_set_pieces(bootstrap, team_map, jp_names),
         "teams": team_section,
         "clean_sheets": clean_sheets,
         "next_fixtures": next_fixtures,

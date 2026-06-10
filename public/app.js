@@ -72,9 +72,12 @@ function renderHeader() {
 /* ===========================================================
    選手タブ
    =========================================================== */
+const RICH_KEYS = ["all", "last3", "last5", "last10", "home", "away"];
 function renderPlayers(key) {
-  if (key === "all") {
-    renderPlayerRich();
+  if (RICH_KEYS.includes(key)) {
+    renderPlayerRich(key);
+  } else if (key === "setpiece") {
+    renderSetPieces();
   } else {
     renderPlayerSimple(key);
   }
@@ -118,6 +121,35 @@ function renderPlayerSimple(key) {
   box.innerHTML = html;
 }
 
+/* ---- セットプレー担当者DB ---- */
+function renderSetPieces() {
+  const note = document.getElementById("players-note");
+  const box = document.getElementById("players-content");
+  note.textContent =
+    "各チームのセットプレー担当（公式データ）。番号は優先順位。PK=ペナルティキック、直接FK=直接フリーキック、CK=コーナー・間接FK。";
+  const rows = DATA.set_pieces || [];
+  if (!rows.length) {
+    box.innerHTML = emptyMessage("まだデータがありません。");
+    return;
+  }
+  let html = `<table class="squad setpiece"><thead><tr>
+      <th>チーム</th><th>PK</th><th>直接FK</th><th>CK・間接FK</th>
+    </tr></thead><tbody>`;
+  rows.forEach((t) => {
+    const fmt = (arr) => arr.length
+      ? arr.map((n, i) => `<div class="sp-taker"><span class="sp-no">${i + 1}</span>${esc(n)}</div>`).join("")
+      : `<span class="sub">—</span>`;
+    html += `<tr>
+      <td class="name">${esc(t.team)}</td>
+      <td>${fmt(t.pens)}</td>
+      <td>${fmt(t.fks)}</td>
+      <td>${fmt(t.cks)}</td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  box.innerHTML = html;
+}
+
 /* ===========================================================
    全試合：高機能テーブル（並べ替え＋列ごとの数値フィルタ＋写真）
    =========================================================== */
@@ -127,7 +159,7 @@ const COL_META = {
   rank:        { label: "順位",      type: "rank",  frozen: true, width: 42, lock: true, noSort: true },
   photo:       { label: "写真",      type: "photo", frozen: true, width: 46, noSort: true },
   name:        { label: "選手",      type: "name",  frozen: true, width: 130, lock: true },
-  position:    { label: "ポジション", type: "pos",   frozen: true, width: 72 },
+  position:    { label: "POS",      type: "pos",   frozen: true, width: 46 },
   cost:        { label: "コスト",    type: "num",   frozen: true, width: 56 },
   points:      { label: "ポイント",  type: "num",   frozen: true, width: 62 },
   value:       { label: "コスパ",    type: "num" },
@@ -150,12 +182,14 @@ const COL_META = {
   pk_saved:    { label: "PKストップ", type: "num" },
   yellow:      { label: "イエロー",  type: "num" },
   red:         { label: "レッド",    type: "num" },
+  next3:       { label: "次の3試合", type: "next3", noSort: true },
 };
 const FROZEN_ORDER = ["rank", "photo", "name", "position", "cost", "points"];  // ポイントまで左に固定
 const DATA_ORDER_DEFAULT = [
   "value", "ownership", "goals", "assists", "clean_sheets", "starts",
   "xg", "xg90", "g_minus_xg", "xa", "xa90", "defcon", "defcon90",
   "bonus", "ppg", "saves", "saves90", "pk_saved", "yellow", "red",
+  "next3",
 ];
 const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
 const PHOTO_BASE = "https://resources.premierleague.com/premierleague/photos/players/250x250/p";
@@ -166,6 +200,7 @@ let playerSort = { key: "points", dir: "desc" };
 let playerFilters = { name: "", pos: "", min: {}, max: {} };
 let colState = loadColState();
 let cmOpen = false;  // 列設定パネルが開いているか
+let currentRichKey = "all";  // 高機能テーブルがいま表示している期間
 
 /* ---- 列の表示設定の保存・読み込み（ブラウザに記憶） ---- */
 function defaultColState() {
@@ -219,12 +254,17 @@ function frozenCss(c) {
     : "";
 }
 
-/* ---- 全試合テーブル：土台を作る ---- */
-function renderPlayerRich() {
+/* ---- 高機能テーブル：土台を作る（全試合・直近3/5/10共通） ---- */
+function renderPlayerRich(key) {
+  currentRichKey = key || "all";
+  const periodLabel = {
+    all: "シーズン全試合", last3: "直近3試合", last5: "直近5試合", last10: "直近10試合",
+    home: "ホーム試合のみ", away: "アウェイ試合のみ",
+  }[currentRichKey];
   document.getElementById("players-note").textContent =
-    "見出しをタップで並べ替え（↑昇順/↓降順）。各列の枠で「以上／以下」絞り込み。⚙で列の表示・並び替え（動画用）。";
+    `${periodLabel}の数値。見出しをタップで並べ替え（↑昇順/↓降順）。各列の枠で「以上／以下」絞り込み。⚙で列の表示・並び替え（動画用）。`;
   const box = document.getElementById("players-content");
-  const rows = (DATA.players && DATA.players.all) || [];
+  const rows = (DATA.players && DATA.players[currentRichKey]) || [];
   if (!rows.length) { box.innerHTML = emptyMessage("まだデータがありません。"); return; }
 
   box.innerHTML = `
@@ -308,7 +348,7 @@ function buildPlayerHead() {
 
 /* ---- 本体（中身）を絞り込み・並べ替えして描く ---- */
 function refreshPlayerBody() {
-  const rows = (DATA.players && DATA.players.all) || [];
+  const rows = (DATA.players && DATA.players[currentRichKey]) || [];
   const { all, data, frozen } = getActiveColumns();
   const numKeys = all.filter((c) => c.type === "num").map((c) => c.key);
   const posVisible = frozen.some((c) => c.key === "position");
@@ -354,6 +394,18 @@ function refreshPlayerBody() {
         tds += `<td class="col-name ${frz}" style="${st}"><div class="name">${esc(r.name)}</div>${ja}<div class="sub">${esc(r.team)}</div></td>`;
       } else if (c.type === "pos") {
         tds += `<td class="${frz}" style="${st}">${esc(r.position)}</td>`;
+      } else if (c.type === "next3") {
+        // 次の3試合：相手名＋その試合の得点期待値（選手のxG/90 × 相手の守備係数）
+        const fx3 = (DATA.team_next3 && DATA.team_next3[String(r.team_id)]) || [];
+        if (!fx3.length) {
+          tds += `<td class="${frz}next3-cell"><span class="sub">—</span></td>`;
+        } else {
+          const lines = fx3.map((f) => {
+            const expG = (Number(r.xg90) * f.f).toFixed(2);
+            return `<div class="fx-line"><span class="fx-opp">${f.h ? "" : "@"}${esc(f.o)}</span><span class="fx-exp">${expG}</span></div>`;
+          }).join("");
+          tds += `<td class="${frz}next3-cell" style="${st}">${lines}</td>`;
+        }
       } else {
         const main = c.key === "value" ? "main-num" : "";
         tds += `<td class="num ${frz}${main}" style="${st}">${esc(r[c.key])}</td>`;
@@ -460,41 +512,47 @@ function renderTeams(key) {
   const teams = DATA.teams || {};
 
   if (key === "totals") {
-    note.textContent = "シーズン合計。xG=攻撃の期待値、被xG=守備で許した期待値（少ないほど良い守備）。";
+    note.textContent = "シーズン合計。失点＝実際に取られた得点、無失点率＝無失点で終えた割合。xG=攻撃の期待値、被xG=守備で許した期待値。";
     drawTeamTotals(box, teams.totals || []);
   } else if (key === "by_gw") {
-    note.textContent = "チームを選ぶと、節ごとのxG（攻撃）と被xG（守備）が見られます。";
+    note.textContent = "チームを選ぶと、節ごとの各データが見られます。";
     drawTeamByGw(box, teams.by_gw || []);
-  } else if (key === "cleansheet") {
-    note.textContent = "「無失点だった試合 ÷ 消化した試合」の割合。守備が安定しているチーム順。";
-    drawCleanSheets(box, DATA.clean_sheets || []);
   } else if (key === "form") {
-    note.textContent = "直近の調子。1試合あたりの平均xG（攻撃）と平均被xG（守備）。";
+    note.textContent = "直近5試合の1試合あたり平均（xGのみ直近10も表示）。";
     drawTeamForm(box, teams.recent || []);
   }
 }
 
+// 横長テーブルを全幅スクロールで囲む
+function wideTable(inner) {
+  return `<div class="fullbleed"><div class="data-table-wrap">${inner}</div></div>`;
+}
+
 function drawTeamTotals(box, rows) {
   if (!rows.length) return (box.innerHTML = emptyMessage("まだデータがありません。"));
-  let html = `<table><thead><tr>
-      <th class="rank">順位</th><th>チーム</th>
-      <th class="num">xG合計</th><th class="num">被xG合計</th>
+  let html = `<table class="rich teamtbl"><thead><tr>
+      <th class="rank">順位</th><th class="col-name">チーム</th>
+      <th>ポイント</th><th>ゴール</th><th>アシスト</th><th>失点</th>
+      <th>DEFCON</th><th>イエロー</th><th>レッド</th>
+      <th>xG合計</th><th>被xG合計</th><th>無失点率</th><th>無失点/試合</th>
     </tr></thead><tbody>`;
   rows.forEach((r) => {
     html += `<tr>
-      <td class="rank ${rankClass(r.rank)}">${r.rank}</td>
-      <td class="name">${esc(r.team)}</td>
-      <td class="num main-num">${r.xg_total}</td>
-      <td class="num">${r.xgc_total}</td>
+      <td class="rank">${r.rank}</td>
+      <td class="col-name"><div class="name">${esc(r.team)}</div></td>
+      <td class="main-num">${r.points}</td>
+      <td>${r.goals}</td><td>${r.assists}</td><td>${r.conceded}</td>
+      <td>${r.defcon}</td><td>${r.yellow}</td><td>${r.red}</td>
+      <td>${r.xg_total}</td><td>${r.xgc_total}</td>
+      <td>${r.cs_pct}%</td><td>${r.cs_count} / ${r.matches}</td>
     </tr>`;
   });
   html += `</tbody></table>`;
-  box.innerHTML = html;
+  box.innerHTML = wideTable(html);
 }
 
 function drawTeamByGw(box, byGw) {
   if (!byGw.length) return (box.innerHTML = emptyMessage("まだデータがありません。"));
-  // チーム選択 → そのチームの節別表
   let options = byGw.map((t, i) => `<option value="${i}">${esc(t.team)}</option>`).join("");
   box.innerHTML = `
     <select id="team-picker" class="picker">${options}</select>
@@ -503,60 +561,46 @@ function drawTeamByGw(box, byGw) {
   const picker = document.getElementById("team-picker");
   const render = () => {
     const t = byGw[Number(picker.value)];
-    let html = `<table><thead><tr>
-        <th class="num">節</th><th class="num">xG（攻撃）</th><th class="num">被xG（守備）</th>
+    let html = `<table class="rich teamtbl"><thead><tr>
+        <th class="col-name">節</th><th>ポイント</th><th>ゴール</th><th>アシスト</th><th>失点</th>
+        <th>DEFCON</th><th>イエロー</th><th>レッド</th><th>xG</th><th>被xG</th>
       </tr></thead><tbody>`;
     t.matches.forEach((m) => {
       html += `<tr>
-        <td class="num">第${m.round}節</td>
-        <td class="num main-num">${m.xg}</td>
-        <td class="num">${m.xgc}</td>
+        <td class="col-name"><div class="name">第${m.round}節</div></td>
+        <td class="main-num">${m.points}</td>
+        <td>${m.goals}</td><td>${m.assists}</td><td>${m.conceded}</td>
+        <td>${m.defcon}</td><td>${m.yellow}</td><td>${m.red}</td>
+        <td>${m.xg}</td><td>${m.xgc}</td>
       </tr>`;
     });
     html += `</tbody></table>`;
-    document.getElementById("team-gw-table").innerHTML = html;
+    document.getElementById("team-gw-table").innerHTML = wideTable(html);
   };
   picker.addEventListener("change", render);
   render();
 }
 
-function drawCleanSheets(box, rows) {
-  if (!rows.length) return (box.innerHTML = emptyMessage("まだデータがありません。"));
-  let html = `<table><thead><tr>
-      <th class="rank">順位</th><th>チーム</th>
-      <th class="num">無失点率</th><th class="num">無失点 / 試合</th>
-    </tr></thead><tbody>`;
-  rows.forEach((r) => {
-    html += `<tr>
-      <td class="rank ${rankClass(r.rank)}">${r.rank}</td>
-      <td class="name">${esc(r.team)}</td>
-      <td class="num main-num">${r.rate_pct}%</td>
-      <td class="num">${r.clean_sheets} / ${r.played}</td>
-    </tr>`;
-  });
-  html += `</tbody></table>`;
-  box.innerHTML = html;
-}
-
 function drawTeamForm(box, rows) {
   if (!rows.length) return (box.innerHTML = emptyMessage("まだデータがありません。"));
-  let html = `<table><thead><tr>
-      <th class="rank">順位</th><th>チーム</th>
-      <th class="num">直近5<br>xG</th><th class="num">直近5<br>被xG</th>
-      <th class="num">直近10<br>xG</th><th class="num">直近10<br>被xG</th>
+  let html = `<table class="rich teamtbl"><thead><tr>
+      <th class="rank">順位</th><th class="col-name">チーム</th>
+      <th>ポイント</th><th>ゴール</th><th>アシスト</th><th>失点</th>
+      <th>DEFCON</th><th>イエロー</th><th>レッド</th>
+      <th>xG<br>(5)</th><th>被xG<br>(5)</th><th>xG<br>(10)</th><th>被xG<br>(10)</th>
     </tr></thead><tbody>`;
   rows.forEach((r) => {
     html += `<tr>
-      <td class="rank ${rankClass(r.rank)}">${r.rank}</td>
-      <td class="name">${esc(r.team)}</td>
-      <td class="num main-num">${r.r5_xg}</td>
-      <td class="num">${r.r5_xgc}</td>
-      <td class="num main-num">${r.r10_xg}</td>
-      <td class="num">${r.r10_xgc}</td>
+      <td class="rank">${r.rank}</td>
+      <td class="col-name"><div class="name">${esc(r.team)}</div></td>
+      <td class="main-num">${r.r5_points}</td>
+      <td>${r.r5_goals}</td><td>${r.r5_assists}</td><td>${r.r5_conceded}</td>
+      <td>${r.r5_defcon}</td><td>${r.r5_yellow}</td><td>${r.r5_red}</td>
+      <td>${r.r5_xg}</td><td>${r.r5_xgc}</td><td>${r.r10_xg}</td><td>${r.r10_xgc}</td>
     </tr>`;
   });
   html += `</tbody></table>`;
-  box.innerHTML = html;
+  box.innerHTML = wideTable(html);
 }
 
 /* ===========================================================

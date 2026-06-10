@@ -291,6 +291,49 @@ details.col-manager > summary {
   border-radius: 5px;
 }
 
+/* 表内の文字は中央寄せ（選手名・チーム名だけ左寄せ） */
+table.rich th, table.rich td,
+table.squad th, table.squad td { text-align: center; }
+table.rich td.col-name, table.rich th.col-name,
+table.squad td.col-name { text-align: left; }
+.name, .sub, .name-ja { text-align: left; }
+
+/* チームデータ用テーブル（列が少なめなので最低幅を抑える） */
+table.rich.teamtbl { min-width: 820px; }
+table.rich.teamtbl td.col-name { min-width: 96px; }
+
+/* 次の3試合セル */
+.next3-cell {
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+.fx-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+.fx-opp { color: var(--text); }
+.fx-exp {
+  color: var(--pl-purple);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* セットプレー担当 */
+table.setpiece td { vertical-align: top; }
+.sp-taker { white-space: nowrap; }
+.sp-no {
+  display: inline-block;
+  background: #efe9f1;
+  color: var(--pl-purple);
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 0 5px;
+  margin-right: 4px;
+}
+
 /* チーム選択のプルダウン */
 .picker {
   width: 100%;
