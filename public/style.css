@@ -243,6 +243,15 @@ details.col-manager > summary {
   font-size: 0.9rem;
 }
 .colmove button:disabled { opacity: 0.3; cursor: default; }
+.cm-freeze {
+  width: 100%;
+  max-width: 280px;
+  padding: 7px 10px;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+}
 .cm-reset {
   margin: 10px 0 4px;
   padding: 6px 14px;

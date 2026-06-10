@@ -159,7 +159,8 @@ const DATA_ORDER_DEFAULT = [
 ];
 const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
 const PHOTO_BASE = "https://resources.premierleague.com/premierleague/photos/players/250x250/p";
-const CONFIG_KEY = "fpl_player_cols_v2";
+// 設定の保存キー。標準設定を変えたらv3に更新（全員に新標準を適用するため）
+const CONFIG_KEY = "fpl_player_cols_v3";
 
 let playerSort = { key: "points", dir: "desc" };
 let playerFilters = { name: "", pos: "", min: {}, max: {} };
@@ -168,7 +169,7 @@ let cmOpen = false;  // 列設定パネルが開いているか
 
 /* ---- 列の表示設定の保存・読み込み（ブラウザに記憶） ---- */
 function defaultColState() {
-  return { dataOrder: [...DATA_ORDER_DEFAULT], hidden: {} };
+  return { dataOrder: [...DATA_ORDER_DEFAULT], hidden: {}, freezeUntil: "name" };
 }
 function loadColState() {
   try {
@@ -177,7 +178,10 @@ function loadColState() {
     const known = new Set(DATA_ORDER_DEFAULT);
     const order = s.dataOrder.filter((k) => known.has(k));
     DATA_ORDER_DEFAULT.forEach((k) => { if (!order.includes(k)) order.push(k); });
-    return { dataOrder: order, hidden: s.hidden || {} };
+    // 固定範囲（無効な値なら標準=ポイントまで）
+    const fu = (s.freezeUntil === "none" || FROZEN_ORDER.includes(s.freezeUntil))
+      ? s.freezeUntil : "name";
+    return { dataOrder: order, hidden: s.hidden || {}, freezeUntil: fu };
   } catch (e) {
     return defaultColState();
   }
@@ -188,15 +192,26 @@ function saveColState() {
 
 /* ---- 今表示する列の一覧（固定列＋データ列） ---- */
 function getActiveColumns() {
-  const frozen = FROZEN_ORDER
+  // 「どこまで固定するか」（none=固定なし）
+  const fu = colState.freezeUntil ?? "points";
+  const cut = fu === "none" ? 0 : FROZEN_ORDER.indexOf(fu) + 1;
+
+  // 左側の基本列のうち、固定する部分（sticky）
+  const frozen = FROZEN_ORDER.slice(0, cut)
     .filter((k) => !colState.hidden[k])
     .map((k) => ({ key: k, ...COL_META[k], frozen: true }));
   let left = 0;
   frozen.forEach((c) => { c.left = left; left += c.width; });
+
+  // 残りの基本列（固定しないが、位置は左側のまま）
+  const unfrozenBase = FROZEN_ORDER.slice(cut)
+    .filter((k) => !colState.hidden[k])
+    .map((k) => ({ key: k, ...COL_META[k], frozen: false }));
+
   const data = colState.dataOrder
     .filter((k) => !colState.hidden[k])
     .map((k) => ({ key: k, ...COL_META[k], frozen: false }));
-  return { frozen, data, all: [...frozen, ...data] };
+  return { frozen, data, all: [...frozen, ...unfrozenBase, ...data] };
 }
 function frozenCss(c) {
   return c.frozen
@@ -330,7 +345,7 @@ function refreshPlayerBody() {
     getActiveColumns().all.forEach((c) => {
       const st = frozenCss(c);
       const frz = c.frozen ? "frz " : "";
-      if (c.type === "rank") tds += `<td class="rank frz" style="${st}">${i + 1}</td>`;
+      if (c.type === "rank") tds += `<td class="rank ${frz}" style="${st}">${i + 1}</td>`;
       else if (c.type === "photo") {
         const ph = r.photo ? `<img class="player-photo" loading="lazy" alt="" src="${PHOTO_BASE}${esc(r.photo)}.png" onerror="this.style.visibility='hidden'">` : "";
         tds += `<td class="col-photo ${frz}" style="${st}">${ph}</td>`;
@@ -370,10 +385,22 @@ function renderColManager() {
         <button type="button" data-cm-down="${k}" ${i === colState.dataOrder.length - 1 ? "disabled" : ""}>↓</button>
       </span></div>`;
   }).join("");
+  // 「どこまで固定するか」の選択肢
+  const fu = colState.freezeUntil ?? "points";
+  const freezeOptions = [
+    `<option value="none" ${fu === "none" ? "selected" : ""}>固定しない</option>`,
+    ...FROZEN_ORDER.map((k) =>
+      `<option value="${k}" ${fu === k ? "selected" : ""}>${COL_META[k].label}まで固定</option>`),
+  ].join("");
+
   document.getElementById("col-manager").innerHTML = `
     <details class="col-manager" ${cmOpen ? "open" : ""}>
       <summary>⚙ 列の表示・並び替え（動画用）</summary>
-      <div class="cm-section"><div class="cm-title">固定列（コストまで・左に固定）</div>${frozenToggles}</div>
+      <div class="cm-section">
+        <div class="cm-title">左に固定する範囲（横スクロールしても残る列）</div>
+        <select id="cm-freeze" class="cm-freeze">${freezeOptions}</select>
+      </div>
+      <div class="cm-section"><div class="cm-title">基本列の表示</div>${frozenToggles}</div>
       <div class="cm-section"><div class="cm-title">データ列（チェックで表示 ／ ↑↓で並び替え）</div>${dataItems}</div>
       <button type="button" id="cm-reset" class="cm-reset">標準に戻す</button>
     </details>`;
@@ -384,6 +411,14 @@ function renderColManager() {
 function setupColManagerEvents() {
   const wrap = document.getElementById("col-manager");
   wrap.addEventListener("change", (e) => {
+    // 固定範囲の変更
+    if (e.target.id === "cm-freeze") {
+      colState.freezeUntil = e.target.value;
+      saveColState();
+      buildPlayerHead();
+      refreshPlayerBody();
+      return;
+    }
     const cb = e.target.closest("[data-cm-show]");
     if (!cb) return;
     colState.hidden[cb.dataset.cmShow] = !cb.checked;
