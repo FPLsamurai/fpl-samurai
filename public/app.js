@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", init);
 async function init() {
   setupParentTabs();
   setupSubtabs();
+  setupMyTeam();
   try {
     const res = await fetch(DATA_URL, { cache: "no-store" });
     if (!res.ok) throw new Error("データファイルを読み込めませんでした");
@@ -609,6 +610,177 @@ function emptyMessage(text) {
 function esc(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+/* ===========================================================
+   マイチーム検索（FPL ID → スカッド＆ミニリーグ）
+   FPL公式APIはブラウザから直接呼べない（CORS制限）ため、
+   無料の中継サービス(allorigins)経由で取得します。
+   =========================================================== */
+
+const FPL_API = "https://fantasy.premierleague.com/api/";
+// 中継サービス（上から順に試す）
+const PROXIES = [
+  (u) => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+  (u) => "https://corsproxy.io/?url=" + encodeURIComponent(u),
+];
+
+async function fplFetch(path) {
+  const url = FPL_API + path;
+  let lastErr = null;
+  for (const wrap of PROXIES) {
+    try {
+      const res = await fetch(wrap(url), { cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw new Error("FPLサーバーに接続できませんでした。IDが正しいか、少し時間をおいて再度お試しください。");
+}
+
+function setupMyTeam() {
+  const input = document.getElementById("fpl-id");
+  const btn = document.getElementById("id-go");
+  if (!input || !btn) return;
+  // 前回入力したIDを覚えておく
+  try {
+    const saved = localStorage.getItem("fpl_my_id");
+    if (saved) input.value = saved;
+  } catch (e) {}
+  const go = () => {
+    const id = parseInt(input.value, 10);
+    if (!id || id <= 0) {
+      document.getElementById("myteam-result").innerHTML = emptyMessage("FPL ID（数字）を入力してください。");
+      return;
+    }
+    try { localStorage.setItem("fpl_my_id", String(id)); } catch (e) {}
+    loadMyTeam(id);
+  };
+  btn.addEventListener("click", go);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+}
+
+async function loadMyTeam(id) {
+  const box = document.getElementById("myteam-result");
+  box.innerHTML = `<div class="empty">読み込み中…（10秒ほどかかることがあります）</div>`;
+  try {
+    const entry = await fplFetch(`entry/${id}/`);
+    const gw = entry.current_event;
+    let picks = null;
+    if (gw) {
+      try { picks = await fplFetch(`entry/${id}/event/${gw}/picks/`); } catch (e) { picks = null; }
+    }
+    renderMyTeam(entry, picks, gw);
+  } catch (err) {
+    box.innerHTML = emptyMessage("取得に失敗しました。<br>" + esc(err.message || err));
+  }
+}
+
+function fmtRank(n) {
+  return (n == null) ? "-" : Number(n).toLocaleString("ja-JP");
+}
+
+function renderMyTeam(entry, picksData, gw) {
+  const box = document.getElementById("myteam-result");
+  const elements = DATA.elements || {};
+
+  // --- サマリー ---
+  let html = `<div class="team-summary">
+    <div class="team-title">${esc(entry.name || "(チーム名なし)")}</div>
+    <div class="sub">${esc(entry.player_first_name || "")} ${esc(entry.player_last_name || "")}（${esc(entry.player_region_name || "")}）</div>
+    <div class="team-stats">
+      <div class="stat"><div class="stat-label">総合ポイント</div><div class="stat-value">${fmtRank(entry.summary_overall_points)}</div></div>
+      <div class="stat"><div class="stat-label">総合順位</div><div class="stat-value">${fmtRank(entry.summary_overall_rank)}</div></div>
+      <div class="stat"><div class="stat-label">直近節</div><div class="stat-value">${fmtRank(entry.summary_event_points)}pt</div></div>
+    </div>
+  </div>`;
+
+  // --- スカッド ---
+  if (picksData && picksData.picks && picksData.picks.length) {
+    const eh = picksData.entry_history || {};
+    const value = eh.value != null ? (eh.value / 10).toFixed(1) : "-";
+    const bank = eh.bank != null ? (eh.bank / 10).toFixed(1) : "-";
+    html += `<h3 class="mt-h3">スカッド（第${gw}節）</h3>
+      <p class="note">チーム価値 £${value}m（うち銀行 £${bank}m）・この節の移籍 ${eh.event_transfers ?? 0}回${picksData.active_chip ? "・チップ使用: " + esc(picksData.active_chip) : ""}</p>`;
+
+    const starters = picksData.picks.filter((p) => p.position <= 11);
+    const bench = picksData.picks.filter((p) => p.position > 11);
+    const order = { GK: 0, DF: 1, MF: 2, FW: 3 };
+    const playerRow = (p) => {
+      const el = elements[String(p.element)] || { n: "ID " + p.element, j: "", t: "?", p: "?", c: "" };
+      const cap = p.is_captain ? `<span class="cap">C</span>` : (p.is_vice_captain ? `<span class="cap vice">V</span>` : "");
+      return `<tr>
+        <td>${esc(el.p)}</td>
+        <td><div class="name">${esc(el.n)} ${cap}</div>${el.j ? `<div class="name-ja">${esc(el.j)}</div>` : ""}<div class="sub">${esc(el.t)}</div></td>
+        <td class="num">£${el.c}m</td>
+      </tr>`;
+    };
+    const sortByPos = (arr) => [...arr].sort((a, b) => {
+      const ea = elements[String(a.element)] || {}, eb = elements[String(b.element)] || {};
+      return (order[ea.p] ?? 9) - (order[eb.p] ?? 9) || a.position - b.position;
+    });
+    html += `<table class="squad"><thead><tr><th>位置</th><th>選手</th><th class="num">コスト</th></tr></thead><tbody>`;
+    sortByPos(starters).forEach((p) => { html += playerRow(p); });
+    html += `<tr><td colspan="3" class="bench-sep">ベンチ</td></tr>`;
+    bench.forEach((p) => { html += playerRow(p); });
+    html += `</tbody></table>`;
+  } else {
+    html += emptyMessage("スカッド情報を取得できませんでした（シーズン開始前の可能性があります）。");
+  }
+
+  // --- ミニリーグ ---
+  const leagues = (entry.leagues && entry.leagues.classic) || [];
+  const mini = leagues.filter((l) => l.league_type === "x");
+  const official = leagues.filter((l) => l.league_type === "s");
+  html += `<h3 class="mt-h3">ミニリーグ</h3>`;
+  if (mini.length || official.length) {
+    html += `<table class="squad"><thead><tr><th>リーグ名</th><th class="num">順位</th><th></th></tr></thead><tbody>`;
+    [...mini, ...official].forEach((l) => {
+      const tag = l.league_type === "x" ? "" : `<span class="sub">（公式）</span>`;
+      html += `<tr>
+        <td><div class="name">${esc(l.name)}</div>${tag}</td>
+        <td class="num main-num">${fmtRank(l.entry_rank)}</td>
+        <td class="num"><button type="button" class="lg-btn" data-league="${l.id}" data-name="${esc(l.name)}">順位表</button></td>
+      </tr>`;
+    });
+    html += `</tbody></table><div id="league-standings"></div>`;
+  } else {
+    html += emptyMessage("参加中のリーグが見つかりませんでした。");
+  }
+
+  box.innerHTML = html;
+
+  // 順位表ボタン
+  box.querySelectorAll(".lg-btn").forEach((b) => {
+    b.addEventListener("click", () => loadLeagueStandings(b.dataset.league, b.dataset.name, entry.id));
+  });
+}
+
+async function loadLeagueStandings(leagueId, leagueName, myEntryId) {
+  const slot = document.getElementById("league-standings");
+  slot.innerHTML = `<div class="empty">順位表を読み込み中…</div>`;
+  try {
+    const d = await fplFetch(`leagues-classic/${leagueId}/standings/?page_standings=1`);
+    const rows = (d.standings && d.standings.results) || [];
+    let html = `<h3 class="mt-h3">${esc(leagueName)} 順位表（上位${Math.min(rows.length, 20)}）</h3>
+      <table class="squad"><thead><tr><th class="num">順位</th><th>チーム / マネージャー</th><th class="num">節pt</th><th class="num">合計</th></tr></thead><tbody>`;
+    rows.slice(0, 20).forEach((r) => {
+      const me = (r.entry === myEntryId) ? " class=\"me-row\"" : "";
+      html += `<tr${me}>
+        <td class="num">${r.rank}</td>
+        <td><div class="name">${esc(r.entry_name)}</div><div class="sub">${esc(r.player_name)}</div></td>
+        <td class="num">${r.event_total}</td>
+        <td class="num main-num">${fmtRank(r.total)}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+    slot.innerHTML = html;
+    slot.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (err) {
+    slot.innerHTML = emptyMessage("順位表の取得に失敗しました。<br>" + esc(err.message || err));
+  }
+}
+
 function showLoadError(err) {
   document.querySelector("main").innerHTML = `<div class="empty">
     <p>データの読み込みに失敗しました。</p>

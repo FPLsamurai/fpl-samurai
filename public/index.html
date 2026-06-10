@@ -19,6 +19,7 @@
     <button class="tab is-active" data-target="players">選手</button>
     <button class="tab" data-target="teams">チーム</button>
     <button class="tab" data-target="next">次節</button>
+    <button class="tab" data-target="myteam">マイチーム</button>
   </nav>
 
   <main>
@@ -60,6 +61,21 @@
       </div>
       <p class="note" id="next-note"></p>
       <div id="next-content"></div>
+    </section>
+
+    <!-- ============ マイチーム ============ -->
+    <section id="myteam" class="panel">
+      <h2>マイチーム検索</h2>
+      <p class="note">
+        FPL ID を入力すると、そのチームのスカッド（15人）とミニリーグ順位を表示します。<br>
+        IDの調べ方：FPL公式サイトにログイン →「Points」ページのアドレスにある
+        <code>/entry/<b>数字</b>/</code> の数字部分です。
+      </p>
+      <div class="idform">
+        <input id="fpl-id" type="number" inputmode="numeric" placeholder="例: 906697">
+        <button id="id-go" type="button">表示</button>
+      </div>
+      <div id="myteam-result"></div>
     </section>
 
   </main>

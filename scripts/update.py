@@ -302,6 +302,24 @@ def compute_next_fixtures(bootstrap, fixtures, team_map):
 # v2 集計：選手データ（全試合・直近・ホームアウェイ）
 # ----------------------------------------------------------------------
 
+def build_element_map(bootstrap, team_map, pos_map, jp_names):
+    """
+    選手ID→名前などの変換表（マイチーム検索ページで使用）。
+    picks APIは選手IDしか返さないため、全選手ぶん（出場0も含む）を入れる。
+    キーを短くしてファイルサイズを抑える: n=名前, j=カタカナ, t=チーム, p=ポジション, c=コスト
+    """
+    out = {}
+    for el in bootstrap["elements"]:
+        out[str(el["id"])] = {
+            "n": el["web_name"],
+            "j": jp_names.get(el["web_name"], ""),
+            "t": team_map.get(el["team"], {}).get("name_ja", "?"),
+            "p": pos_map.get(el["element_type"], "?"),
+            "c": round(el.get("now_cost", 0) / 10.0, 1),
+        }
+    return out
+
+
 def load_japanese_names():
     """選手名のカタカナ対応表を読み込む（無ければ空）"""
     path = os.path.join(ROOT, "data", "japanese_names.json")
@@ -613,6 +631,7 @@ def main():
             "data_fresh": ok1 and ok2,
         },
         "players": player_tables,
+        "elements": build_element_map(bootstrap, team_map, pos_map, jp_names),
         "teams": team_section,
         "clean_sheets": clean_sheets,
         "next_fixtures": next_fixtures,

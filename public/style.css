@@ -399,6 +399,100 @@ tbody tr:nth-child(even) {
 .strength.normal { background: var(--normal); }
 .strength.hard { background: var(--hard); }
 
+/* ---------- マイチーム検索 ---------- */
+.idform {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+.idform input {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
+.idform button {
+  padding: 10px 22px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--pl-purple);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.idform button:active { opacity: 0.85; }
+
+.team-summary {
+  background: linear-gradient(135deg, var(--pl-purple), #5a0a63);
+  color: #fff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+.team-title { font-size: 1.15rem; font-weight: 700; }
+.team-summary .sub { color: #d9c8df; }
+.team-stats {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.stat {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+}
+.stat-label { font-size: 0.7rem; color: #d9c8df; }
+.stat-value { font-size: 1.05rem; font-weight: 700; color: var(--pl-green); }
+
+.mt-h3 {
+  font-size: 1rem;
+  margin: 18px 0 6px;
+  color: var(--pl-purple);
+}
+table.squad { font-size: 0.85rem; }
+.bench-sep {
+  background: #efe9f1 !important;
+  color: var(--pl-purple);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-align: center;
+}
+.cap {
+  display: inline-block;
+  background: var(--pl-purple);
+  color: var(--pl-green);
+  font-size: 0.68rem;
+  font-weight: 800;
+  border-radius: 50%;
+  width: 1.5em;
+  height: 1.5em;
+  line-height: 1.5em;
+  text-align: center;
+  vertical-align: middle;
+}
+.cap.vice { background: #8a8a8a; color: #fff; }
+.lg-btn {
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  border: 1px solid var(--pl-purple);
+  color: var(--pl-purple);
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+tr.me-row td { background: #eafff3 !important; }
+code {
+  background: #efe9f1;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
 /* ---------- お知らせ・空状態 ---------- */
 .empty {
   background: var(--card);
