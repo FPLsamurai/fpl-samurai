@@ -1,0 +1,12 @@
+# APIの生データ（再取得できるのでGitには載せません。容量節約）
+data/raw/
+
+# macOSが勝手に作るファイル
+.DS_Store
+
+# Pythonが作る一時ファイル
+__pycache__/
+*.pyc
+
+# Claude Code 用の設定（公開不要）
+.claude/

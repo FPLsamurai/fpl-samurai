@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FPL侍 データ</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <h1>⚔️ FPL侍 データ</h1>
+    <p class="subtitle">プレミアリーグ 数字まとめ</p>
+    <p class="updated" id="updated">読み込み中…</p>
+  </header>
+
+  <!-- 親タブ -->
+  <nav class="tabs" id="tabs">
+    <button class="tab is-active" data-target="players">選手</button>
+    <button class="tab" data-target="teams">チーム</button>
+    <button class="tab" data-target="next">次節</button>
+  </nav>
+
+  <main>
+
+    <!-- ============ 選手 ============ -->
+    <section id="players" class="panel is-active">
+      <h2>選手データ</h2>
+      <div class="subtabs scrollable" data-group="players">
+        <button class="subtab is-active" data-key="all">全試合</button>
+        <button class="subtab" data-key="last3">直近3</button>
+        <button class="subtab" data-key="last5">直近5</button>
+        <button class="subtab" data-key="last10">直近10</button>
+        <button class="subtab" data-key="home">ホーム</button>
+        <button class="subtab" data-key="away">アウェイ</button>
+      </div>
+      <p class="note" id="players-note"></p>
+      <div id="players-content"></div>
+    </section>
+
+    <!-- ============ チーム ============ -->
+    <section id="teams" class="panel">
+      <h2>チームデータ</h2>
+      <div class="subtabs scrollable" data-group="teams">
+        <button class="subtab is-active" data-key="totals">合計</button>
+        <button class="subtab" data-key="by_gw">節別</button>
+        <button class="subtab" data-key="cleansheet">無失点率</button>
+        <button class="subtab" data-key="form">直近フォーム</button>
+      </div>
+      <p class="note" id="teams-note"></p>
+      <div id="teams-content"></div>
+    </section>
+
+    <!-- ============ 次節 ============ -->
+    <section id="next" class="panel">
+      <h2>次節データ</h2>
+      <div class="subtabs" data-group="next">
+        <button class="subtab is-active" data-key="predict">予測</button>
+        <button class="subtab" data-key="schedule">日程</button>
+      </div>
+      <p class="note" id="next-note"></p>
+      <div id="next-content"></div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>データ出典：Fantasy Premier League 公式API</p>
+    <p>このサイトは非公式のファンメイドです。</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
