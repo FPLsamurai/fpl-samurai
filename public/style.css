@@ -162,9 +162,10 @@ table.rich th.sortable:hover {
   background: #e2d6e6;
 }
 .arr {
-  color: var(--pl-green);
   font-weight: 700;
 }
+.arr-desc { color: var(--pl-green); }   /* 大きい順↓＝緑（そのまま） */
+.arr-asc { color: var(--hard); }        /* 小さい順↑＝赤 */
 /* 固定列（コストまで左に固定）。位置と幅はJSが指定。ここでは背景と重なり順 */
 table.rich th.frz { background: #efe9f1; z-index: 3; }
 table.rich tbody td.frz { background: var(--card); z-index: 2; }
@@ -289,6 +290,21 @@ details.col-manager > summary {
   font-size: 0.75rem;
   border: 1px solid var(--border);
   border-radius: 5px;
+}
+.filter-row #f-team {
+  width: 90px;
+  padding: 4px;
+  font-size: 0.72rem;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+/* チーム列（左寄せ・長い名前は省略・文字サイズはスタッツと同じ） */
+table.rich td.col-team {
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.8rem;
+  font-weight: 400;
 }
 
 /* 表内の文字は中央寄せ（選手名・チーム名だけ左寄せ） */

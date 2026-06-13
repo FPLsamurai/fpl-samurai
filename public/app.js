@@ -158,7 +158,8 @@ function renderSetPieces() {
 const COL_META = {
   rank:        { label: "順位",      type: "rank",  frozen: true, width: 42, lock: true, noSort: true },
   photo:       { label: "写真",      type: "photo", frozen: true, width: 46, noSort: true },
-  name:        { label: "選手",      type: "name",  frozen: true, width: 130, lock: true },
+  team:        { label: "チーム",    type: "team",  frozen: true, width: 96 },
+  name:        { label: "選手名",    type: "name",  frozen: true, width: 130, lock: true },
   position:    { label: "POS",      type: "pos",   frozen: true, width: 46 },
   cost:        { label: "コスト",    type: "num",   frozen: true, width: 56 },
   points:      { label: "ポイント",  type: "num",   frozen: true, width: 62 },
@@ -184,7 +185,7 @@ const COL_META = {
   red:         { label: "レッド",    type: "num" },
   next3:       { label: "次の3試合", type: "next3", noSort: true },
 };
-const FROZEN_ORDER = ["rank", "photo", "name", "position", "cost", "points"];  // ポイントまで左に固定
+const FROZEN_ORDER = ["rank", "photo", "name", "team", "position", "cost", "points"];  // ポイントまで左に固定
 const DATA_ORDER_DEFAULT = [
   "value", "ownership", "goals", "assists", "clean_sheets", "starts",
   "xg", "xg90", "g_minus_xg", "xa", "xa90", "defcon", "defcon90",
@@ -197,7 +198,7 @@ const PHOTO_BASE = "https://resources.premierleague.com/premierleague/photos/pla
 const CONFIG_KEY = "fpl_player_cols_v3";
 
 let playerSort = { key: "points", dir: "desc" };
-let playerFilters = { name: "", pos: "", min: {}, max: {} };
+let playerFilters = { name: "", pos: "", team: "", min: {}, max: {} };
 let colState = loadColState();
 let cmOpen = false;  // 列設定パネルが開いているか
 let currentRichKey = "all";  // 高機能テーブルがいま表示している期間
@@ -248,6 +249,14 @@ function getActiveColumns() {
     .map((k) => ({ key: k, ...COL_META[k], frozen: false }));
   return { frozen, data, all: [...frozen, ...unfrozenBase, ...data] };
 }
+// 全選手から重複なしのチーム名一覧（フィルタ用）
+let _teamOptionsCache = null;
+function teamOptions() {
+  if (_teamOptionsCache) return _teamOptionsCache;
+  const rows = (DATA.players && DATA.players.all) || [];
+  _teamOptionsCache = [...new Set(rows.map((r) => r.team))].sort((a, b) => a.localeCompare(b, "ja"));
+  return _teamOptionsCache;
+}
 function frozenCss(c) {
   return c.frozen
     ? `position:sticky;left:${c.left}px;min-width:${c.width}px;max-width:${c.width}px;`
@@ -297,6 +306,7 @@ function renderPlayerRich(key) {
     const t = e.target;
     if (t.id === "f-name") playerFilters.name = t.value.trim().toLowerCase();
     else if (t.id === "f-pos") playerFilters.pos = t.value;
+    else if (t.id === "f-team") playerFilters.team = t.value;
     else if (t.dataset.min !== undefined) setNumFilter("min", t.dataset.min, t.value);
     else if (t.dataset.max !== undefined) setNumFilter("max", t.dataset.max, t.value);
     else return;
@@ -324,13 +334,19 @@ function buildPlayerHead() {
     const st = frozenCss(c);
     const frz = c.frozen ? "frz " : "";
     const numc = (c.type === "num") ? "num " : "";
-    // 1行目：見出し
+    // 1行目：見出し（写真列だけ見出し文字を消す）
     const sortable = !c.noSort;
-    r1 += `<th class="${frz}${numc}${sortable ? "sortable" : ""}" ${sortable ? `data-sort="${c.key}"` : ""} style="${st}">${esc(c.label)}<span class="arr"></span></th>`;
+    const headText = (c.type === "photo") ? "" : esc(c.label);
+    r1 += `<th class="${frz}${numc}${sortable ? "sortable" : ""}" ${sortable ? `data-sort="${c.key}"` : ""} style="${st}">${headText}<span class="arr"></span></th>`;
     // 2行目：フィルタ
     let f = "";
     if (c.type === "name") {
       f = `<input type="text" id="f-name" placeholder="検索" value="${esc(playerFilters.name)}">`;
+    } else if (c.type === "team") {
+      const opts = ['<option value="">全部</option>'].concat(
+        teamOptions().map((t) => `<option value="${esc(t)}" ${playerFilters.team === t ? "selected" : ""}>${esc(t)}</option>`)
+      ).join("");
+      f = `<select id="f-team" class="f-team">${opts}</select>`;
     } else if (c.type === "pos") {
       const opt = (v, t) => `<option value="${v}" ${playerFilters.pos === v ? "selected" : ""}>${t}</option>`;
       f = `<select id="f-pos">${opt("", "全部")}${opt("GK", "GK")}${opt("DF", "DF")}${opt("MF", "MF")}${opt("FW", "FW")}</select>`;
@@ -352,10 +368,12 @@ function refreshPlayerBody() {
   const { all, data, frozen } = getActiveColumns();
   const numKeys = all.filter((c) => c.type === "num").map((c) => c.key);
   const posVisible = frozen.some((c) => c.key === "position");
+  const teamVisible = frozen.some((c) => c.key === "team");
 
   let filtered = rows.filter((r) => {
     if (playerFilters.name && !r.name.toLowerCase().includes(playerFilters.name)) return false;
     if (posVisible && playerFilters.pos && r.position !== playerFilters.pos) return false;
+    if (teamVisible && playerFilters.team && r.team !== playerFilters.team) return false;
     for (const k of numKeys) {
       const mn = playerFilters.min[k]; if (mn != null && Number(r[k]) < mn) return false;
       const mx = playerFilters.max[k]; if (mx != null && Number(r[k]) > mx) return false;
@@ -372,10 +390,16 @@ function refreshPlayerBody() {
     return dir === "asc" ? av - bv : bv - av;
   });
 
-  // 矢印
+  // 矢印（↑小さい順＝赤 / ↓大きい順＝緑）
   document.querySelectorAll("#player-head th.sortable").forEach((th) => {
-    th.querySelector(".arr").textContent =
-      th.dataset.sort === key ? (dir === "asc" ? " ↑" : " ↓") : "";
+    const arr = th.querySelector(".arr");
+    if (th.dataset.sort === key) {
+      arr.textContent = dir === "asc" ? " ↑" : " ↓";
+      arr.className = "arr " + (dir === "asc" ? "arr-asc" : "arr-desc");
+    } else {
+      arr.textContent = "";
+      arr.className = "arr";
+    }
   });
   document.getElementById("player-count").textContent = filtered.length;
 
@@ -391,9 +415,11 @@ function refreshPlayerBody() {
         tds += `<td class="col-photo ${frz}" style="${st}">${ph}</td>`;
       } else if (c.type === "name") {
         const ja = r.name_ja ? `<div class="name-ja">${esc(r.name_ja)}</div>` : "";
-        tds += `<td class="col-name ${frz}" style="${st}"><div class="name">${esc(r.name)}</div>${ja}<div class="sub">${esc(r.team)}</div></td>`;
+        tds += `<td class="col-name ${frz}" style="${st}"><div class="name">${esc(r.name)}</div>${ja}</td>`;
       } else if (c.type === "pos") {
         tds += `<td class="${frz}" style="${st}">${esc(r.position)}</td>`;
+      } else if (c.type === "team") {
+        tds += `<td class="${frz}col-team" style="${st}">${esc(r.team)}</td>`;
       } else if (c.type === "next3") {
         // 次の3試合：相手名＋その試合の得点期待値（選手のxG/90 × 相手の守備係数）
         const fx3 = (DATA.team_next3 && DATA.team_next3[String(r.team_id)]) || [];
