@@ -198,7 +198,7 @@ def build_team_map(bootstrap):
     result = {}
     for t in bootstrap["teams"]:
         short = t["short_name"]
-        result[t["id"]] = {"name_ja": TEAM_JA.get(short, t["name"]), "short": short}
+        result[t["id"]] = {"name_ja": TEAM_JA.get(short, t["name"]), "short": short, "code": t["code"]}
     return result
 
 
@@ -337,6 +337,7 @@ def player_base(el, team_map, pos_map, jp_names):
         "name": el["web_name"],
         "name_ja": jp_names.get(el["web_name"], ""),   # カタカナ（無ければ空）
         "team": team_map.get(el["team"], {}).get("name_ja", "?"),
+        "team_code": team_map.get(el["team"], {}).get("code", 0),
         "position": pos_map.get(el["element_type"], "?"),
         "team_id": el["team"],
         "photo": str(el.get("photo", "")).split(".")[0],
@@ -372,6 +373,7 @@ def window_row(base, el, rows):
         "assists": s("assists"),
         "clean_sheets": s("clean_sheets"),
         "starts": s("starts"),
+        "minutes": minutes,
         "xg": round(xg, 2),
         "xg90": p90(xg),
         "g_minus_xg": round(goals - xg, 2),
@@ -437,6 +439,7 @@ def compute_player_tables(bootstrap, histories, team_map, pos_map, jp_names):
             "assists": el.get("assists", 0),
             "clean_sheets": el.get("clean_sheets", 0),
             "starts": el.get("starts", 0),
+            "minutes": el.get("minutes", 0),
             "xg": round(xg_total, 2),                       # xG合計
             "xg90": round(to_float(el.get("expected_goals_per_90")), 2),
             "g_minus_xg": round(goals - xg_total, 2),       # G-xG（上振れ/下振れ）
@@ -453,12 +456,10 @@ def compute_player_tables(bootstrap, histories, team_map, pos_map, jp_names):
             "red": el.get("red_cards", 0),
         }})
 
-        # 直近N試合（出場した試合のうち直近）。全試合タブと同じ項目を期間内で計算
-        played = [r for r in hist if r.get("minutes", 0) > 0]
-        if played:
-            last3.append(window_row(base, el, played[-3:]))
-            last5.append(window_row(base, el, played[-5:]))
-            last10.append(window_row(base, el, played[-10:]))
+        # 直近N試合 ＝ チームの直近N試合すべて（欠場・ベンチ=0分も1試合として数える）
+        last3.append(window_row(base, el, hist[-3:]))
+        last5.append(window_row(base, el, hist[-5:]))
+        last10.append(window_row(base, el, hist[-10:]))
 
         # ホーム / アウェイ別
         home = [r for r in hist if r.get("was_home") and r.get("minutes", 0) > 0]
@@ -767,6 +768,8 @@ def main():
         "players": player_tables,
         "elements": build_element_map(bootstrap, team_map, pos_map, jp_names),
         "team_next3": compute_team_next3(fixtures, team_map, team_matches, mu),
+        "teams_meta": {str(tid): {"name": m["name_ja"], "short": m["short"], "code": m["code"]}
+                       for tid, m in team_map.items()},
         "set_pieces": compute_set_pieces(bootstrap, team_map, jp_names),
         "teams": team_section,
         "clean_sheets": clean_sheets,

@@ -284,27 +284,38 @@ details.col-manager > summary {
   border: 1px solid var(--border);
   border-radius: 5px;
 }
-.filter-row #f-pos {
-  width: 64px;
-  padding: 4px;
-  font-size: 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-}
-.filter-row #f-team {
-  width: 90px;
-  padding: 4px;
+/* チーム・POSの絞り込みドロップダウン：列幅(46px)に収める・統一 */
+.filter-row td.col-team,
+.filter-row td.col-position { padding: 4px 2px; }
+.filter-row .colsel {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 2px;
   font-size: 0.72rem;
   border: 1px solid var(--border);
   border-radius: 5px;
+  text-align: center;
 }
-/* チーム列（左寄せ・長い名前は省略・文字サイズはスタッツと同じ） */
+/* チーム列（ロゴを中央表示。ロゴが無い場合はチーム名を中央寄せ・小さめ） */
 table.rich td.col-team {
-  text-align: left;
+  text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 0.8rem;
   font-weight: 400;
+}
+.team-badge {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+/* チーム列の幅をPOS列と同じに揃える */
+table.rich th.col-team, table.rich td.col-team,
+table.rich th.col-position, table.rich td.col-position {
+  width: 46px;
+  min-width: 46px;
+  max-width: 46px;
 }
 
 /* 表内の文字は中央寄せ（選手名・チーム名だけ左寄せ） */

@@ -158,7 +158,7 @@ function renderSetPieces() {
 const COL_META = {
   rank:        { label: "順位",      type: "rank",  frozen: true, width: 42, lock: true, noSort: true },
   photo:       { label: "写真",      type: "photo", frozen: true, width: 46, noSort: true },
-  team:        { label: "チーム",    type: "team",  frozen: true, width: 96 },
+  team:        { label: "チーム",    type: "team",  frozen: true, width: 46 },
   name:        { label: "選手名",    type: "name",  frozen: true, width: 130, lock: true },
   position:    { label: "POS",      type: "pos",   frozen: true, width: 46 },
   cost:        { label: "コスト",    type: "num",   frozen: true, width: 56 },
@@ -169,6 +169,7 @@ const COL_META = {
   assists:     { label: "アシスト",  type: "num" },
   clean_sheets:{ label: "無失点",    type: "num" },
   starts:      { label: "スタメン",  type: "num" },
+  minutes:     { label: "出場時間",  type: "num" },
   xg:          { label: "xG",        type: "num" },
   xg90:        { label: "xG/90",     type: "num" },
   g_minus_xg:  { label: "G-xG",      type: "num" },
@@ -187,15 +188,16 @@ const COL_META = {
 };
 const FROZEN_ORDER = ["rank", "photo", "name", "team", "position", "cost", "points"];  // ポイントまで左に固定
 const DATA_ORDER_DEFAULT = [
-  "value", "ownership", "goals", "assists", "clean_sheets", "starts",
+  "value", "ownership", "goals", "assists", "clean_sheets", "starts", "minutes",
   "xg", "xg90", "g_minus_xg", "xa", "xa90", "defcon", "defcon90",
   "bonus", "ppg", "saves", "saves90", "pk_saved", "yellow", "red",
   "next3",
 ];
 const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
 const PHOTO_BASE = "https://resources.premierleague.com/premierleague/photos/players/250x250/p";
+const BADGE_BASE = "https://resources.premierleague.com/premierleague/badges/70/t";
 // 設定の保存キー。標準設定を変えたらv3に更新（全員に新標準を適用するため）
-const CONFIG_KEY = "fpl_player_cols_v3";
+const CONFIG_KEY = "fpl_player_cols_v4";
 
 let playerSort = { key: "points", dir: "desc" };
 let playerFilters = { name: "", pos: "", team: "", min: {}, max: {} };
@@ -337,26 +339,26 @@ function buildPlayerHead() {
     // 1行目：見出し（写真列だけ見出し文字を消す）
     const sortable = !c.noSort;
     const headText = (c.type === "photo") ? "" : esc(c.label);
-    r1 += `<th class="${frz}${numc}${sortable ? "sortable" : ""}" ${sortable ? `data-sort="${c.key}"` : ""} style="${st}">${headText}<span class="arr"></span></th>`;
+    r1 += `<th class="col-${c.key} ${frz}${numc}${sortable ? "sortable" : ""}" ${sortable ? `data-sort="${c.key}"` : ""} style="${st}">${headText}<span class="arr"></span></th>`;
     // 2行目：フィルタ
     let f = "";
     if (c.type === "name") {
       f = `<input type="text" id="f-name" placeholder="検索" value="${esc(playerFilters.name)}">`;
     } else if (c.type === "team") {
-      const opts = ['<option value="">全部</option>'].concat(
+      const opts = ['<option value="">ー</option>'].concat(
         teamOptions().map((t) => `<option value="${esc(t)}" ${playerFilters.team === t ? "selected" : ""}>${esc(t)}</option>`)
       ).join("");
-      f = `<select id="f-team" class="f-team">${opts}</select>`;
+      f = `<select id="f-team" class="colsel" title="チームで絞り込み（ーで全部）">${opts}</select>`;
     } else if (c.type === "pos") {
-      const opt = (v, t) => `<option value="${v}" ${playerFilters.pos === v ? "selected" : ""}>${t}</option>`;
-      f = `<select id="f-pos">${opt("", "全部")}${opt("GK", "GK")}${opt("DF", "DF")}${opt("MF", "MF")}${opt("FW", "FW")}</select>`;
+      const opt = (v, lbl) => `<option value="${v}" ${playerFilters.pos === v ? "selected" : ""}>${lbl}</option>`;
+      f = `<select id="f-pos" class="colsel" title="ポジションで絞り込み（ーで全部）">${opt("", "ー")}${opt("GK", "GK")}${opt("DF", "DF")}${opt("MF", "MF")}${opt("FW", "FW")}</select>`;
     } else if (c.type === "num") {
       const mn = playerFilters.min[c.key] ?? "";
       const mx = playerFilters.max[c.key] ?? "";
       f = `<input type="number" class="fnum" data-min="${c.key}" placeholder="≥" step="any" value="${mn}">
            <input type="number" class="fnum" data-max="${c.key}" placeholder="≤" step="any" value="${mx}">`;
     }
-    r2 += `<td class="filter-cell ${frz}${numc}" style="${st}">${f}</td>`;
+    r2 += `<td class="filter-cell col-${c.key} ${frz}${numc}" style="${st}">${f}</td>`;
   });
   document.getElementById("player-head").innerHTML =
     `<tr>${r1}</tr><tr class="filter-row">${r2}</tr>`;
@@ -367,8 +369,8 @@ function refreshPlayerBody() {
   const rows = (DATA.players && DATA.players[currentRichKey]) || [];
   const { all, data, frozen } = getActiveColumns();
   const numKeys = all.filter((c) => c.type === "num").map((c) => c.key);
-  const posVisible = frozen.some((c) => c.key === "position");
-  const teamVisible = frozen.some((c) => c.key === "team");
+  const posVisible = all.some((c) => c.key === "position");
+  const teamVisible = all.some((c) => c.key === "team");
 
   let filtered = rows.filter((r) => {
     if (playerFilters.name && !r.name.toLowerCase().includes(playerFilters.name)) return false;
@@ -417,9 +419,13 @@ function refreshPlayerBody() {
         const ja = r.name_ja ? `<div class="name-ja">${esc(r.name_ja)}</div>` : "";
         tds += `<td class="col-name ${frz}" style="${st}"><div class="name">${esc(r.name)}</div>${ja}</td>`;
       } else if (c.type === "pos") {
-        tds += `<td class="${frz}" style="${st}">${esc(r.position)}</td>`;
+        tds += `<td class="col-position ${frz}" style="${st}">${esc(r.position)}</td>`;
       } else if (c.type === "team") {
-        tds += `<td class="${frz}col-team" style="${st}">${esc(r.team)}</td>`;
+        const tm = (DATA.teams_meta && DATA.teams_meta[String(r.team_id)]) || null;
+        const badge = (tm && tm.code)
+          ? `<img class="team-badge" loading="lazy" alt="${esc(r.team)}" title="${esc(r.team)}" src="${BADGE_BASE}${tm.code}.png" onerror="this.replaceWith(document.createTextNode('${esc(r.team)}'))">`
+          : esc(r.team);
+        tds += `<td class="${frz}col-team" style="${st}">${badge}</td>`;
       } else if (c.type === "next3") {
         // 次の3試合：相手名＋その試合の得点期待値（選手のxG/90 × 相手の守備係数）
         const fx3 = (DATA.team_next3 && DATA.team_next3[String(r.team_id)]) || [];
