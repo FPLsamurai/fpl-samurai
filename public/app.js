@@ -439,7 +439,7 @@ function refreshPlayerBody() {
           tds += `<td class="${frz}next3-cell" style="${st}">${lines}</td>`;
         }
       } else {
-        const main = c.key === "value" ? "main-num" : "";
+        const main = c.key === "points" ? "main-num" : "";
         tds += `<td class="num ${frz}${main}" style="${st}">${esc(r[c.key])}</td>`;
       }
     });
