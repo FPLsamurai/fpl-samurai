@@ -28,15 +28,25 @@ async function init() {
 }
 
 /* ---------- タブの仕組み ---------- */
+// 指定タブへ切り替え（タブボタン・ロゴ・カードから共通で使う）
+function activateTab(target) {
+  document.querySelectorAll(".tab").forEach((t) =>
+    t.classList.toggle("is-active", t.dataset.target === target));
+  document.querySelectorAll(".panel").forEach((p) =>
+    p.classList.toggle("is-active", p.id === target));
+  window.scrollTo({ top: 0 });
+}
+
 function setupParentTabs() {
   document.querySelectorAll(".tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach((t) => t.classList.remove("is-active"));
-      document.querySelectorAll(".panel").forEach((p) => p.classList.remove("is-active"));
-      tab.classList.add("is-active");
-      document.getElementById(tab.dataset.target).classList.add("is-active");
-      window.scrollTo({ top: 0 });
-    });
+    tab.addEventListener("click", () => activateTab(tab.dataset.target));
+  });
+  // ロゴ／タイトルのクリックでホームへ
+  const brand = document.getElementById("brand-home");
+  if (brand) brand.addEventListener("click", (e) => { e.preventDefault(); activateTab("home"); });
+  // ホームのカードからデータ各ページへ
+  document.querySelectorAll(".nav-card[data-go]").forEach((c) => {
+    c.addEventListener("click", () => activateTab(c.dataset.go));
   });
 }
 
