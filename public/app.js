@@ -13,6 +13,7 @@ async function init() {
   setupParentTabs();
   setupSubtabs();
   setupMyTeam();
+  loadYouTube();          // ホームのYouTube最新動画（取得失敗しても他は動く）
   try {
     const res = await fetch(DATA_URL, { cache: "no-store" });
     if (!res.ok) throw new Error("データファイルを読み込めませんでした");
@@ -900,6 +901,59 @@ async function loadLeagueStandings(leagueId, leagueName, myEntryId) {
   } catch (err) {
     slot.innerHTML = emptyMessage("順位表の取得に失敗しました。<br>" + esc(err.message || err));
   }
+}
+
+/* ===========================================================
+   ホームのYouTube欄：チャンネルの最新動画2本を自動取得
+   YouTubeのRSSフィードを、myteamと同じ中継サービス(PROXIES)経由で取得します。
+   （APIキー不要。取得に失敗しても固定の「ルール解説」だけは表示されます）
+   =========================================================== */
+const YT_CHANNEL_ID = "UCyn1RapHcZDrtnXDKLF93SQ";  // FPL侍チャンネル
+const YT_RULE_ID = "D8Grf9fL_Wc";                  // 固定表示しているルール解説（最新枠から除外）
+
+async function loadYouTube() {
+  const grid = document.getElementById("yt-grid");
+  if (!grid) return;
+  const feedUrl = "https://www.youtube.com/feeds/videos.xml?channel_id=" + YT_CHANNEL_ID;
+  let xmlText = null;
+  for (const wrap of PROXIES) {
+    try {
+      const res = await fetch(wrap(feedUrl), { cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      xmlText = await res.text();
+      break;
+    } catch (e) { /* 次のプロキシを試す */ }
+  }
+  if (!xmlText) return;  // 取得失敗：固定動画のみ表示
+
+  let entries;
+  try {
+    const doc = new DOMParser().parseFromString(xmlText, "text/xml");
+    entries = Array.from(doc.getElementsByTagName("entry"));
+  } catch (e) { return; }
+
+  const html = [];
+  for (const en of entries) {
+    // <id>yt:video:VIDEOID</id> から動画IDを取り出す（名前空間に依存しない）
+    const idText = (en.getElementsByTagName("id")[0] || {}).textContent || "";
+    const vid = idText.split(":").pop();
+    const title = ((en.getElementsByTagName("title")[0] || {}).textContent || "").trim();
+    if (!vid || vid === YT_RULE_ID) continue;
+    html.push(ytCardHTML(vid, title, ""));
+    if (html.length >= 2) break;
+  }
+  if (html.length) grid.insertAdjacentHTML("beforeend", html.join(""));
+}
+
+function ytCardHTML(vid, title, tag) {
+  const tagHtml = tag ? `<span class="yt-tag">${esc(tag)}</span>` : "";
+  return `<a class="yt-card" href="https://youtu.be/${esc(vid)}" target="_blank" rel="noopener">
+    <span class="yt-thumb">
+      <img src="https://i.ytimg.com/vi/${esc(vid)}/mqdefault.jpg" alt="" loading="lazy">
+      ${tagHtml}<span class="yt-play"></span>
+    </span>
+    <span class="yt-title">${esc(title)}</span>
+  </a>`;
 }
 
 function showLoadError(err) {

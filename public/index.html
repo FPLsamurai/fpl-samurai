@@ -15,12 +15,12 @@
       <span class="brand-title">FPL侍</span>
     </a>
     <nav class="tabs" id="tabs">
-      <button class="tab is-active" data-target="home">ホーム</button>
-      <button class="tab" data-target="players">選手</button>
-      <button class="tab" data-target="teams">チーム</button>
-      <button class="tab" data-target="next">次節</button>
-      <button class="tab" data-target="myteam">マイチーム</button>
-      <button class="tab" data-target="rules">ルール</button>
+      <button class="tab is-active" data-target="home"><img class="tab-ic" src="icons/home.png" alt="">ホーム</button>
+      <button class="tab" data-target="players"><img class="tab-ic" src="icons/player.png" alt="">選手</button>
+      <button class="tab" data-target="teams"><img class="tab-ic" src="icons/team.png" alt="">チーム</button>
+      <button class="tab" data-target="next"><img class="tab-ic" src="icons/next.png" alt="">次節</button>
+      <button class="tab" data-target="myteam"><img class="tab-ic" src="icons/myteam.png" alt="">マイチーム</button>
+      <button class="tab" data-target="rules"><img class="tab-ic" src="icons/rule.png" alt="">ルール</button>
     </nav>
   </header>
 
@@ -33,8 +33,8 @@
         <h1 class="profile-name">FPL侍</h1>
         <p class="profile-tag">FPL 日本語攻略サイト ／ プレミアリーグデータ</p>
         <p class="profile-bio">
-          海外サッカー・FPL（ファンタジープレミアリーグ）の情報を日本語で発信しています。<br>
-          選手・チームのデータ分析、現地観戦vlog、移籍・買い物動画など。
+          FPL（ファンタジープレミアリーグ）を日本語で攻略！<br>
+          選手&amp;チームデータ分析　GW振り返り&amp;移籍プラン
         </p>
         <div class="sns-links">
           <a class="sns x" href="https://x.com/FPLsamuraiJapan" target="_blank" rel="noopener" aria-label="X" title="X @FPLsamuraiJapan">
@@ -55,12 +55,25 @@
           <span class="lc-body"><span class="lc-title">X（旧Twitter）</span><span class="lc-sub">@FPLsamuraiJapan</span></span>
         </a>
 
+        <!-- YouTube：ルール解説（固定）＋最新動画2本（自動取得） -->
+        <div class="profile-section">YouTube</div>
+        <div class="yt-grid" id="yt-grid">
+          <a class="yt-card" href="https://youtu.be/D8Grf9fL_Wc" target="_blank" rel="noopener">
+            <span class="yt-thumb">
+              <img src="https://i.ytimg.com/vi/D8Grf9fL_Wc/mqdefault.jpg" alt="" loading="lazy">
+              <span class="yt-tag">ルール解説</span>
+              <span class="yt-play"></span>
+            </span>
+            <span class="yt-title">FPLルール解説</span>
+          </a>
+        </div>
+
         <div class="profile-section">サイトのデータを見る</div>
-        <button class="linkcard nav-card" data-go="players"><span class="lc-ic data">⚽</span><span class="lc-body"><span class="lc-title">選手データ</span><span class="lc-sub">得点・コスパ・xGなどで並べ替え＆絞り込み</span></span></button>
-        <button class="linkcard nav-card" data-go="teams"><span class="lc-ic data">🛡️</span><span class="lc-body"><span class="lc-title">チームデータ</span><span class="lc-sub">攻撃力・守備力・無失点率</span></span></button>
-        <button class="linkcard nav-card" data-go="next"><span class="lc-ic data">📅</span><span class="lc-body"><span class="lc-title">次節予測</span><span class="lc-sub">クリーンシート率・相手の強さ</span></span></button>
-        <button class="linkcard nav-card" data-go="myteam"><span class="lc-ic data">👤</span><span class="lc-body"><span class="lc-title">マイチーム検索</span><span class="lc-sub">FPL IDでスカッド・ミニリーグ確認</span></span></button>
-        <button class="linkcard nav-card" data-go="rules"><span class="lc-ic data">📖</span><span class="lc-body"><span class="lc-title">FPLルール解説</span><span class="lc-sub">初心者向けの基本ルール</span></span></button>
+        <button class="linkcard nav-card" data-go="players"><span class="lc-ic data"><img class="lc-ic-img" src="icons/player.png" alt=""></span><span class="lc-body"><span class="lc-title">選手データ</span><span class="lc-sub">得点・コスパ・xGなどで並べ替え＆絞り込み</span></span></button>
+        <button class="linkcard nav-card" data-go="teams"><span class="lc-ic data"><img class="lc-ic-img" src="icons/team.png" alt=""></span><span class="lc-body"><span class="lc-title">チームデータ</span><span class="lc-sub">攻撃力・守備力・無失点率</span></span></button>
+        <button class="linkcard nav-card" data-go="next"><span class="lc-ic data"><img class="lc-ic-img" src="icons/next.png" alt=""></span><span class="lc-body"><span class="lc-title">次節予測</span><span class="lc-sub">クリーンシート率・相手の強さ</span></span></button>
+        <button class="linkcard nav-card" data-go="myteam"><span class="lc-ic data"><img class="lc-ic-img" src="icons/myteam.png" alt=""></span><span class="lc-body"><span class="lc-title">マイチーム検索</span><span class="lc-sub">FPL IDでスカッド・ミニリーグ確認</span></span></button>
+        <button class="linkcard nav-card" data-go="rules"><span class="lc-ic data"><img class="lc-ic-img" src="icons/rule.png" alt=""></span><span class="lc-body"><span class="lc-title">FPLルール解説</span><span class="lc-sub">初心者向けの基本ルール</span></span></button>
 
         <p class="updated" id="updated">読み込み中…</p>
       </div>
