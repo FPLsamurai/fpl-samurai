@@ -11,7 +11,7 @@
       {
         "name": "Haaland",
         "name_ja": "ハーランド",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "FW",
         "team_id": 13,
@@ -44,7 +44,7 @@
       {
         "name": "B.Fernandes",
         "name_ja": "ブルーノ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -110,7 +110,7 @@
       {
         "name": "Semenyo",
         "name_ja": "セメンヨ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -308,7 +308,7 @@
       {
         "name": "Guéhi",
         "name_ja": "グエイ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -605,7 +605,7 @@
       {
         "name": "Casemiro",
         "name_ja": "カゼミロ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -704,7 +704,7 @@
       {
         "name": "O'Reilly",
         "name_ja": "オライリー",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -869,7 +869,7 @@
       {
         "name": "Matheus N.",
         "name_ja": "マテウスヌネス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -1067,7 +1067,7 @@
       {
         "name": "Mbeumo",
         "name_ja": "エンベウモ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -1199,7 +1199,7 @@
       {
         "name": "Cunha",
         "name_ja": "クーニャ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -1595,7 +1595,7 @@
       {
         "name": "Cherki",
         "name_ja": "シェルキ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -1628,7 +1628,7 @@
       {
         "name": "Donnarumma",
         "name_ja": "ドンナルンマ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "GK",
         "team_id": 13,
@@ -1859,7 +1859,7 @@
       {
         "name": "Foden",
         "name_ja": "フォーデン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -2684,7 +2684,7 @@
       {
         "name": "Doku",
         "name_ja": "ドク",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -3476,7 +3476,7 @@
       {
         "name": "Rúben",
         "name_ja": "ルベン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -3509,7 +3509,7 @@
       {
         "name": "Shaw",
         "name_ja": "ショー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -3608,7 +3608,7 @@
       {
         "name": "Dalot",
         "name_ja": "ダロト",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -3641,7 +3641,7 @@
       {
         "name": "Šeško",
         "name_ja": "シェシュコ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "FW",
         "team_id": 14,
@@ -3905,7 +3905,7 @@
       {
         "name": "Lammens",
         "name_ja": "ラメンス",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "GK",
         "team_id": 14,
@@ -4433,7 +4433,7 @@
       {
         "name": "Bernardo",
         "name_ja": "ベルナルド",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -5060,7 +5060,7 @@
       {
         "name": "Dorgu",
         "name_ja": "ドルグ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -5192,7 +5192,7 @@
       {
         "name": "Reijnders",
         "name_ja": "ラインデルス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -5390,7 +5390,7 @@
       {
         "name": "Amad",
         "name_ja": "アマド",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -5456,7 +5456,7 @@
       {
         "name": "Maguire",
         "name_ja": "マグワイア",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -6314,7 +6314,7 @@
       {
         "name": "Gvardiol",
         "name_ja": "グヴァルディオル",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -7007,7 +7007,7 @@
       {
         "name": "Mainoo",
         "name_ja": "メイヌー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -7337,7 +7337,7 @@
       {
         "name": "Rodrigo",
         "name_ja": "ロドリ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -7766,7 +7766,7 @@
       {
         "name": "Khusanov",
         "name_ja": "クサノフ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -8162,7 +8162,7 @@
       {
         "name": "N.Gonzalez",
         "name_ja": "ゴンサレス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -8492,7 +8492,7 @@
       {
         "name": "Aït-Nouri",
         "name_ja": "アイトヌーリ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -8756,7 +8756,7 @@
       {
         "name": "Mount",
         "name_ja": "マウント",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -9020,7 +9020,7 @@
       {
         "name": "Marmoush",
         "name_ja": "マルムーシュ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -9053,7 +9053,7 @@
       {
         "name": "Yoro",
         "name_ja": "ヨロ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -9317,7 +9317,7 @@
       {
         "name": "Mazraoui",
         "name_ja": "マズラウィ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -9581,7 +9581,7 @@
       {
         "name": "Martinez",
         "name_ja": "マルティネス",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -10505,7 +10505,7 @@
       {
         "name": "Savinho",
         "name_ja": "サヴィーニョ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -10538,7 +10538,7 @@
       {
         "name": "De Ligt",
         "name_ja": "デリフト",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -10670,7 +10670,7 @@
       {
         "name": "Heaven",
         "name_ja": "ヘヴン",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -10703,7 +10703,7 @@
       {
         "name": "Zirkzee",
         "name_ja": "ザークティ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "FW",
         "team_id": 14,
@@ -11330,7 +11330,7 @@
       {
         "name": "Ugarte",
         "name_ja": "ウガルテ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -11693,7 +11693,7 @@
       {
         "name": "Aké",
         "name_ja": "アケ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -13244,7 +13244,7 @@
       {
         "name": "Lewis",
         "name_ja": "リコルイス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -13673,7 +13673,7 @@
       {
         "name": "Stones",
         "name_ja": "ストーンズ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -14102,7 +14102,7 @@
       {
         "name": "Trafford",
         "name_ja": "トラッフォード",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "GK",
         "team_id": 13,
@@ -14399,7 +14399,7 @@
       {
         "name": "Bayindir",
         "name_ja": "バユンドゥル",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "GK",
         "team_id": 14,
@@ -14696,7 +14696,7 @@
       {
         "name": "Kovačić",
         "name_ja": "コヴァチッチ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -15620,7 +15620,7 @@
       {
         "name": "Alleyne",
         "name_ja": "アレイン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -16016,7 +16016,7 @@
       {
         "name": "Malacia",
         "name_ja": "マラシア",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -16049,7 +16049,7 @@
       {
         "name": "J.Fletcher",
         "name_ja": "フレッチャー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -16082,7 +16082,7 @@
       {
         "name": "Lacey",
         "name_ja": "レイシー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -16478,7 +16478,7 @@
       {
         "name": "Mukasa",
         "name_ja": "ムカサ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -16511,7 +16511,7 @@
       {
         "name": "Fletcher",
         "name_ja": "フレッチャー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -17204,7 +17204,7 @@
       {
         "name": "Fredricson",
         "name_ja": "フレドリクソン",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -17237,7 +17237,7 @@
       {
         "name": "Bendito Mantato",
         "name_ja": "マンタート",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -17769,7 +17769,7 @@
       {
         "name": "B.Fernandes",
         "name_ja": "ブルーノ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -17944,7 +17944,7 @@
       {
         "name": "Dorgu",
         "name_ja": "ドルグ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -18084,7 +18084,7 @@
       {
         "name": "Maguire",
         "name_ja": "マグワイア",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -18294,7 +18294,7 @@
       {
         "name": "Shaw",
         "name_ja": "ショー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -18399,7 +18399,7 @@
       {
         "name": "Mbeumo",
         "name_ja": "エンベウモ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -18434,7 +18434,7 @@
       {
         "name": "Mazraoui",
         "name_ja": "マズラウィ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -18609,7 +18609,7 @@
       {
         "name": "Semenyo",
         "name_ja": "セメンヨ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -18644,7 +18644,7 @@
       {
         "name": "Lammens",
         "name_ja": "ラメンス",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "GK",
         "team_id": 14,
@@ -18924,7 +18924,7 @@
       {
         "name": "Foden",
         "name_ja": "フォーデン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -18959,7 +18959,7 @@
       {
         "name": "Martinez",
         "name_ja": "マルティネス",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -20149,7 +20149,7 @@
       {
         "name": "Savinho",
         "name_ja": "サヴィーニョ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -20184,7 +20184,7 @@
       {
         "name": "Amad",
         "name_ja": "アマド",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -20674,7 +20674,7 @@
       {
         "name": "Cunha",
         "name_ja": "クーニャ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -20709,7 +20709,7 @@
       {
         "name": "Mainoo",
         "name_ja": "メイヌー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -21269,7 +21269,7 @@
       {
         "name": "Marmoush",
         "name_ja": "マルムーシュ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -21304,7 +21304,7 @@
       {
         "name": "Mount",
         "name_ja": "マウント",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -21689,7 +21689,7 @@
       {
         "name": "Haaland",
         "name_ja": "ハーランド",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "FW",
         "team_id": 13,
@@ -21724,7 +21724,7 @@
       {
         "name": "Donnarumma",
         "name_ja": "ドンナルンマ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "GK",
         "team_id": 13,
@@ -22459,7 +22459,7 @@
       {
         "name": "Guéhi",
         "name_ja": "グエイ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -22494,7 +22494,7 @@
       {
         "name": "Khusanov",
         "name_ja": "クサノフ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -23439,7 +23439,7 @@
       {
         "name": "Aït-Nouri",
         "name_ja": "アイトヌーリ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -23474,7 +23474,7 @@
       {
         "name": "Rodrigo",
         "name_ja": "ロドリ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -24104,7 +24104,7 @@
       {
         "name": "Cherki",
         "name_ja": "シェルキ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -24944,7 +24944,7 @@
       {
         "name": "Bernardo",
         "name_ja": "ベルナルド",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -24979,7 +24979,7 @@
       {
         "name": "Reijnders",
         "name_ja": "ラインデルス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -25959,7 +25959,7 @@
       {
         "name": "Stones",
         "name_ja": "ストーンズ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -25994,7 +25994,7 @@
       {
         "name": "Doku",
         "name_ja": "ドク",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -26029,7 +26029,7 @@
       {
         "name": "N.Gonzalez",
         "name_ja": "ゴンサレス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -27359,7 +27359,7 @@
       {
         "name": "Matheus N.",
         "name_ja": "マテウスヌネス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -27394,7 +27394,7 @@
       {
         "name": "Kovačić",
         "name_ja": "コヴァチッチ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -27429,7 +27429,7 @@
       {
         "name": "Zirkzee",
         "name_ja": "ザークティ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "FW",
         "team_id": 14,
@@ -28934,7 +28934,7 @@
       {
         "name": "Trafford",
         "name_ja": "トラッフォード",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "GK",
         "team_id": 13,
@@ -28969,7 +28969,7 @@
       {
         "name": "Gvardiol",
         "name_ja": "グヴァルディオル",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -29004,7 +29004,7 @@
       {
         "name": "Aké",
         "name_ja": "アケ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -29039,7 +29039,7 @@
       {
         "name": "O'Reilly",
         "name_ja": "オライリー",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -30229,7 +30229,7 @@
       {
         "name": "Rúben",
         "name_ja": "ルベン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -30264,7 +30264,7 @@
       {
         "name": "Dalot",
         "name_ja": "ダロト",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -30299,7 +30299,7 @@
       {
         "name": "Yoro",
         "name_ja": "ヨロ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -30334,7 +30334,7 @@
       {
         "name": "Malacia",
         "name_ja": "マラシア",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -30369,7 +30369,7 @@
       {
         "name": "Casemiro",
         "name_ja": "カゼミロ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -30404,7 +30404,7 @@
       {
         "name": "Lacey",
         "name_ja": "レイシー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -30439,7 +30439,7 @@
       {
         "name": "Fletcher",
         "name_ja": "フレッチャー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -33659,7 +33659,7 @@
       {
         "name": "Lewis",
         "name_ja": "リコルイス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -33694,7 +33694,7 @@
       {
         "name": "Mukasa",
         "name_ja": "ムカサ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -33729,7 +33729,7 @@
       {
         "name": "Alleyne",
         "name_ja": "アレイン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -33764,7 +33764,7 @@
       {
         "name": "Bayindir",
         "name_ja": "バユンドゥル",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "GK",
         "team_id": 14,
@@ -33799,7 +33799,7 @@
       {
         "name": "De Ligt",
         "name_ja": "デリフト",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -33834,7 +33834,7 @@
       {
         "name": "Fredricson",
         "name_ja": "フレドリクソン",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -33869,7 +33869,7 @@
       {
         "name": "Heaven",
         "name_ja": "ヘヴン",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -33904,7 +33904,7 @@
       {
         "name": "Ugarte",
         "name_ja": "ウガルテ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -33939,7 +33939,7 @@
       {
         "name": "J.Fletcher",
         "name_ja": "フレッチャー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -33974,7 +33974,7 @@
       {
         "name": "Šeško",
         "name_ja": "シェシュコ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "FW",
         "team_id": 14,
@@ -34009,7 +34009,7 @@
       {
         "name": "Bendito Mantato",
         "name_ja": "マンタート",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -36566,7 +36566,7 @@
       {
         "name": "B.Fernandes",
         "name_ja": "ブルーノ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -36776,7 +36776,7 @@
       {
         "name": "Doku",
         "name_ja": "ドク",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -37056,7 +37056,7 @@
       {
         "name": "Haaland",
         "name_ja": "ハーランド",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "FW",
         "team_id": 13,
@@ -37091,7 +37091,7 @@
       {
         "name": "Maguire",
         "name_ja": "マグワイア",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -37371,7 +37371,7 @@
       {
         "name": "Shaw",
         "name_ja": "ショー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -37511,7 +37511,7 @@
       {
         "name": "Mainoo",
         "name_ja": "メイヌー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -37896,7 +37896,7 @@
       {
         "name": "Mbeumo",
         "name_ja": "エンベウモ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -38281,7 +38281,7 @@
       {
         "name": "Semenyo",
         "name_ja": "セメンヨ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -38316,7 +38316,7 @@
       {
         "name": "Guéhi",
         "name_ja": "グエイ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -38351,7 +38351,7 @@
       {
         "name": "Dorgu",
         "name_ja": "ドルグ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -38386,7 +38386,7 @@
       {
         "name": "Lammens",
         "name_ja": "ラメンス",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "GK",
         "team_id": 14,
@@ -39296,7 +39296,7 @@
       {
         "name": "Mazraoui",
         "name_ja": "マズラウィ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -39331,7 +39331,7 @@
       {
         "name": "Cunha",
         "name_ja": "クーニャ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -39926,7 +39926,7 @@
       {
         "name": "Foden",
         "name_ja": "フォーデン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -39961,7 +39961,7 @@
       {
         "name": "Casemiro",
         "name_ja": "カゼミロ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -40416,7 +40416,7 @@
       {
         "name": "Marmoush",
         "name_ja": "マルムーシュ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -40451,7 +40451,7 @@
       {
         "name": "Donnarumma",
         "name_ja": "ドンナルンマ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "GK",
         "team_id": 13,
@@ -40766,7 +40766,7 @@
       {
         "name": "Martinez",
         "name_ja": "マルティネス",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -41186,7 +41186,7 @@
       {
         "name": "Amad",
         "name_ja": "アマド",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -41536,7 +41536,7 @@
       {
         "name": "Savinho",
         "name_ja": "サヴィーニョ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -41571,7 +41571,7 @@
       {
         "name": "Šeško",
         "name_ja": "シェシュコ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "FW",
         "team_id": 14,
@@ -42061,7 +42061,7 @@
       {
         "name": "Cherki",
         "name_ja": "シェルキ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -42516,7 +42516,7 @@
       {
         "name": "Khusanov",
         "name_ja": "クサノフ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -42551,7 +42551,7 @@
       {
         "name": "Bernardo",
         "name_ja": "ベルナルド",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -42586,7 +42586,7 @@
       {
         "name": "Mount",
         "name_ja": "マウント",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -43776,7 +43776,7 @@
       {
         "name": "Matheus N.",
         "name_ja": "マテウスヌネス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -44546,7 +44546,7 @@
       {
         "name": "Aké",
         "name_ja": "アケ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -44581,7 +44581,7 @@
       {
         "name": "O'Reilly",
         "name_ja": "オライリー",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -45281,7 +45281,7 @@
       {
         "name": "Aït-Nouri",
         "name_ja": "アイトヌーリ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -45316,7 +45316,7 @@
       {
         "name": "Rodrigo",
         "name_ja": "ロドリ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -45351,7 +45351,7 @@
       {
         "name": "Kovačić",
         "name_ja": "コヴァチッチ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -45911,7 +45911,7 @@
       {
         "name": "N.Gonzalez",
         "name_ja": "ゴンサレス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -45946,7 +45946,7 @@
       {
         "name": "Reijnders",
         "name_ja": "ラインデルス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -45981,7 +45981,7 @@
       {
         "name": "Dalot",
         "name_ja": "ダロト",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -47661,7 +47661,7 @@
       {
         "name": "Stones",
         "name_ja": "ストーンズ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -47696,7 +47696,7 @@
       {
         "name": "Zirkzee",
         "name_ja": "ザークティ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "FW",
         "team_id": 14,
@@ -48361,7 +48361,7 @@
       {
         "name": "Yoro",
         "name_ja": "ヨロ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -48396,7 +48396,7 @@
       {
         "name": "Heaven",
         "name_ja": "ヘヴン",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -49411,7 +49411,7 @@
       {
         "name": "Trafford",
         "name_ja": "トラッフォード",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "GK",
         "team_id": 13,
@@ -49446,7 +49446,7 @@
       {
         "name": "Gvardiol",
         "name_ja": "グヴァルディオル",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -50356,7 +50356,7 @@
       {
         "name": "Rúben",
         "name_ja": "ルベン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -50391,7 +50391,7 @@
       {
         "name": "Malacia",
         "name_ja": "マラシア",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -50426,7 +50426,7 @@
       {
         "name": "Lacey",
         "name_ja": "レイシー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -50461,7 +50461,7 @@
       {
         "name": "Fletcher",
         "name_ja": "フレッチャー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -53016,7 +53016,7 @@
       {
         "name": "Lewis",
         "name_ja": "リコルイス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -53051,7 +53051,7 @@
       {
         "name": "Mukasa",
         "name_ja": "ムカサ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -53086,7 +53086,7 @@
       {
         "name": "Alleyne",
         "name_ja": "アレイン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -53121,7 +53121,7 @@
       {
         "name": "Bayindir",
         "name_ja": "バユンドゥル",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "GK",
         "team_id": 14,
@@ -53156,7 +53156,7 @@
       {
         "name": "De Ligt",
         "name_ja": "デリフト",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -53191,7 +53191,7 @@
       {
         "name": "Fredricson",
         "name_ja": "フレドリクソン",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -53226,7 +53226,7 @@
       {
         "name": "Ugarte",
         "name_ja": "ウガルテ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -53261,7 +53261,7 @@
       {
         "name": "J.Fletcher",
         "name_ja": "フレッチャー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -53296,7 +53296,7 @@
       {
         "name": "Bendito Mantato",
         "name_ja": "マンタート",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -55328,7 +55328,7 @@
       {
         "name": "B.Fernandes",
         "name_ja": "ブルーノ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -55923,7 +55923,7 @@
       {
         "name": "Doku",
         "name_ja": "ドク",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -56063,7 +56063,7 @@
       {
         "name": "Guéhi",
         "name_ja": "グエイ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -56168,7 +56168,7 @@
       {
         "name": "Haaland",
         "name_ja": "ハーランド",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "FW",
         "team_id": 13,
@@ -56203,7 +56203,7 @@
       {
         "name": "Casemiro",
         "name_ja": "カゼミロ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -56413,7 +56413,7 @@
       {
         "name": "Shaw",
         "name_ja": "ショー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -56798,7 +56798,7 @@
       {
         "name": "Cunha",
         "name_ja": "クーニャ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -56938,7 +56938,7 @@
       {
         "name": "Cherki",
         "name_ja": "シェルキ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -57078,7 +57078,7 @@
       {
         "name": "Lammens",
         "name_ja": "ラメンス",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "GK",
         "team_id": 14,
@@ -57603,7 +57603,7 @@
       {
         "name": "Semenyo",
         "name_ja": "セメンヨ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -57638,7 +57638,7 @@
       {
         "name": "O'Reilly",
         "name_ja": "オライリー",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -57953,7 +57953,7 @@
       {
         "name": "Mainoo",
         "name_ja": "メイヌー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -58233,7 +58233,7 @@
       {
         "name": "Khusanov",
         "name_ja": "クサノフ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -58408,7 +58408,7 @@
       {
         "name": "Donnarumma",
         "name_ja": "ドンナルンマ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "GK",
         "team_id": 13,
@@ -58828,7 +58828,7 @@
       {
         "name": "Bernardo",
         "name_ja": "ベルナルド",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -59038,7 +59038,7 @@
       {
         "name": "Mbeumo",
         "name_ja": "エンベウモ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -59528,7 +59528,7 @@
       {
         "name": "Matheus N.",
         "name_ja": "マテウスヌネス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -59563,7 +59563,7 @@
       {
         "name": "Maguire",
         "name_ja": "マグワイア",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -60298,7 +60298,7 @@
       {
         "name": "Mazraoui",
         "name_ja": "マズラウィ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -60718,7 +60718,7 @@
       {
         "name": "Rodrigo",
         "name_ja": "ロドリ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -61033,7 +61033,7 @@
       {
         "name": "Šeško",
         "name_ja": "シェシュコ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "FW",
         "team_id": 14,
@@ -61593,7 +61593,7 @@
       {
         "name": "Foden",
         "name_ja": "フォーデン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -61628,7 +61628,7 @@
       {
         "name": "Amad",
         "name_ja": "アマド",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -61943,7 +61943,7 @@
       {
         "name": "Aït-Nouri",
         "name_ja": "アイトヌーリ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -61978,7 +61978,7 @@
       {
         "name": "Dorgu",
         "name_ja": "ドルグ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -62678,7 +62678,7 @@
       {
         "name": "Marmoush",
         "name_ja": "マルムーシュ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -63518,7 +63518,7 @@
       {
         "name": "Savinho",
         "name_ja": "サヴィーニョ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -63553,7 +63553,7 @@
       {
         "name": "Dalot",
         "name_ja": "ダロト",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -64393,7 +64393,7 @@
       {
         "name": "Heaven",
         "name_ja": "ヘヴン",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -65723,7 +65723,7 @@
       {
         "name": "Martinez",
         "name_ja": "マルティネス",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -65758,7 +65758,7 @@
       {
         "name": "Mount",
         "name_ja": "マウント",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -66143,7 +66143,7 @@
       {
         "name": "Yoro",
         "name_ja": "ヨロ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -66633,7 +66633,7 @@
       {
         "name": "Aké",
         "name_ja": "アケ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -67158,7 +67158,7 @@
       {
         "name": "Kovačić",
         "name_ja": "コヴァチッチ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -67193,7 +67193,7 @@
       {
         "name": "N.Gonzalez",
         "name_ja": "ゴンサレス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -67683,7 +67683,7 @@
       {
         "name": "Reijnders",
         "name_ja": "ラインデルス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -67718,7 +67718,7 @@
       {
         "name": "Ugarte",
         "name_ja": "ウガルテ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -68068,7 +68068,7 @@
       {
         "name": "Zirkzee",
         "name_ja": "ザークティ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "FW",
         "team_id": 14,
@@ -68733,7 +68733,7 @@
       {
         "name": "Stones",
         "name_ja": "ストーンズ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -69713,7 +69713,7 @@
       {
         "name": "Trafford",
         "name_ja": "トラッフォード",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "GK",
         "team_id": 13,
@@ -69748,7 +69748,7 @@
       {
         "name": "Gvardiol",
         "name_ja": "グヴァルディオル",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -69783,7 +69783,7 @@
       {
         "name": "Rúben",
         "name_ja": "ルベン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -69818,7 +69818,7 @@
       {
         "name": "Malacia",
         "name_ja": "マラシア",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -70518,7 +70518,7 @@
       {
         "name": "Lacey",
         "name_ja": "レイシー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -70553,7 +70553,7 @@
       {
         "name": "Fletcher",
         "name_ja": "フレッチャー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -72373,7 +72373,7 @@
       {
         "name": "Lewis",
         "name_ja": "リコルイス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -72408,7 +72408,7 @@
       {
         "name": "Mukasa",
         "name_ja": "ムカサ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -72443,7 +72443,7 @@
       {
         "name": "Alleyne",
         "name_ja": "アレイン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -72478,7 +72478,7 @@
       {
         "name": "Bayindir",
         "name_ja": "バユンドゥル",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "GK",
         "team_id": 14,
@@ -72513,7 +72513,7 @@
       {
         "name": "De Ligt",
         "name_ja": "デリフト",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -72548,7 +72548,7 @@
       {
         "name": "Fredricson",
         "name_ja": "フレドリクソン",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -72583,7 +72583,7 @@
       {
         "name": "J.Fletcher",
         "name_ja": "フレッチャー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -72618,7 +72618,7 @@
       {
         "name": "Bendito Mantato",
         "name_ja": "マンタート",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -74125,7 +74125,7 @@
       {
         "name": "B.Fernandes",
         "name_ja": "ブルーノ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -74160,7 +74160,7 @@
       {
         "name": "Semenyo",
         "name_ja": "セメンヨ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -74195,7 +74195,7 @@
       {
         "name": "Haaland",
         "name_ja": "ハーランド",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "FW",
         "team_id": 13,
@@ -74230,7 +74230,7 @@
       {
         "name": "Casemiro",
         "name_ja": "カゼミロ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -74370,7 +74370,7 @@
       {
         "name": "O'Reilly",
         "name_ja": "オライリー",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -74965,7 +74965,7 @@
       {
         "name": "Matheus N.",
         "name_ja": "マテウスヌネス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -75000,7 +75000,7 @@
       {
         "name": "Foden",
         "name_ja": "フォーデン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -75210,7 +75210,7 @@
       {
         "name": "Donnarumma",
         "name_ja": "ドンナルンマ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "GK",
         "team_id": 13,
@@ -75525,7 +75525,7 @@
       {
         "name": "Mbeumo",
         "name_ja": "エンベウモ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -75560,7 +75560,7 @@
       {
         "name": "Dalot",
         "name_ja": "ダロト",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -75910,7 +75910,7 @@
       {
         "name": "Cunha",
         "name_ja": "クーニャ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -76190,7 +76190,7 @@
       {
         "name": "Guéhi",
         "name_ja": "グエイ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -76750,7 +76750,7 @@
       {
         "name": "Doku",
         "name_ja": "ドク",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -77135,7 +77135,7 @@
       {
         "name": "Cherki",
         "name_ja": "シェルキ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -77940,7 +77940,7 @@
       {
         "name": "Shaw",
         "name_ja": "ショー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -78080,7 +78080,7 @@
       {
         "name": "Šeško",
         "name_ja": "シェシュコ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "FW",
         "team_id": 14,
@@ -78150,7 +78150,7 @@
       {
         "name": "Rúben",
         "name_ja": "ルベン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -78605,7 +78605,7 @@
       {
         "name": "Lammens",
         "name_ja": "ラメンス",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "GK",
         "team_id": 14,
@@ -80285,7 +80285,7 @@
       {
         "name": "Bernardo",
         "name_ja": "ベルナルド",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -80320,7 +80320,7 @@
       {
         "name": "Dorgu",
         "name_ja": "ドルグ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -80530,7 +80530,7 @@
       {
         "name": "Gvardiol",
         "name_ja": "グヴァルディオル",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -80565,7 +80565,7 @@
       {
         "name": "Reijnders",
         "name_ja": "ラインデルス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -80635,7 +80635,7 @@
       {
         "name": "Mainoo",
         "name_ja": "メイヌー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -80880,7 +80880,7 @@
       {
         "name": "Maguire",
         "name_ja": "マグワイア",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -80915,7 +80915,7 @@
       {
         "name": "Amad",
         "name_ja": "アマド",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -81125,7 +81125,7 @@
       {
         "name": "N.Gonzalez",
         "name_ja": "ゴンサレス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -82490,7 +82490,7 @@
       {
         "name": "Marmoush",
         "name_ja": "マルムーシュ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -82525,7 +82525,7 @@
       {
         "name": "Rodrigo",
         "name_ja": "ロドリ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -83085,7 +83085,7 @@
       {
         "name": "Khusanov",
         "name_ja": "クサノフ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -83400,7 +83400,7 @@
       {
         "name": "Martinez",
         "name_ja": "マルティネス",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -83435,7 +83435,7 @@
       {
         "name": "Yoro",
         "name_ja": "ヨロ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -83925,7 +83925,7 @@
       {
         "name": "Savinho",
         "name_ja": "サヴィーニョ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -84625,7 +84625,7 @@
       {
         "name": "Aït-Nouri",
         "name_ja": "アイトヌーリ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -85045,7 +85045,7 @@
       {
         "name": "Mazraoui",
         "name_ja": "マズラウィ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -85290,7 +85290,7 @@
       {
         "name": "Aké",
         "name_ja": "アケ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -85325,7 +85325,7 @@
       {
         "name": "Mount",
         "name_ja": "マウント",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -85955,7 +85955,7 @@
       {
         "name": "Ugarte",
         "name_ja": "ウガルテ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -85990,7 +85990,7 @@
       {
         "name": "Zirkzee",
         "name_ja": "ザークティ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "FW",
         "team_id": 14,
@@ -86410,7 +86410,7 @@
       {
         "name": "Heaven",
         "name_ja": "ヘヴン",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -86655,7 +86655,7 @@
       {
         "name": "De Ligt",
         "name_ja": "デリフト",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -89035,7 +89035,7 @@
       {
         "name": "Stones",
         "name_ja": "ストーンズ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -89070,7 +89070,7 @@
       {
         "name": "Lewis",
         "name_ja": "リコルイス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -89490,7 +89490,7 @@
       {
         "name": "Bayindir",
         "name_ja": "バユンドゥル",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "GK",
         "team_id": 14,
@@ -89735,7 +89735,7 @@
       {
         "name": "Trafford",
         "name_ja": "トラッフォード",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "GK",
         "team_id": 13,
@@ -89770,7 +89770,7 @@
       {
         "name": "Alleyne",
         "name_ja": "アレイン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -90155,7 +90155,7 @@
       {
         "name": "Kovačić",
         "name_ja": "コヴァチッチ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -90820,7 +90820,7 @@
       {
         "name": "J.Fletcher",
         "name_ja": "フレッチャー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -91590,7 +91590,7 @@
       {
         "name": "Mukasa",
         "name_ja": "ムカサ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -91625,7 +91625,7 @@
       {
         "name": "Fredricson",
         "name_ja": "フレドリクソン",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -91660,7 +91660,7 @@
       {
         "name": "Malacia",
         "name_ja": "マラシア",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -91695,7 +91695,7 @@
       {
         "name": "Bendito Mantato",
         "name_ja": "マンタート",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -91730,7 +91730,7 @@
       {
         "name": "Fletcher",
         "name_ja": "フレッチャー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -92257,7 +92257,7 @@
       {
         "name": "Haaland",
         "name_ja": "ハーランド",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "FW",
         "team_id": 13,
@@ -92292,7 +92292,7 @@
       {
         "name": "B.Fernandes",
         "name_ja": "ブルーノ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -92362,7 +92362,7 @@
       {
         "name": "Guéhi",
         "name_ja": "グエイ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -92957,7 +92957,7 @@
       {
         "name": "Semenyo",
         "name_ja": "セメンヨ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -93517,7 +93517,7 @@
       {
         "name": "Matheus N.",
         "name_ja": "マテウスヌネス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -93552,7 +93552,7 @@
       {
         "name": "Cherki",
         "name_ja": "シェルキ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -93587,7 +93587,7 @@
       {
         "name": "Mbeumo",
         "name_ja": "エンベウモ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -93727,7 +93727,7 @@
       {
         "name": "Cunha",
         "name_ja": "クーニャ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -94812,7 +94812,7 @@
       {
         "name": "Casemiro",
         "name_ja": "カゼミロ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -95057,7 +95057,7 @@
       {
         "name": "Bernardo",
         "name_ja": "ベルナルド",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -95372,7 +95372,7 @@
       {
         "name": "Rúben",
         "name_ja": "ルベン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -95582,7 +95582,7 @@
       {
         "name": "O'Reilly",
         "name_ja": "オライリー",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -95617,7 +95617,7 @@
       {
         "name": "Donnarumma",
         "name_ja": "ドンナルンマ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "GK",
         "team_id": 13,
@@ -95652,7 +95652,7 @@
       {
         "name": "Lammens",
         "name_ja": "ラメンス",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "GK",
         "team_id": 14,
@@ -95792,7 +95792,7 @@
       {
         "name": "Doku",
         "name_ja": "ドク",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -96002,7 +96002,7 @@
       {
         "name": "Shaw",
         "name_ja": "ショー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -96037,7 +96037,7 @@
       {
         "name": "Šeško",
         "name_ja": "シェシュコ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "FW",
         "team_id": 14,
@@ -96352,7 +96352,7 @@
       {
         "name": "Dorgu",
         "name_ja": "ドルグ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -96387,7 +96387,7 @@
       {
         "name": "Amad",
         "name_ja": "アマド",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -96632,7 +96632,7 @@
       {
         "name": "Reijnders",
         "name_ja": "ラインデルス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -96667,7 +96667,7 @@
       {
         "name": "Maguire",
         "name_ja": "マグワイア",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -96772,7 +96772,7 @@
       {
         "name": "Foden",
         "name_ja": "フォーデン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -99117,7 +99117,7 @@
       {
         "name": "Aït-Nouri",
         "name_ja": "アイトヌーリ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -99152,7 +99152,7 @@
       {
         "name": "Gvardiol",
         "name_ja": "グヴァルディオル",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -99187,7 +99187,7 @@
       {
         "name": "Khusanov",
         "name_ja": "クサノフ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -99222,7 +99222,7 @@
       {
         "name": "Mount",
         "name_ja": "マウント",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -99537,7 +99537,7 @@
       {
         "name": "Rodrigo",
         "name_ja": "ロドリ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -99782,7 +99782,7 @@
       {
         "name": "Dalot",
         "name_ja": "ダロト",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -100517,7 +100517,7 @@
       {
         "name": "Mainoo",
         "name_ja": "メイヌー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -100727,7 +100727,7 @@
       {
         "name": "Mazraoui",
         "name_ja": "マズラウィ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -101497,7 +101497,7 @@
       {
         "name": "Yoro",
         "name_ja": "ヨロ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -101777,7 +101777,7 @@
       {
         "name": "De Ligt",
         "name_ja": "デリフト",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -102057,7 +102057,7 @@
       {
         "name": "N.Gonzalez",
         "name_ja": "ゴンサレス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -102302,7 +102302,7 @@
       {
         "name": "Heaven",
         "name_ja": "ヘヴン",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -102757,7 +102757,7 @@
       {
         "name": "Marmoush",
         "name_ja": "マルムーシュ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -102792,7 +102792,7 @@
       {
         "name": "Zirkzee",
         "name_ja": "ザークティ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "FW",
         "team_id": 14,
@@ -103212,7 +103212,7 @@
       {
         "name": "Martinez",
         "name_ja": "マルティネス",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -104122,7 +104122,7 @@
       {
         "name": "Ugarte",
         "name_ja": "ウガルテ",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -104682,7 +104682,7 @@
       {
         "name": "Savinho",
         "name_ja": "サヴィーニョ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -105137,7 +105137,7 @@
       {
         "name": "Aké",
         "name_ja": "アケ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -105417,7 +105417,7 @@
       {
         "name": "Lewis",
         "name_ja": "リコルイス",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -106222,7 +106222,7 @@
       {
         "name": "Stones",
         "name_ja": "ストーンズ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -106502,7 +106502,7 @@
       {
         "name": "Trafford",
         "name_ja": "トラッフォード",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "GK",
         "team_id": 13,
@@ -107237,7 +107237,7 @@
       {
         "name": "Kovačić",
         "name_ja": "コヴァチッチ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -107272,7 +107272,7 @@
       {
         "name": "Bayindir",
         "name_ja": "バユンドゥル",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "GK",
         "team_id": 14,
@@ -108322,7 +108322,7 @@
       {
         "name": "Lacey",
         "name_ja": "レイシー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -108777,7 +108777,7 @@
       {
         "name": "Malacia",
         "name_ja": "マラシア",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "DF",
         "team_id": 14,
@@ -109617,7 +109617,7 @@
       {
         "name": "Mukasa",
         "name_ja": "ムカサ",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "MF",
         "team_id": 13,
@@ -109652,7 +109652,7 @@
       {
         "name": "Alleyne",
         "name_ja": "アレイン",
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_code": 43,
         "position": "DF",
         "team_id": 13,
@@ -109687,7 +109687,7 @@
       {
         "name": "J.Fletcher",
         "name_ja": "フレッチャー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -109722,7 +109722,7 @@
       {
         "name": "Fletcher",
         "name_ja": "フレッチャー",
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_code": 1,
         "position": "MF",
         "team_id": 14,
@@ -113890,574 +113890,574 @@
     "82": {
       "n": "Semenyo",
       "j": "セメンヨ",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 8.0
     },
     "182": {
       "n": "Trafford",
       "j": "トラッフォード",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "GK",
       "c": 4.5
     },
     "260": {
       "n": "Guéhi",
       "j": "グエイ",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "DF",
       "c": 5.1
     },
     "399": {
       "n": "Ederson M.",
       "j": "",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "GK",
       "c": 5.3
     },
     "401": {
       "n": "Bettinelli",
       "j": "",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "GK",
       "c": 3.8
     },
     "402": {
       "n": "Aït-Nouri",
       "j": "アイトヌーリ",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "DF",
       "c": 5.7
     },
     "403": {
       "n": "Gvardiol",
       "j": "グヴァルディオル",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "DF",
       "c": 5.8
     },
     "404": {
       "n": "Akanji",
       "j": "",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "DF",
       "c": 5.4
     },
     "405": {
       "n": "Aké",
       "j": "アケ",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "DF",
       "c": 5.2
     },
     "406": {
       "n": "Khusanov",
       "j": "クサノフ",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "DF",
       "c": 5.4
     },
     "407": {
       "n": "Matheus N.",
       "j": "マテウスヌネス",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "DF",
       "c": 5.3
     },
     "408": {
       "n": "Rúben",
       "j": "ルベン",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "DF",
       "c": 5.5
     },
     "409": {
       "n": "Stones",
       "j": "ストーンズ",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "DF",
       "c": 5.4
     },
     "410": {
       "n": "Lewis",
       "j": "リコルイス",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "DF",
       "c": 4.6
     },
     "411": {
       "n": "O'Reilly",
       "j": "オライリー",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "DF",
       "c": 5.3
     },
     "412": {
       "n": "Vitor Reis",
       "j": "",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "DF",
       "c": 5.0
     },
     "413": {
       "n": "Marmoush",
       "j": "マルムーシュ",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 8.3
     },
     "414": {
       "n": "Foden",
       "j": "フォーデン",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 8.0
     },
     "415": {
       "n": "Savinho",
       "j": "サヴィーニョ",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 6.9
     },
     "416": {
       "n": "Bernardo",
       "j": "ベルナルド",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 6.2
     },
     "417": {
       "n": "Cherki",
       "j": "シェルキ",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 6.5
     },
     "418": {
       "n": "Doku",
       "j": "ドク",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 6.5
     },
     "420": {
       "n": "Gündoğan",
       "j": "",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 6.3
     },
     "421": {
       "n": "Rodrigo",
       "j": "ロドリ",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 6.3
     },
     "422": {
       "n": "Kovačić",
       "j": "コヴァチッチ",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 5.8
     },
     "423": {
       "n": "N.Gonzalez",
       "j": "ゴンサレス",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 5.9
     },
     "425": {
       "n": "Echeverri",
       "j": "",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 5.4
     },
     "427": {
       "n": "Reijnders",
       "j": "ラインデルス",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 5.0
     },
     "428": {
       "n": "Nypan",
       "j": "",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 5.0
     },
     "429": {
       "n": "Phillips",
       "j": "",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 4.7
     },
     "430": {
       "n": "Haaland",
       "j": "ハーランド",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "FW",
       "c": 14.7
     },
     "736": {
       "n": "Donnarumma",
       "j": "ドンナルンマ",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "GK",
       "c": 5.6
     },
     "739": {
       "n": "Mukasa",
       "j": "ムカサ",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 4.4
     },
     "740": {
       "n": "Mfuni",
       "j": "",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "DF",
       "c": 3.9
     },
     "742": {
       "n": "McAidoo",
       "j": "",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 4.5
     },
     "763": {
       "n": "Gray",
       "j": "グレイ",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 4.5
     },
     "764": {
       "n": "Heskey",
       "j": "",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "MF",
       "c": 4.5
     },
     "794": {
       "n": "Alleyne",
       "j": "アレイン",
-      "t": "マンシティ",
+      "t": "マンチェスターシティ",
       "p": "DF",
       "c": 3.9
     },
     "119": {
       "n": "Mbeumo",
       "j": "エンベウモ",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 8.3
     },
     "431": {
       "n": "Bayindir",
       "j": "バユンドゥル",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "GK",
       "c": 4.7
     },
     "432": {
       "n": "Onana",
       "j": "オナナ",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "GK",
       "c": 4.9
     },
     "433": {
       "n": "Harrison",
       "j": "ハリソン",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "GK",
       "c": 4.0
     },
     "434": {
       "n": "Heaton",
       "j": "",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "GK",
       "c": 3.8
     },
     "435": {
       "n": "Mee",
       "j": "",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "GK",
       "c": 3.9
     },
     "436": {
       "n": "De Ligt",
       "j": "デリフト",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "DF",
       "c": 4.9
     },
     "437": {
       "n": "Martinez",
       "j": "マルティネス",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "DF",
       "c": 4.8
     },
     "438": {
       "n": "Mazraoui",
       "j": "マズラウィ",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "DF",
       "c": 4.9
     },
     "439": {
       "n": "D.Leon",
       "j": "",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "DF",
       "c": 4.1
     },
     "440": {
       "n": "Dalot",
       "j": "ダロト",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "DF",
       "c": 4.5
     },
     "441": {
       "n": "Dorgu",
       "j": "ドルグ",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "DF",
       "c": 4.1
     },
     "442": {
       "n": "Maguire",
       "j": "マグワイア",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "DF",
       "c": 4.4
     },
     "443": {
       "n": "Shaw",
       "j": "ショー",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "DF",
       "c": 4.5
     },
     "444": {
       "n": "Yoro",
       "j": "ヨロ",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "DF",
       "c": 4.1
     },
     "445": {
       "n": "Amass",
       "j": "",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "DF",
       "c": 4.0
     },
     "446": {
       "n": "Fredricson",
       "j": "フレドリクソン",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "DF",
       "c": 3.7
     },
     "447": {
       "n": "Heaven",
       "j": "ヘヴン",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "DF",
       "c": 3.7
     },
     "448": {
       "n": "Malacia",
       "j": "マラシア",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "DF",
       "c": 3.7
     },
     "449": {
       "n": "B.Fernandes",
       "j": "ブルーノ",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 10.4
     },
     "450": {
       "n": "Cunha",
       "j": "クーニャ",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 8.1
     },
     "451": {
       "n": "Rashford",
       "j": "ラッシュフォード",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 7.0
     },
     "452": {
       "n": "Amad",
       "j": "アマド",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 6.2
     },
     "454": {
       "n": "Antony",
       "j": "",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 5.9
     },
     "455": {
       "n": "Mount",
       "j": "マウント",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 5.9
     },
     "457": {
       "n": "Casemiro",
       "j": "カゼミロ",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 5.8
     },
     "458": {
       "n": "Mainoo",
       "j": "メイヌー",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 4.7
     },
     "459": {
       "n": "Ugarte",
       "j": "ウガルテ",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 4.7
     },
     "460": {
       "n": "Collyer",
       "j": "",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 4.5
     },
     "461": {
       "n": "Fitzgerald",
       "j": "",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 4.3
     },
     "462": {
       "n": "J.Fletcher",
       "j": "フレッチャー",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 4.3
     },
     "463": {
       "n": "Kone",
       "j": "",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 4.3
     },
     "464": {
       "n": "Moorhouse",
       "j": "",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 4.5
     },
     "465": {
       "n": "Højlund",
       "j": "",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "FW",
       "c": 6.3
     },
     "466": {
       "n": "Zirkzee",
       "j": "ザークティ",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "FW",
       "c": 5.8
     },
     "467": {
       "n": "Obi",
       "j": "",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "FW",
       "c": 4.2
     },
     "468": {
       "n": "Wheatley",
       "j": "",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "FW",
       "c": 4.5
     },
     "681": {
       "n": "Šeško",
       "j": "シェシュコ",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "FW",
       "c": 7.2
     },
     "733": {
       "n": "Lammens",
       "j": "ラメンス",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "GK",
       "c": 5.1
     },
     "755": {
       "n": "Lacey",
       "j": "レイシー",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 4.5
     },
     "769": {
       "n": "Bendito Mantato",
       "j": "マンタート",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 4.5
     },
     "771": {
       "n": "Fletcher",
       "j": "フレッチャー",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 4.4
     },
     "788": {
       "n": "Kukonki",
       "j": "",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "DF",
       "c": 4.0
     },
     "827": {
       "n": "Thwaites",
       "j": "",
-      "t": "マンユナイテッド",
+      "t": "マンチェスターユナイテッド",
       "p": "MF",
       "c": 4.5
     },
@@ -116373,12 +116373,12 @@
       "code": 14
     },
     "13": {
-      "name": "マンシティ",
+      "name": "マンチェスターシティ",
       "short": "MCI",
       "code": 43
     },
     "14": {
-      "name": "マンユナイテッド",
+      "name": "マンチェスターユナイテッド",
       "short": "MUN",
       "code": 1
     },
@@ -116716,7 +116716,7 @@
       ]
     },
     {
-      "team": "マンシティ",
+      "team": "マンチェスターシティ",
       "pens": [
         "ハーランド",
         "マルムーシュ",
@@ -116738,7 +116738,7 @@
       ]
     },
     {
-      "team": "マンユナイテッド",
+      "team": "マンチェスターユナイテッド",
       "pens": [
         "ブルーノ"
       ],
@@ -124170,7 +124170,7 @@
         ]
       },
       {
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "matches": [
           {
             "round": 1,
@@ -124631,7 +124631,7 @@
         ]
       },
       {
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "matches": [
           {
             "round": 1,
@@ -126032,7 +126032,7 @@
         "rank": 1
       },
       {
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "matches": 38,
         "points": 2092,
         "goals": 74,
@@ -126048,7 +126048,7 @@
         "rank": 2
       },
       {
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "matches": 38,
         "points": 1891,
         "goals": 66,
@@ -126354,7 +126354,7 @@
         "rank": 1
       },
       {
-        "team": "マンユナイテッド",
+        "team": "マンチェスターユナイテッド",
         "team_id": 14,
         "r5_xg": 0.49,
         "r5_xgc": 1.25,
@@ -126402,7 +126402,7 @@
         "rank": 4
       },
       {
-        "team": "マンシティ",
+        "team": "マンチェスターシティ",
         "team_id": 13,
         "r5_xg": 1.1,
         "r5_xgc": 1.49,
@@ -126668,7 +126668,7 @@
       "rank": 1
     },
     {
-      "team": "マンシティ",
+      "team": "マンチェスターシティ",
       "played": 38,
       "clean_sheets": 16,
       "rate_pct": 42.1,
@@ -126766,7 +126766,7 @@
       "rank": 15
     },
     {
-      "team": "マンユナイテッド",
+      "team": "マンチェスターユナイテッド",
       "played": 38,
       "clean_sheets": 8,
       "rate_pct": 21.1,

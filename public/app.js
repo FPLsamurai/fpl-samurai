@@ -9,7 +9,16 @@ let DATA = null;
 
 document.addEventListener("DOMContentLoaded", init);
 
+// 見出し固定の基準となるトップバーの高さを実測してCSS変数に反映
+function syncTopbarHeight() {
+  const bar = document.querySelector(".topbar");
+  if (!bar) return;
+  document.documentElement.style.setProperty("--topbar-h", bar.offsetHeight + "px");
+}
+window.addEventListener("resize", syncTopbarHeight);
+
 async function init() {
+  syncTopbarHeight();
   setupParentTabs();
   setupSubtabs();
   setupMyTeam();
@@ -571,6 +580,15 @@ function wideTable(inner) {
   return `<div class="fullbleed"><div class="data-table-wrap">${inner}</div></div>`;
 }
 
+// チーム名（文字列）からエンブレム画像HTMLを作る（見つからなければ文字のまま）
+function teamBadgeByName(teamName) {
+  const meta = DATA.teams_meta || {};
+  const tm = Object.values(meta).find((m) => m.name === teamName);
+  return (tm && tm.code)
+    ? `<img class="team-badge" loading="lazy" alt="${esc(teamName)}" title="${esc(teamName)}" src="${BADGE_BASE}${tm.code}.png" onerror="this.replaceWith(document.createTextNode('${esc(teamName)}'))">`
+    : esc(teamName);
+}
+
 function drawTeamTotals(box, rows) {
   if (!rows.length) return (box.innerHTML = emptyMessage("まだデータがありません。"));
   let html = `<table class="rich teamtbl"><thead><tr>
@@ -582,7 +600,7 @@ function drawTeamTotals(box, rows) {
   rows.forEach((r) => {
     html += `<tr>
       <td class="rank">${r.rank}</td>
-      <td class="col-name"><div class="name">${esc(r.team)}</div></td>
+      <td class="col-name"><div class="name">${teamBadgeByName(r.team)}</div></td>
       <td class="main-num">${r.points}</td>
       <td>${r.goals}</td><td>${r.assists}</td><td>${r.conceded}</td>
       <td>${r.defcon}</td><td>${r.yellow}</td><td>${r.red}</td>
@@ -635,7 +653,7 @@ function drawTeamForm(box, rows) {
   rows.forEach((r) => {
     html += `<tr>
       <td class="rank">${r.rank}</td>
-      <td class="col-name"><div class="name">${esc(r.team)}</div></td>
+      <td class="col-name"><div class="name">${teamBadgeByName(r.team)}</div></td>
       <td class="main-num">${r.r5_points}</td>
       <td>${r.r5_goals}</td><td>${r.r5_assists}</td><td>${r.r5_conceded}</td>
       <td>${r.r5_defcon}</td><td>${r.r5_yellow}</td><td>${r.r5_red}</td>
@@ -817,35 +835,11 @@ function renderMyTeam(entry, picksData, gw) {
     </div>
   </div>`;
 
-  // --- スカッド ---
-  if (picksData && picksData.picks && picksData.picks.length) {
-    const eh = picksData.entry_history || {};
-    const value = eh.value != null ? (eh.value / 10).toFixed(1) : "-";
-    const bank = eh.bank != null ? (eh.bank / 10).toFixed(1) : "-";
-    html += `<h3 class="mt-h3">スカッド（第${gw}節）</h3>
-      <p class="note">チーム価値 £${value}m（うち銀行 £${bank}m）・この節の移籍 ${eh.event_transfers ?? 0}回${picksData.active_chip ? "・チップ使用: " + esc(picksData.active_chip) : ""}</p>`;
-
-    const starters = picksData.picks.filter((p) => p.position <= 11);
-    const bench = picksData.picks.filter((p) => p.position > 11);
-    const order = { GK: 0, DF: 1, MF: 2, FW: 3 };
-    const playerRow = (p) => {
-      const el = elements[String(p.element)] || { n: "ID " + p.element, j: "", t: "?", p: "?", c: "" };
-      const cap = p.is_captain ? `<span class="cap">C</span>` : (p.is_vice_captain ? `<span class="cap vice">V</span>` : "");
-      return `<tr>
-        <td>${esc(el.p)}</td>
-        <td><div class="name">${esc(el.n)} ${cap}</div>${el.j ? `<div class="name-ja">${esc(el.j)}</div>` : ""}<div class="sub">${esc(el.t)}</div></td>
-        <td class="num">£${el.c}m</td>
-      </tr>`;
-    };
-    const sortByPos = (arr) => [...arr].sort((a, b) => {
-      const ea = elements[String(a.element)] || {}, eb = elements[String(b.element)] || {};
-      return (order[ea.p] ?? 9) - (order[eb.p] ?? 9) || a.position - b.position;
-    });
-    html += `<table class="squad"><thead><tr><th>位置</th><th>選手</th><th class="num">コスト</th></tr></thead><tbody>`;
-    sortByPos(starters).forEach((p) => { html += playerRow(p); });
-    html += `<tr><td colspan="3" class="bench-sep">ベンチ</td></tr>`;
-    bench.forEach((p) => { html += playerRow(p); });
-    html += `</tbody></table>`;
+  // --- スカッド（ピッチ表示・編集可） ---
+  const hasPicks = picksData && picksData.picks && picksData.picks.length;
+  html += `<h3 class="mt-h3">スカッド</h3>`;
+  if (hasPicks) {
+    html += `<div id="mt-squad"></div>`;
   } else {
     html += emptyMessage("スカッド情報を取得できませんでした（シーズン開始前の可能性があります）。");
   }
@@ -872,10 +866,219 @@ function renderMyTeam(entry, picksData, gw) {
 
   box.innerHTML = html;
 
+  // スカッド（ピッチ）を初期化
+  if (hasPicks) initSquadEditor(entry, picksData, gw);
+
   // 順位表ボタン
   box.querySelectorAll(".lg-btn").forEach((b) => {
     b.addEventListener("click", () => loadLeagueStandings(b.dataset.league, b.dataset.name, entry.id));
   });
+}
+
+/* ===========================================================
+   スカッド・ピッチ（編集可）
+   - スタメン／ベンチの入れ替え（2人タップ）
+   - 主将(C)・副主将(V)の変更
+   - 移籍：所持していない選手を同ポジションから加える
+   現状は現行GWのピックを土台に、次節以降のプランを編集できます。
+   =========================================================== */
+let MT = null;  // マイチーム編集状態
+
+// チーム名 → エンブレムコード（キット画像用）
+let _teamCodeByName = null;
+function teamCodeByName(name) {
+  if (!_teamCodeByName) {
+    _teamCodeByName = {};
+    Object.values(DATA.teams_meta || {}).forEach((t) => { _teamCodeByName[t.name] = t.code; });
+  }
+  return _teamCodeByName[name];
+}
+function kitUrl(el) {
+  const code = teamCodeByName(el.t);
+  if (!code) return null;
+  const gk = el.p === "GK" ? "_1" : "";
+  return `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${code}${gk}-66.png`;
+}
+function elOf(pick) {
+  return DATA.elements[String(pick.element)] || { n: "ID " + pick.element, j: "", t: "", p: "?", c: 0 };
+}
+
+function initSquadEditor(entry, picksData, gw) {
+  const eh = picksData.entry_history || {};
+  MT = {
+    entry, gw,
+    bank: eh.bank != null ? eh.bank / 10 : 0,
+    teamValue: eh.value != null ? eh.value / 10 : 0,
+    chip: picksData.active_chip || null,
+    squad: picksData.picks.map((p) => ({
+      element: p.element,
+      position: p.position,
+      is_captain: !!p.is_captain,
+      is_vice_captain: !!p.is_vice_captain,
+    })),
+    owned: new Set(picksData.picks.map((p) => p.element)),
+    sel: null,        // 選択中の position(1-15)
+    pickerFor: null,  // 移籍ピッカー対象の position
+    msg: null,
+  };
+  renderSquadPitch();
+}
+
+function mtCard(p) {
+  const el = elOf(p);
+  const url = kitUrl(el);
+  const img = url ? `<img src="${url}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : "";
+  const cv = p.is_captain ? `<span class="mt-cv c">C</span>`
+    : (p.is_vice_captain ? `<span class="mt-cv v">V</span>` : "");
+  const sel = MT.sel === p.position ? " is-sel" : "";
+  return `<button type="button" class="mt-card${sel}" data-pos="${p.position}">
+    <span class="mt-kit">${img}${cv}</span>
+    <span class="mt-name">${esc(el.n)}</span>
+    <span class="mt-meta">£${el.c}m</span>
+  </button>`;
+}
+
+function validFormation() {
+  const c = { GK: 0, DF: 0, MF: 0, FW: 0 };
+  MT.squad.filter((p) => p.position <= 11).forEach((p) => { const e = elOf(p); c[e.p] = (c[e.p] || 0) + 1; });
+  return c.GK === 1 && c.DF >= 3 && c.MF >= 2 && c.FW >= 1 && (c.DF + c.MF + c.FW === 10);
+}
+
+function renderSquadPitch() {
+  const wrap = document.getElementById("mt-squad");
+  if (!wrap || !MT) return;
+  const starters = MT.squad.filter((p) => p.position <= 11);
+  const bench = MT.squad.filter((p) => p.position > 11).sort((a, b) => a.position - b.position);
+  const byPos = (pos) => starters.filter((p) => elOf(p).p === pos).sort((a, b) => a.position - b.position);
+  const rows = ["GK", "DF", "MF", "FW"]
+    .map((pos) => `<div class="mt-row">${byPos(pos).map(mtCard).join("")}</div>`).join("");
+
+  const sel = MT.sel != null ? MT.squad.find((p) => p.position === MT.sel) : null;
+  let bar;
+  if (sel) {
+    const el = elOf(sel);
+    bar = `<div class="mt-actions">
+      <span class="mt-sel-name">${esc(el.n)}</span>
+      <button type="button" data-act="cap">主将C</button>
+      <button type="button" data-act="vice">副V</button>
+      <button type="button" data-act="transfer">移籍</button>
+      <button type="button" data-act="clear">解除</button>
+    </div>`;
+  } else {
+    bar = `<div class="mt-msg">${MT.msg ? esc(MT.msg) : "選手をタップ → もう一人タップで入れ替え／選択中に主将・移籍を変更"}</div>`;
+  }
+  if (MT.msg) { setTimeout(() => { MT.msg = null; }, 2600); }
+
+  wrap.innerHTML = `
+    <div class="mt-bar">第${MT.gw}節のスカッドを土台に次節プランを編集できます・残り資金 £${MT.bank.toFixed(1)}m・チーム £${MT.teamValue.toFixed(1)}m${MT.chip ? "・チップ: " + esc(MT.chip) : ""}</div>
+    ${bar}
+    <div class="mt-pitch">${rows}</div>
+    <div class="mt-bench-label">ベンチ</div>
+    <div class="mt-bench">${bench.map(mtCard).join("")}</div>
+    <div id="mt-picker" class="mt-picker" hidden></div>`;
+
+  wrap.querySelectorAll(".mt-card").forEach((c) => c.addEventListener("click", onMtCardClick));
+  wrap.querySelectorAll(".mt-actions button").forEach((b) => b.addEventListener("click", () => onMtAction(b.dataset.act)));
+}
+
+function onMtCardClick(e) {
+  const pos = +e.currentTarget.dataset.pos;
+  if (MT.sel == null) { MT.sel = pos; renderSquadPitch(); return; }
+  if (MT.sel === pos) { MT.sel = null; renderSquadPitch(); return; }
+  tryMtSwap(MT.sel, pos);
+}
+
+function tryMtSwap(a, b) {
+  const A = MT.squad.find((p) => p.position === a);
+  const B = MT.squad.find((p) => p.position === b);
+  const ea = elOf(A), eb = elOf(B);
+  const roleChange = (a <= 11) !== (b <= 11);
+  if (roleChange && (ea.p === "GK") !== (eb.p === "GK")) {
+    MT.msg = "GKはGK同士でのみ入れ替えできます"; MT.sel = null; renderSquadPitch(); return;
+  }
+  [A.position, B.position] = [B.position, A.position];
+  if (!validFormation()) {
+    [A.position, B.position] = [B.position, A.position];
+    MT.msg = "そのフォーメーションは選べません（GK1・DF3+・MF2+・FW1+）";
+    MT.sel = null; renderSquadPitch(); return;
+  }
+  MT.sel = null; renderSquadPitch();
+}
+
+function onMtAction(act) {
+  if (act === "clear") { MT.sel = null; renderSquadPitch(); return; }
+  if (MT.sel == null) return;
+  const pick = MT.squad.find((p) => p.position === MT.sel);
+  if (act === "cap") {
+    MT.squad.forEach((p) => { p.is_captain = false; });
+    pick.is_captain = true; pick.is_vice_captain = false;
+    MT.sel = null; renderSquadPitch(); return;
+  }
+  if (act === "vice") {
+    MT.squad.forEach((p) => { p.is_vice_captain = false; });
+    pick.is_vice_captain = true; pick.is_captain = false;
+    MT.sel = null; renderSquadPitch(); return;
+  }
+  if (act === "transfer") { MT.pickerFor = MT.sel; renderMtPicker(""); }
+}
+
+function renderMtPicker(query) {
+  const box = document.getElementById("mt-picker");
+  if (!box) return;
+  const pick = MT.squad.find((p) => p.position === MT.pickerFor);
+  const out = elOf(pick);
+  const q = (query || "").trim();
+  const ql = q.toLowerCase();
+  const list = Object.entries(DATA.elements)
+    .map(([id, e]) => ({ id: +id, ...e }))
+    .filter((e) => e.p === out.p && !MT.owned.has(e.id))
+    .filter((e) => !q || e.n.toLowerCase().includes(ql) || (e.j && e.j.includes(q)))
+    .sort((a, b) => b.c - a.c)
+    .slice(0, 100);
+  const rowHtml = list.map((e) => {
+    const after = MT.bank + out.c - e.c;
+    const kit = kitUrl(e);
+    return `<button type="button" class="mt-pick-row${after < 0 ? " over" : ""}" data-id="${e.id}">
+      <span class="mt-pick-kit">${kit ? `<img src="${kit}" loading="lazy" onerror="this.style.visibility='hidden'">` : ""}</span>
+      <span class="mt-pick-name">${esc(e.n)}<span class="sub">${esc(e.t)}</span></span>
+      <span class="mt-pick-cost">£${e.c}m</span>
+      <span class="mt-pick-after">残£${after.toFixed(1)}m</span>
+    </button>`;
+  }).join("") || `<div class="empty" style="box-shadow:none;">候補が見つかりません</div>`;
+
+  box.hidden = false;
+  box.innerHTML = `
+    <div class="mt-picker-head">
+      <strong>${esc(out.n)} を移籍 → ${esc(out.p)}の候補</strong>
+      <button type="button" id="mt-picker-close">✕</button>
+    </div>
+    <input type="search" id="mt-picker-q" placeholder="選手名で検索（英字／カタカナ）" value="${esc(q)}">
+    <div class="mt-picker-list">${rowHtml}</div>`;
+  box.querySelector("#mt-picker-close").addEventListener("click", () => {
+    box.hidden = true; MT.sel = null; MT.pickerFor = null; renderSquadPitch();
+  });
+  const qi = box.querySelector("#mt-picker-q");
+  qi.addEventListener("input", () => renderMtPicker(qi.value));
+  box.querySelectorAll(".mt-pick-row").forEach((r) => r.addEventListener("click", () => doMtTransfer(+r.dataset.id)));
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function doMtTransfer(inId) {
+  const pos = MT.pickerFor;
+  const pick = MT.squad.find((p) => p.position === pos);
+  const out = elOf(pick);
+  const inc = DATA.elements[String(inId)];
+  if (!inc) return;
+  // 同一チーム3人まで
+  const teamCount = {};
+  MT.squad.forEach((p) => { if (p.position === pos) return; const e = elOf(p); teamCount[e.t] = (teamCount[e.t] || 0) + 1; });
+  if ((teamCount[inc.t] || 0) >= 3) { MT.msg = "同じチームから選べるのは3人までです"; renderMtPicker(document.getElementById("mt-picker-q")?.value || ""); return; }
+  MT.owned.delete(pick.element);
+  pick.element = inId;
+  MT.owned.add(inId);
+  MT.bank = MT.bank + out.c - inc.c;
+  MT.sel = null; MT.pickerFor = null;
+  renderSquadPitch();
 }
 
 async function loadLeagueStandings(leagueId, leagueName, myEntryId) {
@@ -939,20 +1142,19 @@ async function loadYouTube() {
     const vid = idText.split(":").pop();
     const title = ((en.getElementsByTagName("title")[0] || {}).textContent || "").trim();
     if (!vid || vid === YT_RULE_ID) continue;
-    html.push(ytCardHTML(vid, title, ""));
+    html.push(ytCardHTML(vid, title));
     if (html.length >= 2) break;
   }
   if (html.length) grid.insertAdjacentHTML("beforeend", html.join(""));
 }
 
-function ytCardHTML(vid, title, tag) {
-  const tagHtml = tag ? `<span class="yt-tag">${esc(tag)}</span>` : "";
-  return `<a class="yt-card" href="https://youtu.be/${esc(vid)}" target="_blank" rel="noopener">
-    <span class="yt-thumb">
+function ytCardHTML(vid, title) {
+  return `<a class="yt-card-h" href="https://youtu.be/${esc(vid)}" target="_blank" rel="noopener">
+    <span class="yt-thumb-h">
       <img src="https://i.ytimg.com/vi/${esc(vid)}/mqdefault.jpg" alt="" loading="lazy">
-      ${tagHtml}<span class="yt-play"></span>
+      <span class="yt-play"></span>
     </span>
-    <span class="yt-title">${esc(title)}</span>
+    <span class="yt-title-h">${esc(title)}</span>
   </a>`;
 }
 

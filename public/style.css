@@ -19,6 +19,7 @@
   --easy: #1aa260;
   --normal: #c8860a;
   --hard: #d23c3c;
+  --topbar-h: 50px;   /* トップバーの高さ（JSで実測して上書き）。見出し固定の基準 */
 }
 
 body {
@@ -436,6 +437,45 @@ body {
   overflow: hidden;
 }
 
+/* ---------- ホームのYouTube欄（横動画カード） ---------- */
+.yt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.yt-card-h {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+.yt-thumb-h {
+  position: relative;
+  flex: 0 0 45%;
+  max-width: 180px;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+}
+.yt-thumb-h img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.yt-card-h:hover .yt-thumb-h img { opacity: 0.9; }
+.yt-title-h {
+  font-size: 0.8rem;
+  line-height: 1.35;
+  text-align: left;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* ---------- 本文 ---------- */
 main {
   max-width: 720px;
@@ -492,9 +532,11 @@ main {
 
 /* ---------- 高機能テーブル（選手・全試合） ---------- */
 .data-table-wrap {
-  overflow-x: auto;            /* 列が多いので横スクロール */
+  overflow: auto;              /* 列が多いので横スクロール＋縦スクロール */
   -webkit-overflow-scrolling: touch;
   border-radius: 10px;
+  /* 枠内を縦スクロールにして、見出し行を枠の上端に固定する */
+  max-height: calc(100vh - var(--topbar-h) - 8px);
 }
 table.rich {
   font-size: 0.8rem;
@@ -523,8 +565,16 @@ table.rich th.sortable:hover {
 }
 .arr-desc { color: var(--pl-green); }   /* 大きい順↓＝緑（そのまま） */
 .arr-asc { color: var(--hard); }        /* 小さい順↑＝赤 */
+/* 見出し行（1行目）は枠の上端に固定。フィルタ行(.filter-row td)は固定しない */
+table.rich thead tr:first-child th {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+}
 /* 固定列（コストまで左に固定）。位置と幅はJSが指定。ここでは背景と重なり順 */
 table.rich th.frz { background: #efe9f1; z-index: 3; }
+/* 見出し1行目かつ固定列＝左上の角。縦横どちらにも固定するので最前面 */
+table.rich thead tr:first-child th.frz { z-index: 6; }
 table.rich tbody td.frz { background: var(--card); z-index: 2; }
 table.rich tbody tr:nth-child(even) td.frz { background: #faf8fb; }
 table.rich .filter-row td.frz { background: #f4eff6; }
@@ -736,7 +786,8 @@ table {
   border-collapse: collapse;
   background: var(--card);
   border-radius: 10px;
-  overflow: hidden;
+  /* 見出し行を固定(sticky)するため overflow:hidden は使わない */
+  overflow: visible;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   font-size: 0.88rem;
 }
@@ -747,6 +798,10 @@ thead th {
   padding: 10px 8px;
   font-size: 0.78rem;
   white-space: nowrap;
+  /* 単純な表：ページをスクロールしても見出し行をトップバー直下に固定 */
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: 4;
 }
 tbody td {
   padding: 10px 8px;
@@ -922,6 +977,198 @@ table.squad { font-size: 0.85rem; }
   cursor: pointer;
 }
 tr.me-row td { background: #eafff3 !important; }
+
+/* ---------- マイチーム：ピッチ表示（編集可） ---------- */
+.mt-bar {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 2px 0 8px;
+}
+.mt-msg {
+  font-size: 0.78rem;
+  color: var(--pl-purple);
+  background: #f4eff6;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+.mt-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  background: #f4eff6;
+  border-radius: 8px;
+  padding: 7px 10px;
+  margin-bottom: 8px;
+}
+.mt-sel-name { font-weight: 700; color: var(--pl-purple); margin-right: auto; font-size: 0.85rem; }
+.mt-actions button {
+  border: 1px solid var(--pl-purple);
+  background: #fff;
+  color: var(--pl-purple);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mt-actions button[data-act="transfer"] { background: var(--pl-purple); color: #fff; }
+.mt-actions button:active { opacity: 0.85; }
+
+.mt-pitch {
+  background:
+    repeating-linear-gradient(0deg, #1faa4a 0 11%, #1ba045 11% 22%);
+  border-radius: 12px 12px 0 0;
+  padding: 14px 6px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+.mt-row {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: flex-start;
+  gap: 4px;
+}
+.mt-card {
+  width: 72px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.mt-kit {
+  position: relative;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mt-kit img { height: 44px; width: auto; object-fit: contain; }
+.mt-cv {
+  position: absolute;
+  top: -4px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  border-radius: 50%;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-align: center;
+  background: var(--pl-purple);
+  color: var(--pl-green);
+  box-shadow: 0 0 0 1.5px #fff;
+}
+.mt-cv.v { background: #8a8a8a; color: #fff; }
+.mt-name {
+  width: 100%;
+  margin-top: 2px;
+  background: #fff;
+  color: var(--text);
+  font-size: 0.68rem;
+  font-weight: 600;
+  border-radius: 4px 4px 0 0;
+  padding: 2px 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mt-meta {
+  width: 100%;
+  background: var(--pl-purple);
+  color: #fff;
+  font-size: 0.64rem;
+  border-radius: 0 0 4px 4px;
+  padding: 1px 3px;
+}
+.mt-card.is-sel .mt-name { background: var(--pl-green); }
+.mt-card.is-sel .mt-kit::after {
+  content: "";
+  position: absolute;
+  inset: -4px -2px;
+  border: 2px solid var(--pl-green);
+  border-radius: 8px;
+}
+.mt-bench-label {
+  background: var(--pl-purple);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 3px;
+}
+.mt-bench {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 4px;
+  background: #d7e9dc;
+  border-radius: 0 0 12px 12px;
+  padding: 12px 6px 14px;
+}
+
+/* 移籍ピッカー */
+.mt-picker {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-top: 12px;
+  background: var(--card);
+  overflow: hidden;
+}
+.mt-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--pl-purple);
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+.mt-picker-head button {
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+#mt-picker-q {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 12px;
+  font-size: 0.9rem;
+}
+.mt-picker-list { max-height: 360px; overflow-y: auto; }
+.mt-pick-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+  text-align: left;
+}
+.mt-pick-row:active { background: #f4eff6; }
+.mt-pick-kit { flex: 0 0 28px; height: 30px; display: flex; align-items: center; }
+.mt-pick-kit img { height: 30px; width: auto; }
+.mt-pick-name { flex: 1; font-size: 0.85rem; font-weight: 600; }
+.mt-pick-name .sub { display: block; font-weight: 400; }
+.mt-pick-cost { font-weight: 700; color: var(--pl-purple); font-size: 0.85rem; }
+.mt-pick-after { font-size: 0.72rem; color: var(--muted); min-width: 64px; text-align: right; }
+.mt-pick-row.over .mt-pick-after { color: var(--hard); font-weight: 700; }
 code {
   background: #efe9f1;
   padding: 1px 5px;
