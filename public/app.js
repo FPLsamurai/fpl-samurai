@@ -109,14 +109,7 @@ function renderPlayerSimple(key) {
   const box = document.getElementById("players-content");
   const rows = (DATA.players && DATA.players[key]) || [];
 
-  const labels = {
-    last3: "直近3試合の合計（得点期待度=xGI順）",
-    last5: "直近5試合の合計（得点期待度=xGI順）",
-    last10: "直近10試合の合計（得点期待度=xGI順）",
-    home: "ホーム試合のみの合計（得点期待度=xGI順）",
-    away: "アウェイ試合のみの合計（得点期待度=xGI順）",
-  };
-  note.textContent = labels[key] || "";
+  note.textContent = "";
 
   if (!rows.length) {
     box.innerHTML = emptyMessage("まだデータがありません。");
@@ -145,8 +138,7 @@ function renderPlayerSimple(key) {
 function renderSetPieces() {
   const note = document.getElementById("players-note");
   const box = document.getElementById("players-content");
-  note.textContent =
-    "各チームのセットプレー担当（公式データ）。番号は優先順位。PK=ペナルティキック、直接FK=直接フリーキック、CK=コーナー・間接FK。";
+  note.textContent = "";
   const rows = DATA.set_pieces || [];
   if (!rows.length) {
     box.innerHTML = emptyMessage("まだデータがありません。");
@@ -288,12 +280,7 @@ function frozenCss(c) {
 /* ---- 高機能テーブル：土台を作る（全試合・直近3/5/10共通） ---- */
 function renderPlayerRich(key) {
   currentRichKey = key || "all";
-  const periodLabel = {
-    all: "シーズン全試合", last3: "直近3試合", last5: "直近5試合", last10: "直近10試合",
-    home: "ホーム試合のみ", away: "アウェイ試合のみ",
-  }[currentRichKey];
-  document.getElementById("players-note").textContent =
-    `${periodLabel}の数値。見出しをタップで並べ替え（↑昇順/↓降順）。各列の枠で「以上／以下」絞り込み。⚙で列の表示・並び替え（動画用）。`;
+  document.getElementById("players-note").textContent = "";
   const box = document.getElementById("players-content");
   const rows = (DATA.players && DATA.players[currentRichKey]) || [];
   if (!rows.length) { box.innerHTML = emptyMessage("まだデータがありません。"); return; }
@@ -393,7 +380,11 @@ function refreshPlayerBody() {
   const teamVisible = all.some((c) => c.key === "team");
 
   let filtered = rows.filter((r) => {
-    if (playerFilters.name && !r.name.toLowerCase().includes(playerFilters.name)) return false;
+    if (playerFilters.name) {
+      const q = playerFilters.name;
+      const hit = r.name.toLowerCase().includes(q) || (r.name_ja && r.name_ja.toLowerCase().includes(q));
+      if (!hit) return false;
+    }
     if (posVisible && playerFilters.pos && r.position !== playerFilters.pos) return false;
     if (teamVisible && playerFilters.team && r.team !== playerFilters.team) return false;
     for (const k of numKeys) {
@@ -499,7 +490,7 @@ function renderColManager() {
 
   document.getElementById("col-manager").innerHTML = `
     <details class="col-manager" ${cmOpen ? "open" : ""}>
-      <summary>⚙ 列の表示・並び替え（動画用）</summary>
+      <summary>⚙ 列の表示・並び替え</summary>
       <div class="cm-section">
         <div class="cm-title">左に固定する範囲（横スクロールしても残る列）</div>
         <select id="cm-freeze" class="cm-freeze">${freezeOptions}</select>
@@ -622,7 +613,7 @@ function drawTeamByGw(box, byGw) {
   const picker = document.getElementById("team-picker");
   const render = () => {
     const t = byGw[Number(picker.value)];
-    let html = `<table class="rich teamtbl"><thead><tr>
+    let html = `<table class="rich teamtbl tbl-gw"><thead><tr>
         <th class="col-name">節</th><th>ポイント</th><th>ゴール</th><th>アシスト</th><th>失点</th>
         <th>DEFCON</th><th>イエロー</th><th>レッド</th><th>xG</th><th>被xG</th>
       </tr></thead><tbody>`;
@@ -692,20 +683,34 @@ function drawPredictions(box, pred) {
     );
     return;
   }
-  let html = `<p class="note" style="font-weight:600;color:#37003c;">${esc(pred.event_name || "次節")}</p>`;
-  html += `<table><thead><tr>
-      <th>チーム</th><th>対戦相手</th>
-      <th class="num">無失点率</th><th class="num">ゴール期待値</th>
-    </tr></thead><tbody>`;
+  // 対戦ごとにまとめる（ホームを上に）。各試合はh/aの2行で来る
+  const map = {};
   rows.forEach((r) => {
-    html += `<tr>
-      <td><div class="name">${esc(r.team)}</div><div class="sub">${esc(r.home_away)}</div></td>
-      <td class="sub">${esc(r.opponent)}</td>
-      <td class="num main-num">${r.clean_sheet_pct}%</td>
-      <td class="num">${r.goal_expect}</td>
-    </tr>`;
+    const key = [r.team, r.opponent].slice().sort().join("");
+    (map[key] = map[key] || []).push(r);
   });
-  html += `</tbody></table>`;
+  const matches = Object.values(map).map((pair) => {
+    if (pair.length === 2) return pair[0].home_away === "ホーム" ? pair : [pair[1], pair[0]];
+    return pair;
+  });
+
+  const teamRow = (r) => {
+    const gHi = Number(r.goal_expect) >= 1.1 ? " hi-goal" : "";
+    const csHi = Number(r.clean_sheet_pct) >= 44 ? " hi-cs" : "";
+    return `<div class="pred-row">
+      <span class="pred-team">${teamBadgeByName(r.team)}<span class="pred-tname">${esc(r.team)}</span></span>
+      <span class="pred-cell${gHi}">${r.goal_expect}</span>
+      <span class="pred-cell${csHi}">${Math.round(r.clean_sheet_pct)}%</span>
+    </div>`;
+  };
+  const head = `<div class="pred-head"><span></span><span>ゴール期待値</span><span>クリーンシート％</span></div>`;
+  const cards = matches.map((m) => `<div class="pred-match">${m.map(teamRow).join("")}</div>`);
+  const mid = Math.ceil(cards.length / 2);
+  const col1 = head + cards.slice(0, mid).join("");
+  const col2 = cards.length > mid ? head + cards.slice(mid).join("") : "";
+
+  let html = `<p class="note" style="font-weight:600;color:#37003c;">${esc(pred.event_name || "次節")}</p>`;
+  html += `<div class="pred-cols"><div class="pred-col">${col1}</div><div class="pred-col">${col2}</div></div>`;
   box.innerHTML = html;
 }
 
@@ -807,10 +812,17 @@ async function loadMyTeam(id) {
     const entry = await fplFetch(`entry/${id}/`);
     const gw = entry.current_event;
     let picks = null;
+    let livePoints = null;
     if (gw) {
       try { picks = await fplFetch(`entry/${id}/event/${gw}/picks/`); } catch (e) { picks = null; }
+      // その節の選手別ポイント（出場・得点などの結果）
+      try {
+        const live = await fplFetch(`event/${gw}/live/`);
+        livePoints = {};
+        (live.elements || []).forEach((e) => { livePoints[e.id] = (e.stats && e.stats.total_points) || 0; });
+      } catch (e) { livePoints = null; }
     }
-    renderMyTeam(entry, picks, gw);
+    renderMyTeam(entry, picks, gw, livePoints);
   } catch (err) {
     box.innerHTML = emptyMessage("取得に失敗しました。<br>" + esc(err.message || err));
   }
@@ -820,7 +832,7 @@ function fmtRank(n) {
   return (n == null) ? "-" : Number(n).toLocaleString("ja-JP");
 }
 
-function renderMyTeam(entry, picksData, gw) {
+function renderMyTeam(entry, picksData, gw, livePoints) {
   const box = document.getElementById("myteam-result");
   const elements = DATA.elements || {};
 
@@ -867,7 +879,7 @@ function renderMyTeam(entry, picksData, gw) {
   box.innerHTML = html;
 
   // スカッド（ピッチ）を初期化
-  if (hasPicks) initSquadEditor(entry, picksData, gw);
+  if (hasPicks) initSquadEditor(entry, picksData, gw, livePoints);
 
   // 順位表ボタン
   box.querySelectorAll(".lg-btn").forEach((b) => {
@@ -903,13 +915,15 @@ function elOf(pick) {
   return DATA.elements[String(pick.element)] || { n: "ID " + pick.element, j: "", t: "", p: "?", c: 0 };
 }
 
-function initSquadEditor(entry, picksData, gw) {
+function initSquadEditor(entry, picksData, gw, livePoints) {
   const eh = picksData.entry_history || {};
   MT = {
     entry, gw,
     bank: eh.bank != null ? eh.bank / 10 : 0,
     teamValue: eh.value != null ? eh.value / 10 : 0,
+    eventPoints: eh.points != null ? eh.points : (entry.summary_event_points != null ? entry.summary_event_points : null),
     chip: picksData.active_chip || null,
+    livePoints: livePoints || null,   // {element_id: その節のポイント}
     squad: picksData.picks.map((p) => ({
       element: p.element,
       position: p.position,
@@ -924,17 +938,40 @@ function initSquadEditor(entry, picksData, gw) {
   renderSquadPitch();
 }
 
+// 選手の表示ポイント（主将は倍率を反映）。live未取得なら null
+function mtPoints(p) {
+  if (!MT.livePoints) return null;
+  const base = MT.livePoints[p.element] || 0;
+  const mult = p.is_captain ? (MT.chip === "3xc" ? 3 : 2) : 1;
+  return base * mult;
+}
+
 function mtCard(p) {
   const el = elOf(p);
-  const url = kitUrl(el);
-  const img = url ? `<img src="${url}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : "";
+  const kit = kitUrl(el);
+  let img;
+  if (el.ph) {
+    const fb = kit ? `this.onerror=null;this.src='${kit}';this.classList.add('is-kit')` : `this.style.visibility='hidden'`;
+    img = `<img class="mt-photo" src="${PHOTO_BASE}${esc(el.ph)}.png" alt="" loading="lazy" onerror="${fb}">`;
+  } else {
+    img = kit ? `<img class="mt-photo is-kit" src="${kit}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : "";
+  }
   const cv = p.is_captain ? `<span class="mt-cv c">C</span>`
     : (p.is_vice_captain ? `<span class="mt-cv v">V</span>` : "");
   const sel = MT.sel === p.position ? " is-sel" : "";
+  const pts = mtPoints(p);
+  let foot;
+  if (pts == null) {
+    foot = `<span class="mt-pts">£${el.c}m</span>`;
+  } else {
+    const cls = pts <= 0 ? " neg" : (pts >= 6 ? " pos" : "");
+    foot = `<span class="mt-pts${cls}">${pts}pt</span>`;
+  }
+  const nm = el.j || el.n;
   return `<button type="button" class="mt-card${sel}" data-pos="${p.position}">
-    <span class="mt-kit">${img}${cv}</span>
-    <span class="mt-name">${esc(el.n)}</span>
-    <span class="mt-meta">£${el.c}m</span>
+    <span class="mt-photo-wrap">${img}${cv}</span>
+    <span class="mt-name">${esc(nm)}</span>
+    ${foot}
   </button>`;
 }
 
@@ -958,7 +995,7 @@ function renderSquadPitch() {
   if (sel) {
     const el = elOf(sel);
     bar = `<div class="mt-actions">
-      <span class="mt-sel-name">${esc(el.n)}</span>
+      <span class="mt-sel-name">${esc(el.j || el.n)}</span>
       <button type="button" data-act="cap">主将C</button>
       <button type="button" data-act="vice">副V</button>
       <button type="button" data-act="transfer">移籍</button>
@@ -969,12 +1006,20 @@ function renderSquadPitch() {
   }
   if (MT.msg) { setTimeout(() => { MT.msg = null; }, 2600); }
 
+  const ptsBadge = MT.eventPoints != null ? `<div class="mt-badge pts">${MT.eventPoints}pt</div>` : "";
   wrap.innerHTML = `
     <div class="mt-bar">第${MT.gw}節のスカッドを土台に次節プランを編集できます・残り資金 £${MT.bank.toFixed(1)}m・チーム £${MT.teamValue.toFixed(1)}m${MT.chip ? "・チップ: " + esc(MT.chip) : ""}</div>
     ${bar}
-    <div class="mt-pitch">${rows}</div>
-    <div class="mt-bench-label">ベンチ</div>
-    <div class="mt-bench">${bench.map(mtCard).join("")}</div>
+    <div class="mt-pitch-wrap">
+      <div class="mt-topbar">
+        <span class="mt-pl">Premier League</span>
+        <img class="mt-fpl" src="logo.png" alt="FPL侍" onerror="this.style.display='none'">
+      </div>
+      <div class="mt-badge gw">GW${MT.gw}</div>
+      ${ptsBadge}
+      <div class="mt-pitch">${rows}</div>
+      <div class="mt-bench">${bench.map(mtCard).join("")}</div>
+    </div>
     <div id="mt-picker" class="mt-picker" hidden></div>`;
 
   wrap.querySelectorAll(".mt-card").forEach((c) => c.addEventListener("click", onMtCardClick));
