@@ -206,7 +206,10 @@ const DATA_ORDER_DEFAULT = [
   "next3",
 ];
 const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
-const PHOTO_BASE = "https://resources.premierleague.com/premierleague/photos/players/250x250/p";
+// 選手写真。公式は季節ごとに別パス（premierleague25=25/26）で最新版を配信。
+// 旧パス（premierleague/.../250x250/p{code}）は24/25で更新停止しているため新パスを使用。
+// ※新シーズンでは "premierleague25" → "premierleague26" に更新する（サイズは40x40/110x140/500x500のみ提供）
+const PHOTO_BASE = "https://resources.premierleague.com/premierleague25/photos/players/110x140/";
 const BADGE_BASE = "https://resources.premierleague.com/premierleague/badges/70/t";
 // 設定の保存キー。標準設定を変えたらv3に更新（全員に新標準を適用するため）
 const CONFIG_KEY = "fpl_player_cols_v4";
