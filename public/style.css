@@ -1109,48 +1109,40 @@ tr.me-row td { background: #eafff3 !important; }
 .mt-actions button[data-act="transfer"] { background: var(--pl-purple); color: #fff; }
 .mt-actions button:active { opacity: 0.85; }
 
+/* スカッドの背景はピッチ画像（ヘッダー・ゴール・薄緑ベンチ枠込み）。
+   選手は画像の上に重ね、ベンチは下部の薄緑エリアに配置。 */
 .mt-pitch-wrap {
   position: relative;
-  border-radius: 14px;
-  overflow: hidden;
-  background: #289a4e;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-}
-.mt-topbar {
-  height: 52px;
-  background: linear-gradient(90deg, #38003c 0%, #2b8cff 100%);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 14px;
-}
-.mt-pl { color: #fff; font-weight: 700; font-size: 0.82rem; letter-spacing: 0.02em; }
-.mt-fpl {
-  height: 38px; width: 38px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  max-width: 440px;
+  margin: 0 auto;
+  aspect-ratio: 1274 / 1220;
+  background: url("pitch.png") center / 100% 100% no-repeat;
 }
 .mt-badge {
   position: absolute;
-  top: 64px;
+  top: 14%;
   background: #fff;
-  border-radius: 14px;
-  padding: 6px 16px;
+  border-radius: 10px;
+  padding: 3px 9px;
   font-weight: 800;
-  font-size: 1.15rem;
+  font-size: 0.85rem;
   color: #1b1b1f;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   z-index: 3;
 }
-.mt-badge.gw { left: 12px; }
-.mt-badge.pts { right: 12px; }
+.mt-badge.gw { left: 10%; }
+.mt-badge.pts { right: 10%; }
+/* スタメン（GK/DF/MF/FW）をピッチ部分に縦等間隔で配置 */
 .mt-pitch {
-  background: repeating-linear-gradient(0deg, #2faa57 0 56px, #289a4e 56px 112px);
-  padding: 16px 4px 20px;
+  position: absolute;
+  top: 9%;
+  left: 0;
+  right: 0;
+  bottom: 24%;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  justify-content: space-between;
+  padding: 0 2%;
 }
 .mt-row {
   display: flex;
@@ -1158,8 +1150,19 @@ tr.me-row td { background: #eafff3 !important; }
   align-items: flex-start;
   gap: 2px;
 }
+/* ベンチは下部の薄緑枠に配置 */
+.mt-bench {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+}
 .mt-card {
-  width: 80px;
+  width: 52px;
   border: none;
   background: none;
   padding: 0;
@@ -1170,23 +1173,34 @@ tr.me-row td { background: #eafff3 !important; }
 }
 .mt-photo-wrap {
   position: relative;
-  height: 56px;
+  height: 24px;
   width: 100%;
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  background: #e7e7ec;
+  border: 1.5px solid #1b1b1f;
+  border-bottom: none;
+  border-radius: 5px 5px 0 0;
+  overflow: visible;          /* 頭が箱の上にはみ出す */
 }
-.mt-photo { height: 56px; width: auto; object-fit: contain; }
-.mt-photo.is-kit { height: 46px; margin-bottom: 4px; }
+.mt-photo {
+  height: 33px;               /* 箱より高く＝頭がはみ出し、肩から下は名前バーで隠れる */
+  width: auto;
+  object-fit: contain;
+  position: relative;
+  z-index: 1;
+}
+.mt-photo.is-kit { height: 22px; }
 .mt-cv {
   position: absolute;
-  top: -6px;
-  left: 4px;
-  width: 22px;
-  height: 22px;
-  line-height: 22px;
+  top: -7px;
+  left: -7px;
+  width: 17px;
+  height: 17px;
+  line-height: 17px;
   border-radius: 50%;
-  font-size: 0.74rem;
+  font-size: 0.6rem;
   font-weight: 800;
   text-align: center;
   background: #000;
@@ -1199,24 +1213,24 @@ tr.me-row td { background: #eafff3 !important; }
   width: 100%;
   background: #fff;
   color: #1b1b1f;
-  font-size: 0.74rem;
+  font-size: 0.5rem;
   font-weight: 700;
-  border-radius: 5px 5px 0 0;
-  padding: 3px 3px;
+  padding: 1px 1px;
+  letter-spacing: -0.02em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border: 1.5px solid #1b1b1f;
-  border-bottom: none;
+  border-left: 1.5px solid #1b1b1f;
+  border-right: 1.5px solid #1b1b1f;
 }
 .mt-pts {
   width: 100%;
   background: #f1f1f3;
   color: #1b1b1f;
-  font-size: 0.78rem;
+  font-size: 0.62rem;
   font-weight: 700;
   border-radius: 0 0 5px 5px;
-  padding: 2px 3px;
+  padding: 1px 2px;
   border: 1.5px solid #1b1b1f;
   border-top: none;
 }
@@ -1230,15 +1244,6 @@ tr.me-row td { background: #eafff3 !important; }
   border: 2px solid var(--pl-green);
   border-radius: 8px;
 }
-.mt-bench {
-  display: flex;
-  justify-content: space-evenly;
-  gap: 2px;
-  background: rgba(255, 255, 255, 0.18);
-  padding: 14px 4px 16px;
-  border-top: 2px dashed rgba(255, 255, 255, 0.4);
-}
-
 /* 移籍ピッカー */
 .mt-picker {
   border: 1px solid var(--border);

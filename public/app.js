@@ -1014,10 +1014,6 @@ function renderSquadPitch() {
     <div class="mt-bar">第${MT.gw}節のスカッドを土台に次節プランを編集できます・残り資金 £${MT.bank.toFixed(1)}m・チーム £${MT.teamValue.toFixed(1)}m${MT.chip ? "・チップ: " + esc(MT.chip) : ""}</div>
     ${bar}
     <div class="mt-pitch-wrap">
-      <div class="mt-topbar">
-        <span class="mt-pl">Premier League</span>
-        <img class="mt-fpl" src="logo.png" alt="FPL侍" onerror="this.style.display='none'">
-      </div>
       <div class="mt-badge gw">GW${MT.gw}</div>
       ${ptsBadge}
       <div class="mt-pitch">${rows}</div>
