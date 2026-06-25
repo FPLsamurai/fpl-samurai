@@ -24,7 +24,7 @@ async function init() {
   setupMyTeam();
   loadYouTube();          // ホームのYouTube最新動画（取得失敗しても他は動く）
   try {
-    const res = await fetch(DATA_URL, { cache: "no-store" });
+    const res = await fetch(DATA_URL, { cache: "no-cache" });
     if (!res.ok) throw new Error("データファイルを読み込めませんでした");
     DATA = await res.json();
     renderHeader();
@@ -815,17 +815,20 @@ async function loadMyTeam(id) {
     const entry = await fplFetch(`entry/${id}/`);
     const gw = entry.current_event;
     let picks = null;
-    let livePoints = null;
     if (gw) {
       try { picks = await fplFetch(`entry/${id}/event/${gw}/picks/`); } catch (e) { picks = null; }
-      // その節の選手別ポイント（出場・得点などの結果）
-      try {
-        const live = await fplFetch(`event/${gw}/live/`);
-        livePoints = {};
-        (live.elements || []).forEach((e) => { livePoints[e.id] = (e.stats && e.stats.total_points) || 0; });
-      } catch (e) { livePoints = null; }
     }
-    renderMyTeam(entry, picks, gw, livePoints);
+    // まずスカッド（写真・名前・配置）を表示。得点は重いので待たない。
+    renderMyTeam(entry, picks, gw, null);
+
+    // その節の選手別ポイントはバックグラウンドで取得し、届いたら得点だけ差し込む。
+    if (gw && picks) {
+      fplFetch(`event/${gw}/live/`).then((live) => {
+        const lp = {};
+        (live.elements || []).forEach((e) => { lp[e.id] = (e.stats && e.stats.total_points) || 0; });
+        if (MT) { MT.livePoints = lp; renderSquadPitch(); }
+      }).catch(() => { /* 得点が取れなくてもスカッドは表示済み */ });
+    }
   } catch (err) {
     box.innerHTML = emptyMessage("取得に失敗しました。<br>" + esc(err.message || err));
   }
@@ -965,9 +968,13 @@ function mtCard(p) {
   const pts = mtPoints(p);
   let foot;
   if (pts == null) {
-    foot = `<span class="mt-pts">£${el.c}m</span>`;
+    foot = `<span class="mt-pts">-</span>`;
   } else {
-    const cls = pts <= 0 ? " neg" : (pts >= 6 ? " pos" : "");
+    let cls;
+    if (pts <= 1) cls = " p01";        // 0〜1pt
+    else if (pts <= 3) cls = " p23";   // 2,3pt
+    else if (pts <= 9) cls = " p49";   // 4〜9pt
+    else cls = " p10";                 // 10pt〜
     foot = `<span class="mt-pts${cls}">${pts}pt</span>`;
   }
   const nm = el.j || el.n;

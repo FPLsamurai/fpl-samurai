@@ -1234,8 +1234,10 @@ tr.me-row td { background: #eafff3 !important; }
   border: 1.5px solid #1b1b1f;
   border-top: none;
 }
-.mt-pts.pos { background: #57c66a; color: #0a3d1a; }
-.mt-pts.neg { background: #e23b4f; color: #fff; }
+.mt-pts.p01 { background: #fe1752; color: #1b1b1f; }
+.mt-pts.p23 { background: #e7e7e7; color: #1b1b1f; }
+.mt-pts.p49 { background: #12fc7a; color: #1b1b1f; }
+.mt-pts.p10 { background: #49b605; color: #1b1b1f; }
 .mt-card.is-sel .mt-name { background: var(--pl-green); }
 .mt-card.is-sel .mt-photo-wrap::after {
   content: "";
