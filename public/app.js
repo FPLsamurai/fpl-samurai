@@ -939,6 +939,8 @@ function initSquadEditor(entry, picksData, gw, livePoints) {
     bank: eh.bank != null ? eh.bank / 10 : 0,
     teamValue: eh.value != null ? eh.value / 10 : 0,
     eventPoints: eh.points != null ? eh.points : (entry.summary_event_points != null ? entry.summary_event_points : null),
+    eventTransfers: eh.event_transfers != null ? eh.event_transfers : 0,          // その節に使った移籍数
+    eventTransfersCost: eh.event_transfers_cost != null ? eh.event_transfers_cost : 0,  // その節の移籍コスト(-4等)
     chip: picksData.active_chip || null,
     livePoints: livePoints || null,   // {element_id: その節のポイント}
     squad: picksData.picks.map((p) => ({
@@ -948,6 +950,8 @@ function initSquadEditor(entry, picksData, gw, livePoints) {
       is_vice_captain: !!p.is_vice_captain,
     })),
     owned: new Set(picksData.picks.map((p) => p.element)),
+    origElements: new Set(picksData.picks.map((p) => p.element)),  // 移籍数カウント用の元スカッド
+    freeTransfers: 1,  // 無料移籍枠（公開APIでは取得できないため既定1）
     sel: null,        // 選択中の position(1-15)
     pickerFor: null,  // 移籍ピッカー対象の position
     msg: null,
@@ -1020,9 +1024,9 @@ function renderSquadPitch() {
     .map((pos) => `<div class="mt-row">${byPos(pos).map(mtCard).join("")}</div>`).join("");
 
   if (MT.mode === "plan") {
-    // ===== 計画タブ：GWナビ＋編集（入れ替え・主将・移籍） =====
+    // ===== 計画タブ：GWナビ＋ステータス（チップ/移籍/資金/コスト）＋編集 =====
     const sel = MT.sel != null ? MT.squad.find((p) => p.position === MT.sel) : null;
-    let bar;
+    let bar = "";
     if (sel) {
       const el = elOf(sel);
       bar = `<div class="mt-actions">
@@ -1032,18 +1036,29 @@ function renderSquadPitch() {
         <button type="button" data-act="transfer">移籍</button>
         <button type="button" data-act="clear">解除</button>
       </div>`;
-    } else {
-      bar = `<div class="mt-msg">${MT.msg ? esc(MT.msg) : "選手をタップ → もう一人タップで入れ替え／選択中に主将・移籍を変更"}</div>`;
+    } else if (MT.msg) {
+      bar = `<div class="mt-msg">${esc(MT.msg)}</div>`;
     }
     if (MT.msg) { setTimeout(() => { MT.msg = null; }, 2600); }
 
+    const made = MT.squad.reduce((n, p) => n + (MT.origElements.has(p.element) ? 0 : 1), 0);
+    const free = MT.freeTransfers || 1;
+    const cost = Math.max(0, made - free) * 4;
+
     wrap.innerHTML = `
-      <div class="mt-gwnav">
-        <button type="button" class="mt-gw-btn" data-gw="prev" ${MT.planGw <= 1 ? "disabled" : ""}>‹ 前</button>
-        <span class="mt-gw-cur">第${MT.planGw}節</span>
-        <button type="button" class="mt-gw-btn" data-gw="next" ${MT.planGw >= 38 ? "disabled" : ""}>次 ›</button>
+      <div class="mt-head">
+        <div class="mt-gwnav">
+          <button type="button" class="mt-gw-btn" data-gw="prev" ${MT.planGw <= 1 ? "disabled" : ""}>‹ 前</button>
+          <span class="mt-gw-cur">第${MT.planGw}節</span>
+          <button type="button" class="mt-gw-btn" data-gw="next" ${MT.planGw >= 38 ? "disabled" : ""}>次 ›</button>
+        </div>
+        <div class="mt-stats">
+          <div class="mt-stat"><span class="mt-stat-l">チップ</span><span class="mt-stat-v">${MT.chip ? esc(MT.chip) : "なし"}</span></div>
+          <div class="mt-stat"><span class="mt-stat-l">移籍</span><span class="mt-stat-v">${made}/${free}</span></div>
+          <div class="mt-stat"><span class="mt-stat-l">資金</span><span class="mt-stat-v">£${MT.bank.toFixed(1)}m</span></div>
+          <div class="mt-stat"><span class="mt-stat-l">コスト</span><span class="mt-stat-v${cost > 0 ? " neg" : ""}">${cost > 0 ? "-" + cost : "0"}</span></div>
+        </div>
       </div>
-      <div class="mt-bar">第${MT.gw}節のスカッドを土台に次節プランを編集・残り資金 £${MT.bank.toFixed(1)}m・チーム £${MT.teamValue.toFixed(1)}m${MT.chip ? "・チップ: " + esc(MT.chip) : ""}</div>
       ${bar}
       <div class="mt-pitch-wrap">
         <div class="mt-pitch">${rows}</div>
@@ -1060,12 +1075,23 @@ function renderSquadPitch() {
     }));
   } else {
     // ===== 直近節タブ：結果（ポイント）の読み取り専用 =====
-    const ptsBadge = MT.eventPoints != null ? `<div class="mt-badge pts">${MT.eventPoints}pt</div>` : "";
+    // 上部は計画タブと同じ（前/次は無し）＝第N節＋ステータス（チップ/移籍/資金/コスト）
+    let header;
+    if (MT.livePoints) {
+      const cost = MT.eventTransfersCost || 0;
+      header = `<div class="mt-gwnav"><span class="mt-gw-cur">第${MT.gw}節</span></div>
+        <div class="mt-stats">
+          <div class="mt-stat"><span class="mt-stat-l">チップ</span><span class="mt-stat-v">${MT.chip ? esc(MT.chip) : "なし"}</span></div>
+          <div class="mt-stat"><span class="mt-stat-l">移籍</span><span class="mt-stat-v">${MT.eventTransfers != null ? MT.eventTransfers : 0}</span></div>
+          <div class="mt-stat"><span class="mt-stat-l">資金</span><span class="mt-stat-v">£${MT.bank.toFixed(1)}m</span></div>
+          <div class="mt-stat"><span class="mt-stat-l">コスト</span><span class="mt-stat-v${cost > 0 ? " neg" : ""}">${cost > 0 ? "-" + cost : "0"}</span></div>
+        </div>`;
+    } else {
+      header = `<div class="mt-loading-msg">ポイント反映まで時間がかかっています...</div>`;
+    }
     wrap.innerHTML = `
-      <div class="mt-bar">第${MT.gw}節の結果（ポイント）</div>
+      <div class="mt-head${MT.livePoints ? "" : " mt-head-center"}">${header}</div>
       <div class="mt-pitch-wrap mt-readonly">
-        <div class="mt-badge gw">GW${MT.gw}</div>
-        ${ptsBadge}
         <div class="mt-pitch">${rows}</div>
         <div class="mt-bench">${bench.map(mtCard).join("")}</div>
       </div>`;

@@ -1131,13 +1131,49 @@ tr.me-row td { background: #eafff3 !important; }
   color: #fff;
   border-color: var(--pl-purple);
 }
+/* 直近節・計画でスカッドの開始位置を揃えるための共通ヘッダー領域 */
+.mt-head {
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.mt-head-center { align-items: center; text-align: center; }
+.mt-loading-msg {
+  font-size: 0.88rem;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.5;
+}
+/* 計画タブのステータス（チップ／移籍／資金／コスト）＝前/次と同じ図形 */
+.mt-stats {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.mt-stat {
+  flex: 1;
+  border: 1px solid var(--pl-purple);
+  border-radius: 8px;
+  background: #fff;
+  padding: 5px 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.mt-stat-l { font-size: 0.6rem; color: var(--muted); }
+.mt-stat-v { font-size: 0.85rem; font-weight: 800; color: var(--pl-purple); }
+.mt-stat-v.neg { color: var(--hard); }
 /* 計画タブのGWナビ（LiveFPL風 ‹前／第N節／次›） */
 .mt-gwnav {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin: 0 0 10px;
+  margin: 0;
+  min-height: 38px;   /* 前/次ボタンの有無で高さが変わらないよう固定し、下のステータス位置を揃える */
 }
 .mt-gw-cur {
   font-weight: 800;
