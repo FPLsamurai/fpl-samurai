@@ -826,7 +826,7 @@ async function loadMyTeam(id) {
       fplFetch(`event/${gw}/live/`).then((live) => {
         const lp = {};
         (live.elements || []).forEach((e) => { lp[e.id] = (e.stats && e.stats.total_points) || 0; });
-        if (MT) { MT.livePoints = lp; renderSquadPitch(); }
+        if (MT) { MT.livePoints = lp; if (MT.mode === "recent") renderSquadPitch(); }
       }).catch(() => { /* 得点が取れなくてもスカッドは表示済み */ });
     }
   } catch (err) {
@@ -853,13 +853,16 @@ function renderMyTeam(entry, picksData, gw, livePoints) {
     </div>
   </div>`;
 
-  // --- スカッド（ピッチ表示・編集可） ---
+  // --- スカッド（直近節＝結果表示 ／ 計画＝編集） ---
   const hasPicks = picksData && picksData.picks && picksData.picks.length;
-  html += `<h3 class="mt-h3">スカッド</h3>`;
   if (hasPicks) {
-    html += `<div id="mt-squad"></div>`;
+    html += `<div class="mt-subtabs">
+      <button type="button" class="mt-subtab is-active" data-mode="recent">直近節</button>
+      <button type="button" class="mt-subtab" data-mode="plan">計画</button>
+    </div>
+    <div id="mt-squad"></div>`;
   } else {
-    html += emptyMessage("スカッド情報を取得できませんでした（シーズン開始前の可能性があります）。");
+    html += `<h3 class="mt-h3">スカッド</h3>` + emptyMessage("スカッド情報を取得できませんでした（シーズン開始前の可能性があります）。");
   }
 
   // --- ミニリーグ ---
@@ -884,8 +887,16 @@ function renderMyTeam(entry, picksData, gw, livePoints) {
 
   box.innerHTML = html;
 
-  // スカッド（ピッチ）を初期化
-  if (hasPicks) initSquadEditor(entry, picksData, gw, livePoints);
+  // スカッド（ピッチ）を初期化＋サブタブ切替
+  if (hasPicks) {
+    initSquadEditor(entry, picksData, gw, livePoints);
+    box.querySelectorAll(".mt-subtab").forEach((b) => b.addEventListener("click", () => {
+      if (!MT) return;
+      MT.mode = b.dataset.mode; MT.sel = null; MT.msg = null;
+      box.querySelectorAll(".mt-subtab").forEach((x) => x.classList.toggle("is-active", x === b));
+      renderSquadPitch();
+    }));
+  }
 
   // 順位表ボタン
   box.querySelectorAll(".lg-btn").forEach((b) => {
@@ -940,6 +951,8 @@ function initSquadEditor(entry, picksData, gw, livePoints) {
     sel: null,        // 選択中の position(1-15)
     pickerFor: null,  // 移籍ピッカー対象の position
     msg: null,
+    mode: "recent",   // recent=直近節の結果表示 ／ plan=次節以降のプラン編集
+    planGw: Math.min((gw || 1) + 1, 38),  // 計画タブで表示中のGW
   };
   renderSquadPitch();
 }
@@ -965,17 +978,23 @@ function mtCard(p) {
   const cv = p.is_captain ? `<span class="mt-cv c">C</span>`
     : (p.is_vice_captain ? `<span class="mt-cv v">V</span>` : "");
   const sel = MT.sel === p.position ? " is-sel" : "";
-  const pts = mtPoints(p);
   let foot;
-  if (pts == null) {
-    foot = `<span class="mt-pts">-</span>`;
+  if (MT.mode === "plan") {
+    // 計画タブ：移籍・予算検討のためコストを表示
+    foot = `<span class="mt-pts mt-cost">£${el.c}m</span>`;
   } else {
-    let cls;
-    if (pts <= 1) cls = " p01";        // 0〜1pt
-    else if (pts <= 3) cls = " p23";   // 2,3pt
-    else if (pts <= 9) cls = " p49";   // 4〜9pt
-    else cls = " p10";                 // 10pt〜
-    foot = `<span class="mt-pts${cls}">${pts}pt</span>`;
+    // 直近節タブ：その節のポイント結果（色分け）
+    const pts = mtPoints(p);
+    if (pts == null) {
+      foot = `<span class="mt-pts">-</span>`;
+    } else {
+      let cls;
+      if (pts <= 1) cls = " p01";        // 0〜1pt
+      else if (pts <= 3) cls = " p23";   // 2,3pt
+      else if (pts <= 9) cls = " p49";   // 4〜9pt
+      else cls = " p10";                 // 10pt〜
+      foot = `<span class="mt-pts${cls}">${pts}pt</span>`;
+    }
   }
   const nm = el.j || el.n;
   return `<button type="button" class="mt-card${sel}" data-pos="${p.position}">
@@ -1000,36 +1019,57 @@ function renderSquadPitch() {
   const rows = ["GK", "DF", "MF", "FW"]
     .map((pos) => `<div class="mt-row">${byPos(pos).map(mtCard).join("")}</div>`).join("");
 
-  const sel = MT.sel != null ? MT.squad.find((p) => p.position === MT.sel) : null;
-  let bar;
-  if (sel) {
-    const el = elOf(sel);
-    bar = `<div class="mt-actions">
-      <span class="mt-sel-name">${esc(el.j || el.n)}</span>
-      <button type="button" data-act="cap">主将C</button>
-      <button type="button" data-act="vice">副V</button>
-      <button type="button" data-act="transfer">移籍</button>
-      <button type="button" data-act="clear">解除</button>
-    </div>`;
+  if (MT.mode === "plan") {
+    // ===== 計画タブ：GWナビ＋編集（入れ替え・主将・移籍） =====
+    const sel = MT.sel != null ? MT.squad.find((p) => p.position === MT.sel) : null;
+    let bar;
+    if (sel) {
+      const el = elOf(sel);
+      bar = `<div class="mt-actions">
+        <span class="mt-sel-name">${esc(el.j || el.n)}</span>
+        <button type="button" data-act="cap">主将C</button>
+        <button type="button" data-act="vice">副V</button>
+        <button type="button" data-act="transfer">移籍</button>
+        <button type="button" data-act="clear">解除</button>
+      </div>`;
+    } else {
+      bar = `<div class="mt-msg">${MT.msg ? esc(MT.msg) : "選手をタップ → もう一人タップで入れ替え／選択中に主将・移籍を変更"}</div>`;
+    }
+    if (MT.msg) { setTimeout(() => { MT.msg = null; }, 2600); }
+
+    wrap.innerHTML = `
+      <div class="mt-gwnav">
+        <button type="button" class="mt-gw-btn" data-gw="prev" ${MT.planGw <= 1 ? "disabled" : ""}>‹ 前</button>
+        <span class="mt-gw-cur">第${MT.planGw}節</span>
+        <button type="button" class="mt-gw-btn" data-gw="next" ${MT.planGw >= 38 ? "disabled" : ""}>次 ›</button>
+      </div>
+      <div class="mt-bar">第${MT.gw}節のスカッドを土台に次節プランを編集・残り資金 £${MT.bank.toFixed(1)}m・チーム £${MT.teamValue.toFixed(1)}m${MT.chip ? "・チップ: " + esc(MT.chip) : ""}</div>
+      ${bar}
+      <div class="mt-pitch-wrap">
+        <div class="mt-pitch">${rows}</div>
+        <div class="mt-bench">${bench.map(mtCard).join("")}</div>
+      </div>
+      <div id="mt-picker" class="mt-picker" hidden></div>`;
+
+    wrap.querySelectorAll(".mt-card").forEach((c) => c.addEventListener("click", onMtCardClick));
+    wrap.querySelectorAll(".mt-actions button").forEach((b) => b.addEventListener("click", () => onMtAction(b.dataset.act)));
+    wrap.querySelectorAll(".mt-gw-btn").forEach((b) => b.addEventListener("click", () => {
+      if (b.dataset.gw === "prev" && MT.planGw > 1) MT.planGw--;
+      else if (b.dataset.gw === "next" && MT.planGw < 38) MT.planGw++;
+      renderSquadPitch();
+    }));
   } else {
-    bar = `<div class="mt-msg">${MT.msg ? esc(MT.msg) : "選手をタップ → もう一人タップで入れ替え／選択中に主将・移籍を変更"}</div>`;
+    // ===== 直近節タブ：結果（ポイント）の読み取り専用 =====
+    const ptsBadge = MT.eventPoints != null ? `<div class="mt-badge pts">${MT.eventPoints}pt</div>` : "";
+    wrap.innerHTML = `
+      <div class="mt-bar">第${MT.gw}節の結果（ポイント）</div>
+      <div class="mt-pitch-wrap mt-readonly">
+        <div class="mt-badge gw">GW${MT.gw}</div>
+        ${ptsBadge}
+        <div class="mt-pitch">${rows}</div>
+        <div class="mt-bench">${bench.map(mtCard).join("")}</div>
+      </div>`;
   }
-  if (MT.msg) { setTimeout(() => { MT.msg = null; }, 2600); }
-
-  const ptsBadge = MT.eventPoints != null ? `<div class="mt-badge pts">${MT.eventPoints}pt</div>` : "";
-  wrap.innerHTML = `
-    <div class="mt-bar">第${MT.gw}節のスカッドを土台に次節プランを編集できます・残り資金 £${MT.bank.toFixed(1)}m・チーム £${MT.teamValue.toFixed(1)}m${MT.chip ? "・チップ: " + esc(MT.chip) : ""}</div>
-    ${bar}
-    <div class="mt-pitch-wrap">
-      <div class="mt-badge gw">GW${MT.gw}</div>
-      ${ptsBadge}
-      <div class="mt-pitch">${rows}</div>
-      <div class="mt-bench">${bench.map(mtCard).join("")}</div>
-    </div>
-    <div id="mt-picker" class="mt-picker" hidden></div>`;
-
-  wrap.querySelectorAll(".mt-card").forEach((c) => c.addEventListener("click", onMtCardClick));
-  wrap.querySelectorAll(".mt-actions button").forEach((b) => b.addEventListener("click", () => onMtAction(b.dataset.act)));
 }
 
 function onMtCardClick(e) {

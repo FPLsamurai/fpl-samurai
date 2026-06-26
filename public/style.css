@@ -1109,6 +1109,56 @@ tr.me-row td { background: #eafff3 !important; }
 .mt-actions button[data-act="transfer"] { background: var(--pl-purple); color: #fff; }
 .mt-actions button:active { opacity: 0.85; }
 
+/* マイチームのサブタブ（直近節／計画） */
+.mt-subtabs {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+.mt-subtab {
+  flex: 1;
+  padding: 9px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--pl-purple);
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.mt-subtab.is-active {
+  background: var(--pl-purple);
+  color: #fff;
+  border-color: var(--pl-purple);
+}
+/* 計画タブのGWナビ（LiveFPL風 ‹前／第N節／次›） */
+.mt-gwnav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 0 10px;
+}
+.mt-gw-cur {
+  font-weight: 800;
+  color: var(--pl-purple);
+  font-size: 1.05rem;
+  min-width: 5em;
+  text-align: center;
+}
+.mt-gw-btn {
+  border: 1px solid var(--pl-purple);
+  background: #fff;
+  color: var(--pl-purple);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mt-gw-btn:disabled { opacity: 0.4; cursor: default; }
+/* 直近節（読み取り専用）はカードを押せない見た目に */
+.mt-readonly .mt-card { cursor: default; }
+
 /* スカッドの背景はピッチ画像（ヘッダー・ゴール・薄緑ベンチ枠込み）。
    選手は画像の上に重ね、ベンチは下部の薄緑エリアに配置。 */
 .mt-pitch-wrap {
