@@ -32,44 +32,8 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
-/* ---------- ヘッダー（高級感） ---------- */
+/* ---------- 共通の色（ゴールド） ---------- */
 :root { --gold: #d4af37; --gold-soft: #e9d9b0; }
-.site-header {
-  background:
-    radial-gradient(120% 90% at 50% -10%, #5a0a63 0%, #2c0033 55%, #160019 100%);
-  color: #fff;
-  padding: 22px 16px 16px;
-  text-align: center;
-  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
-}
-.site-logo {
-  width: 76px;
-  height: 76px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--gold);
-  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.18), 0 6px 16px rgba(0, 0, 0, 0.45);
-  margin: 0 auto 10px;
-  display: block;
-}
-.site-header h1 {
-  margin: 0;
-  font-size: 1.6rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  /* 白→ゴールドの上品なグラデ文字 */
-  background: linear-gradient(180deg, #ffffff 0%, #fbf3df 55%, var(--gold) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: var(--gold-soft); /* 非対応ブラウザ用フォールバック */
-}
-.subtitle {
-  margin: 6px 0 0;
-  letter-spacing: 0.18em;
-  font-size: 0.78rem;
-  color: var(--gold-soft);
-}
 .updated {
   margin: 10px 0 0;
   font-size: 0.76rem;

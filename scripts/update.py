@@ -778,9 +778,10 @@ def main():
         "predictions": predictions,
     }
 
+    # 配信用なので改行・空白なしのコンパクト形式（現在公開中のdata.jsonと同じ形式）
     for path in (os.path.join(SITE_DIR, "data.json"), os.path.join(PUBLIC_DIR, "data.json")):
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(site_data, f, ensure_ascii=False, indent=2)
+            json.dump(site_data, f, ensure_ascii=False, separators=(",", ":"))
 
     print("\n集計が完了しました！")
     print(f"  最終更新の節: {latest_gw_label}")
