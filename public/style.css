@@ -83,22 +83,38 @@ body {
 .rules-doc li { font-size: 0.9rem; margin: 3px 0; }
 /* 目次（ルール解説の冒頭。タップで各セクションへ） */
 .rules-toc {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0 0 12px;
-}
-.rules-toc a {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--pl-purple);
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 5px 10px;
+  border-radius: 10px;
+  padding: 12px 16px 14px;
+  margin: 0 0 14px;
+}
+.rules-toc .toc-title {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 6px;
+}
+.rules-toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rules-toc li {
+  margin: 10px 0;   /* 項目ごとの余白 */
+}
+.rules-toc li:first-child { margin-top: 4px; }
+.rules-toc li:last-child { margin-bottom: 0; }
+.rules-toc a {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--pl-purple);
   text-decoration: none;
 }
-.rules-toc a:hover { background: #efe9f1; }
+.rules-toc a:hover { text-decoration: underline; }
 /* 目次から飛んだとき、固定ヘッダーに見出しが隠れないように */
 .rules-doc h3 { scroll-margin-top: 110px; }
 
