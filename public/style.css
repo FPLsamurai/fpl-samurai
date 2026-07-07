@@ -75,8 +75,9 @@ body {
   color: var(--pl-purple);
   border-left: 4px solid var(--pl-green);
   padding-left: 8px;
-  margin: 20px 0 8px;
+  margin: 44px 0 8px;   /* セクション間は約1行分の余白を追加 */
 }
+.rules-doc h3:first-child { margin-top: 16px; }  /* 先頭（FPLとは？）は詰める */
 .rules-doc p { margin: 6px 0; font-size: 0.9rem; }
 .rules-doc ul { margin: 6px 0; padding-left: 1.3em; }
 .rules-doc ol { margin: 6px 0; padding-left: 1.5em; }
