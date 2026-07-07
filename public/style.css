@@ -79,7 +79,19 @@ body {
 }
 .rules-doc p { margin: 6px 0; font-size: 0.9rem; }
 .rules-doc ul { margin: 6px 0; padding-left: 1.3em; }
+.rules-doc ol { margin: 6px 0; padding-left: 1.5em; }
 .rules-doc li { font-size: 0.9rem; margin: 3px 0; }
+/* 見出し横の「▶ 動画 0:46〜」リンク（該当タイムスタンプへ） */
+.rules-time {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #ff0000;
+  text-decoration: none;
+  white-space: nowrap;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.rules-time:hover { text-decoration: underline; }
 .rules-doc b { color: var(--pl-purple); }
 .rules-table {
   width: 100%;
