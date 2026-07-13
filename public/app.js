@@ -982,6 +982,12 @@ function mtCard(p) {
   const cv = p.is_captain ? `<span class="mt-cv c">C</span>`
     : (p.is_vice_captain ? `<span class="mt-cv v">V</span>` : "");
   const sel = MT.sel === p.position ? " is-sel" : "";
+  const plan = MT.mode === "plan";
+  // 計画タブ：左上=スタメン⇄ベンチ入れ替え、右上=移籍（LiveFPL風）。C/Vは⇅の下に表示（CSS側で位置指定）
+  const ctrls = plan
+    ? `<span class="mt-ctrl mt-ctrl-swap" data-pos="${p.position}" role="button" title="スタメン⇄ベンチ入れ替え">⇅</span>
+       <span class="mt-ctrl mt-ctrl-x" data-pos="${p.position}" role="button" title="移籍候補を見る">✕</span>`
+    : "";
   let foot;
   if (MT.mode === "plan") {
     // 計画タブ：移籍・予算検討のためコストを表示
@@ -1001,8 +1007,8 @@ function mtCard(p) {
     }
   }
   const nm = el.j || el.n;
-  return `<button type="button" class="mt-card${sel}" data-pos="${p.position}">
-    <span class="mt-photo-wrap">${img}${cv}</span>
+  return `<button type="button" class="mt-card${plan ? " is-plan" : ""}${sel}" data-pos="${p.position}">
+    <span class="mt-photo-wrap">${img}${ctrls}${cv}</span>
     <span class="mt-name">${esc(nm)}</span>
     ${foot}
   </button>`;
@@ -1067,6 +1073,19 @@ function renderSquadPitch() {
       <div id="mt-picker" class="mt-picker" hidden></div>`;
 
     wrap.querySelectorAll(".mt-card").forEach((c) => c.addEventListener("click", onMtCardClick));
+    // 左上⇅＝入れ替え選択（カード本体タップと同じ選択ロジック）
+    wrap.querySelectorAll(".mt-ctrl-swap").forEach((s) => s.addEventListener("click", (e) => {
+      e.stopPropagation();
+      mtSelectOrSwap(+s.dataset.pos);
+    }));
+    // 右上✕＝その選手の移籍候補をすぐ表示
+    wrap.querySelectorAll(".mt-ctrl-x").forEach((s) => s.addEventListener("click", (e) => {
+      e.stopPropagation();
+      MT.sel = +s.dataset.pos;
+      MT.pickerFor = MT.sel;
+      renderSquadPitch();
+      renderMtPicker("");
+    }));
     wrap.querySelectorAll(".mt-actions button").forEach((b) => b.addEventListener("click", () => onMtAction(b.dataset.act)));
     wrap.querySelectorAll(".mt-gw-btn").forEach((b) => b.addEventListener("click", () => {
       if (b.dataset.gw === "prev" && MT.planGw > 1) MT.planGw--;
@@ -1099,7 +1118,11 @@ function renderSquadPitch() {
 }
 
 function onMtCardClick(e) {
-  const pos = +e.currentTarget.dataset.pos;
+  mtSelectOrSwap(+e.currentTarget.dataset.pos);
+}
+
+// 選択→もう1人タップで入れ替え（カード本体・⇅アイコン共通）
+function mtSelectOrSwap(pos) {
   if (MT.sel == null) { MT.sel = pos; renderSquadPitch(); return; }
   if (MT.sel === pos) { MT.sel = null; renderSquadPitch(); return; }
   tryMtSwap(MT.sel, pos);
@@ -1160,6 +1183,7 @@ function renderMtPicker(query) {
       <span class="mt-pick-name">${esc(e.n)}<span class="sub">${esc(e.t)}</span></span>
       <span class="mt-pick-cost">£${e.c}m</span>
       <span class="mt-pick-after">残£${after.toFixed(1)}m</span>
+      <span class="mt-pick-add" aria-hidden="true">＋</span>
     </button>`;
   }).join("") || `<div class="empty" style="box-shadow:none;">候補が見つかりません</div>`;
 

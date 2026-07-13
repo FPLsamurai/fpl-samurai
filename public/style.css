@@ -1295,7 +1295,7 @@ tr.me-row td { background: #eafff3 !important; }
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 8px;
+  gap: 18px;   /* カード左右の⇅✕アイコンが隣と重ならない間隔 */
 }
 .mt-card {
   width: 52px;
@@ -1375,13 +1375,32 @@ tr.me-row td { background: #eafff3 !important; }
 .mt-pts.p49 { background: #12fc7a; color: #1b1b1f; }
 .mt-pts.p10 { background: #49b605; color: #1b1b1f; }
 .mt-card.is-sel .mt-name { background: var(--pl-green); }
-.mt-card.is-sel .mt-photo-wrap::after {
-  content: "";
-  position: absolute;
-  inset: -3px -2px 0;
-  border: 2px solid var(--pl-green);
-  border-radius: 8px;
+/* 選択中はカード全体を緑枠で囲む */
+.mt-card.is-sel {
+  outline: 2.5px solid var(--pl-green);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
+
+/* 計画タブ：カード左上の⇅（入れ替え）・右上の✕（移籍）アイコン（LiveFPL風） */
+.mt-ctrl {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 0 0 2px #fff;
+  cursor: pointer;
+  z-index: 3;
+}
+.mt-ctrl-swap { top: -8px; left: -8px; background: var(--pl-purple); color: #fff; }
+.mt-ctrl-x { top: -8px; right: -8px; background: var(--hard); color: #fff; }
+.mt-ctrl:active { opacity: 0.8; }
+/* 計画タブではC/Vバッジを⇅アイコンの下に配置 */
+.mt-card.is-plan .mt-cv { top: 12px; left: -8px; }
 /* 移籍ピッカー */
 .mt-picker {
   border: 1px solid var(--border);
@@ -1438,6 +1457,20 @@ tr.me-row td { background: #eafff3 !important; }
 .mt-pick-cost { font-weight: 700; color: var(--pl-purple); font-size: 0.85rem; }
 .mt-pick-after { font-size: 0.72rem; color: var(--muted); min-width: 64px; text-align: right; }
 .mt-pick-row.over .mt-pick-after { color: var(--hard); font-weight: 700; }
+/* 候補行の＋ボタン（この選手を加える） */
+.mt-pick-add {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  border-radius: 50%;
+  background: var(--easy);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-align: center;
+}
+.mt-pick-row.over .mt-pick-add { background: #c9c9cf; }
 code {
   background: #efe9f1;
   padding: 1px 5px;
