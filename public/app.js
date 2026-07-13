@@ -892,7 +892,7 @@ function renderMyTeam(entry, picksData, gw, livePoints) {
     initSquadEditor(entry, picksData, gw, livePoints);
     box.querySelectorAll(".mt-subtab").forEach((b) => b.addEventListener("click", () => {
       if (!MT) return;
-      MT.mode = b.dataset.mode; MT.sel = null; MT.swapFrom = null; MT.pickerFor = null; MT.msg = null;
+      MT.mode = b.dataset.mode; MT.sel = null; MT.swapFrom = null; MT.outs = []; MT.msg = null;
       box.querySelectorAll(".mt-subtab").forEach((x) => x.classList.toggle("is-active", x === b));
       renderSquadPitch();
     }));
@@ -956,7 +956,8 @@ function initSquadEditor(entry, picksData, gw, livePoints) {
     plans: {},            // {gw: {squad, bank, ft, inhElems}} 節ごとの独立プラン（前の節から引き継いで作る）
     sel: null,            // 詳細表示中の position(1-15)（カード本体タップ＝緑枠＋主将C等のバー）
     swapFrom: null,       // 入れ替え元の position（⇅タップ＝半透明。次にタップした選手と入れ替え）
-    pickerFor: null,      // 移籍ピッカー対象の position（✕タップ＝半透明）
+    outs: [],             // 移籍OUT対象の position 一覧（✕タップ＝半透明。複数可・押した順）
+    pickQ: "",            // 移籍候補の検索文字列（再描画時に保持）
     msg: null,
     mode: "recent",       // recent=直近節の結果表示 ／ plan=次節以降のプラン編集
     pickSort: "cost",     // 移籍候補の並び替え（cost/points/value）
@@ -1093,8 +1094,8 @@ function mtCard(p) {
   const cv = p.is_captain ? `<span class="mt-cv c">C</span>`
     : (p.is_vice_captain ? `<span class="mt-cv v">V</span>` : "");
   const sel = MT.sel === p.position ? " is-sel" : "";
-  // 移籍候補を表示中（✕）／入れ替え元（⇅）の選手は緑枠ではなく半透明で示す
-  const outSel = (MT.pickerFor === p.position || MT.swapFrom === p.position) ? " is-out" : "";
+  // 移籍OUT対象（✕・複数可）／入れ替え元（⇅）の選手は緑枠ではなく半透明で示す
+  const outSel = (MT.outs.includes(p.position) || MT.swapFrom === p.position) ? " is-out" : "";
   const plan = MT.mode === "plan";
   // 計画タブ：左上=スタメン⇄ベンチ入れ替え、右上=移籍（LiveFPL風）。C/Vは⇅の下に表示（CSS側で位置指定）
   const ctrls = plan
@@ -1198,7 +1199,7 @@ function renderSquadPitch() {
           <div class="mt-stat"><span class="mt-stat-l">コスト</span><span class="mt-stat-v${cost > 0 ? " neg" : ""}">${cost > 0 ? "-" + cost : "0"}</span></div>
         </div>
       </div>
-      ${bar}
+      <div class="mt-bar-slot">${bar}</div>
       <div class="mt-pitch-wrap">
         <div class="mt-pitch">${rows}</div>
         <div class="mt-bench">${bench.map(mtCard).join("")}</div>
@@ -1221,23 +1222,24 @@ function renderSquadPitch() {
       if (MT.swapFrom != null) { tryMtSwap(MT.swapFrom, pos); return; }             // 2人目→入れ替え実行
       MT.swapFrom = pos;
       MT.sel = null;
-      MT.pickerFor = null;
+      MT.outs = [];
       renderSquadPitch();
     }));
-    // 右上✕＝移籍フロー（詳細バーは出さない）。対象を半透明にして候補をすぐ表示
+    // 右上✕＝移籍フロー（詳細バーは出さない）。複数選手を同時にOUT対象にできる（もう一度✕で解除）
     wrap.querySelectorAll(".mt-ctrl-x").forEach((s) => s.addEventListener("click", (e) => {
       e.stopPropagation();
+      const pos = +s.dataset.pos;
       MT.sel = null;
       MT.swapFrom = null;
-      MT.pickerFor = +s.dataset.pos;
-      renderSquadPitch();
-      renderMtPicker("");
+      if (MT.outs.includes(pos)) MT.outs = MT.outs.filter((x) => x !== pos);
+      else MT.outs.push(pos);
+      renderSquadPitch();  // OUT対象があれば候補リストも自動で開く
     }));
     wrap.querySelectorAll(".mt-actions button").forEach((b) => b.addEventListener("click", () => onMtAction(b.dataset.act)));
     wrap.querySelectorAll(".mt-gw-btn").forEach((b) => b.addEventListener("click", () => {
       if (b.dataset.gw === "prev" && MT.planGw > MT.basePlanGw) MT.planGw--;
       else if (b.dataset.gw === "next" && MT.planGw < 38) MT.planGw++;
-      MT.sel = null; MT.swapFrom = null; MT.pickerFor = null;
+      MT.sel = null; MT.swapFrom = null; MT.outs = [];
       savePlans();
       renderSquadPitch();
     }));
@@ -1247,10 +1249,13 @@ function renderSquadPitch() {
       savePlans();
       renderSquadPitch();
     });
+    // OUT対象が残っていれば候補リストを開いたままにする（検索文字列も保持）
+    if (MT.outs.length) renderMtPicker(MT.pickQ || "");
+
     // この節以降のプランを破棄して引き継ぎ状態に戻す
     wrap.querySelector("#mt-plan-reset").addEventListener("click", () => {
       Object.keys(MT.plans).forEach((g) => { if (+g >= MT.planGw) delete MT.plans[g]; });
-      MT.sel = null; MT.swapFrom = null; MT.pickerFor = null;
+      MT.sel = null; MT.swapFrom = null; MT.outs = [];
       MT.msg = "この節以降のプランをリセットしました";
       savePlans();
       renderSquadPitch();
@@ -1330,27 +1335,30 @@ function onMtAction(act) {
     MT.sel = null; renderSquadPitch(); return;
   }
   if (act === "transfer") {
-    // 緑枠（入れ替え用の選択）を外し、対象選手を半透明にしてから候補を表示
-    MT.pickerFor = MT.sel;
+    // 緑枠（詳細の選択）を外し、対象選手をOUT対象（半透明）に加えて候補を表示
+    if (!MT.outs.includes(MT.sel)) MT.outs.push(MT.sel);
     MT.sel = null;
     renderSquadPitch();
-    renderMtPicker("");
   }
 }
 
 function renderMtPicker(query) {
   const box = document.getElementById("mt-picker");
-  if (!box) return;
+  if (!box || !MT.outs.length) return;
   const P = MT.plans[MT.planGw];
-  const pick = P.squad.find((p) => p.position === MT.pickerFor);
-  const out = elOf(pick);
+  // OUT対象（✕を押した順）。候補と同じポジションの先頭が入れ替え相手になる
+  const outPicks = MT.outs.map((pos) => P.squad.find((p) => p.position === pos)).filter(Boolean);
+  const outEls = outPicks.map(elOf);
+  const posTypes = [...new Set(outEls.map((e) => e.p))];
+  const outFor = (cand) => outEls.find((e) => e.p === cand.p) || null;
   const ownedNow = new Set(P.squad.map((p) => p.element));
   const q = (query || "").trim();
+  MT.pickQ = q;
   const ql = q.toLowerCase();
   const st = (e) => playerStats(e.ph);
   let list = Object.entries(DATA.elements)
     .map(([id, e]) => ({ id: +id, ...e }))
-    .filter((e) => e.p === out.p && !ownedNow.has(e.id))
+    .filter((e) => posTypes.includes(e.p) && !ownedNow.has(e.id))
     .filter((e) => !q || e.n.toLowerCase().includes(ql) || (e.j && e.j.includes(q)))
     .filter((e) => MT.pickMax == null || e.c <= MT.pickMax);
   // 並び替え：価格／今季ポイント／コスパ（成績が無い選手は後ろ）
@@ -1364,13 +1372,15 @@ function renderMtPicker(query) {
   list = list.slice(0, 100);
 
   const rowHtml = list.map((e) => {
-    const after = P.bank + out.c - e.c;
+    const o = outFor(e);
+    const after = P.bank + (o ? o.c : 0) - e.c;
     const kit = kitUrl(e);
     const s = st(e);
     const fx = s ? next3Text(s.tid) : "";
+    const posTag = posTypes.length > 1 ? esc(e.p) + "・" : "";
     return `<button type="button" class="mt-pick-row${after < 0 ? " over" : ""}" data-id="${e.id}">
       <span class="mt-pick-kit">${kit ? `<img src="${kit}" loading="lazy" onerror="this.style.visibility='hidden'">` : ""}</span>
-      <span class="mt-pick-name">${esc(e.n)}<span class="sub">${esc(e.t)}${fx ? "　次3試合: " + esc(fx) : ""}</span></span>
+      <span class="mt-pick-name">${esc(e.n)}<span class="sub">${posTag}${esc(e.t)}${fx ? "　次3試合: " + esc(fx) : ""}</span></span>
       <span class="mt-pick-pt">${s && s.pt != null ? s.pt + "pt" : "–"}</span>
       <span class="mt-pick-cost">£${e.c}m</span>
       <span class="mt-pick-after">残£${after.toFixed(1)}m</span>
@@ -1384,7 +1394,7 @@ function renderMtPicker(query) {
   box.hidden = false;
   box.innerHTML = `
     <div class="mt-picker-head">
-      <strong>${esc(out.n)} を移籍 → ${esc(out.p)}の候補</strong>
+      <strong>OUT: ${outEls.map((e) => esc(e.j || e.n)).join("・")} の候補</strong>
       <button type="button" id="mt-picker-close">✕</button>
     </div>
     <input type="search" id="mt-picker-q" placeholder="選手名で検索（英字／カタカナ）" value="${esc(q)}">
@@ -1397,7 +1407,7 @@ function renderMtPicker(query) {
     </div>
     <div class="mt-picker-list">${rowHtml}</div>`;
   box.querySelector("#mt-picker-close").addEventListener("click", () => {
-    box.hidden = true; MT.sel = null; MT.pickerFor = null; renderSquadPitch();
+    box.hidden = true; MT.sel = null; MT.outs = []; MT.pickQ = ""; renderSquadPitch();
   });
   const qi = box.querySelector("#mt-picker-q");
   qi.addEventListener("input", () => renderMtPicker(qi.value));
@@ -1413,26 +1423,30 @@ function renderMtPicker(query) {
     renderMtPicker(qi.value);
   });
   box.querySelectorAll(".mt-pick-row").forEach((r) => r.addEventListener("click", () => doMtTransfer(+r.dataset.id)));
-  box.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function doMtTransfer(inId) {
   const P = MT.plans[MT.planGw];
-  const pos = MT.pickerFor;
-  const pick = P.squad.find((p) => p.position === pos);
-  const out = elOf(pick);
   const inc = DATA.elements[String(inId)];
   if (!inc) return;
+  // 候補と同じポジションのOUT対象（先に✕を押した選手）と入れ替える
+  const pos = MT.outs.find((q) => {
+    const pk = P.squad.find((p) => p.position === q);
+    return pk && elOf(pk).p === inc.p;
+  });
+  if (pos == null) return;
+  const pick = P.squad.find((p) => p.position === pos);
+  const out = elOf(pick);
   // 同一チーム3人まで
   const teamCount = {};
   P.squad.forEach((p) => { if (p.position === pos) return; const e = elOf(p); teamCount[e.t] = (teamCount[e.t] || 0) + 1; });
-  if ((teamCount[inc.t] || 0) >= 3) { MT.msg = "同じチームから選べるのは3人までです"; renderMtPicker(document.getElementById("mt-picker-q")?.value || ""); return; }
+  if ((teamCount[inc.t] || 0) >= 3) { MT.msg = "同じチームから選べるのは3人までです"; renderMtPicker(MT.pickQ || ""); return; }
   pick.element = inId;
   P.bank = P.bank + out.c - inc.c;
-  MT.sel = null; MT.pickerFor = null;
+  MT.outs = MT.outs.filter((q) => q !== pos);
   invalidateAfter(MT.planGw);
   savePlans();
-  renderSquadPitch();
+  renderSquadPitch();  // OUT対象が残っていれば候補リストは開いたまま
 }
 
 async function loadLeagueStandings(leagueId, leagueName, myEntryId) {

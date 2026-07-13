@@ -1135,23 +1135,45 @@ tr.me-row td { background: #eafff3 !important; }
   margin-bottom: 8px;
   text-align: center;
 }
+/* 説明文・操作バー用の固定スロット。
+   ⇅や選択でバーが出てもスカッド（ピッチ）が上下に動かないよう、空でも高さを確保する */
+.mt-bar-slot {
+  min-height: 54px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.mt-bar-slot .mt-actions,
+.mt-bar-slot .mt-msg { margin-bottom: 0; }
 .mt-actions {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;   /* 1行に収めてバーの高さを一定に（スカッドが動かないように） */
   gap: 6px;
   background: #f4eff6;
   border-radius: 8px;
   padding: 7px 10px;
   margin-bottom: 8px;
 }
-.mt-sel-name { font-weight: 700; color: var(--pl-purple); margin-right: auto; font-size: 0.85rem; }
+.mt-sel-name {
+  font-weight: 700;
+  color: var(--pl-purple);
+  margin-right: auto;
+  font-size: 0.85rem;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;   /* 長い名前は…で省略して折り返さない */
+}
 .mt-actions button {
+  flex: 0 0 auto;
   border: 1px solid var(--pl-purple);
   background: #fff;
   color: var(--pl-purple);
   border-radius: 6px;
-  padding: 5px 10px;
+  padding: 5px 8px;
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
