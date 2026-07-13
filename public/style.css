@@ -1436,12 +1436,14 @@ button.mt-stat-btn .mt-stat-v {
 .mt-pts.p49 { background: #12fc7a; color: #1b1b1f; }
 .mt-pts.p10 { background: #49b605; color: #1b1b1f; }
 .mt-card.is-sel .mt-name { background: var(--pl-green); }
-/* 選択中はカード全体を緑枠で囲む */
+/* 選択中（入れ替え用）はカード全体を緑枠で囲む */
 .mt-card.is-sel {
   outline: 2.5px solid var(--pl-green);
   outline-offset: 2px;
   border-radius: 6px;
 }
+/* 移籍候補を表示中の選手（OUT対象）は半透明で示す */
+.mt-card.is-out { opacity: 0.5; }
 
 /* 計画タブ：カード左上の⇅（入れ替え）・右上の✕（移籍）アイコン（LiveFPL風） */
 .mt-ctrl {

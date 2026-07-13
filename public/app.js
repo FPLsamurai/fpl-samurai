@@ -1092,6 +1092,8 @@ function mtCard(p) {
   const cv = p.is_captain ? `<span class="mt-cv c">C</span>`
     : (p.is_vice_captain ? `<span class="mt-cv v">V</span>` : "");
   const sel = MT.sel === p.position ? " is-sel" : "";
+  // 移籍候補を表示中の選手（OUT対象）は緑枠ではなく半透明で示す
+  const outSel = MT.pickerFor === p.position ? " is-out" : "";
   const plan = MT.mode === "plan";
   // 計画タブ：左上=スタメン⇄ベンチ入れ替え、右上=移籍（LiveFPL風）。C/Vは⇅の下に表示（CSS側で位置指定）
   const ctrls = plan
@@ -1117,7 +1119,7 @@ function mtCard(p) {
     }
   }
   const nm = el.j || el.n;
-  return `<button type="button" class="mt-card${plan ? " is-plan" : ""}${sel}" data-pos="${p.position}">
+  return `<button type="button" class="mt-card${plan ? " is-plan" : ""}${sel}${outSel}" data-pos="${p.position}">
     <span class="mt-photo-wrap">${img}${ctrls}${cv}</span>
     <span class="mt-name">${esc(nm)}</span>
     ${foot}
@@ -1212,11 +1214,11 @@ function renderSquadPitch() {
       e.stopPropagation();
       mtSelectOrSwap(+s.dataset.pos);
     }));
-    // 右上✕＝その選手の移籍候補をすぐ表示
+    // 右上✕＝その選手の移籍候補をすぐ表示（緑枠は付けず、対象選手を半透明にする）
     wrap.querySelectorAll(".mt-ctrl-x").forEach((s) => s.addEventListener("click", (e) => {
       e.stopPropagation();
-      MT.sel = +s.dataset.pos;
-      MT.pickerFor = MT.sel;
+      MT.sel = null;
+      MT.pickerFor = +s.dataset.pos;
       renderSquadPitch();
       renderMtPicker("");
     }));
@@ -1315,7 +1317,13 @@ function onMtAction(act) {
     invalidateAfter(MT.planGw); savePlans();
     MT.sel = null; renderSquadPitch(); return;
   }
-  if (act === "transfer") { MT.pickerFor = MT.sel; renderMtPicker(""); }
+  if (act === "transfer") {
+    // 緑枠（入れ替え用の選択）を外し、対象選手を半透明にしてから候補を表示
+    MT.pickerFor = MT.sel;
+    MT.sel = null;
+    renderSquadPitch();
+    renderMtPicker("");
+  }
 }
 
 function renderMtPicker(query) {
