@@ -934,6 +934,13 @@ function elOf(pick) {
 
 function initSquadEditor(entry, picksData, gw, livePoints) {
   const eh = picksData.entry_history || {};
+  const baseSquad = picksData.picks.map((p) => ({
+    element: p.element,
+    position: p.position,
+    is_captain: !!p.is_captain,
+    is_vice_captain: !!p.is_vice_captain,
+  }));
+  const basePlanGw = Math.min((gw || 1) + 1, 38);  // プランを立てられる最初の節（次節）
   MT = {
     entry, gw,
     bank: eh.bank != null ? eh.bank / 10 : 0,
@@ -943,22 +950,125 @@ function initSquadEditor(entry, picksData, gw, livePoints) {
     eventTransfersCost: eh.event_transfers_cost != null ? eh.event_transfers_cost : 0,  // その節の移籍コスト(-4等)
     chip: picksData.active_chip || null,
     livePoints: livePoints || null,   // {element_id: その節のポイント}
-    squad: picksData.picks.map((p) => ({
-      element: p.element,
-      position: p.position,
-      is_captain: !!p.is_captain,
-      is_vice_captain: !!p.is_vice_captain,
-    })),
-    owned: new Set(picksData.picks.map((p) => p.element)),
-    origElements: new Set(picksData.picks.map((p) => p.element)),  // 移籍数カウント用の元スカッド
-    freeTransfers: 1,  // 無料移籍枠（公開APIでは取得できないため既定1）
-    sel: null,        // 選択中の position(1-15)
-    pickerFor: null,  // 移籍ピッカー対象の position
+    base: { squad: baseSquad, bank: eh.bank != null ? eh.bank / 10 : 0 },  // 現行GWの実スカッド（直近節タブ＆プランの起点）
+    basePlanGw,
+    planGw: basePlanGw,   // 計画タブで表示中のGW
+    plans: {},            // {gw: {squad, bank, ft, inhElems}} 節ごとの独立プラン（前の節から引き継いで作る）
+    sel: null,            // 選択中の position(1-15)
+    pickerFor: null,      // 移籍ピッカー対象の position
     msg: null,
-    mode: "recent",   // recent=直近節の結果表示 ／ plan=次節以降のプラン編集
-    planGw: Math.min((gw || 1) + 1, 38),  // 計画タブで表示中のGW
+    mode: "recent",       // recent=直近節の結果表示 ／ plan=次節以降のプラン編集
+    pickSort: "cost",     // 移籍候補の並び替え（cost/points/value）
+    pickMax: null,        // 移籍候補の価格上限（£m）
   };
+  restorePlans();
   renderSquadPitch();
+}
+
+/* ---- 節ごとのプラン管理 ---- */
+const PLAN_STORE_PREFIX = "fpl_plan_v1_";  // localStorageキー（FPL IDごと）
+
+// 指定節より前で一番近いプランを探す（無ければ null＝実スカッドが起点）
+function planSrc(gw) {
+  for (let g = gw - 1; g >= MT.basePlanGw; g--) {
+    if (MT.plans[g]) return { plan: MT.plans[g], gw: g };
+  }
+  return null;
+}
+
+// その節のプランでの移籍数（引き継いだスカッドとの差分）
+function planMade(P) {
+  const cur = new Set(P.squad.map((p) => p.element));
+  return P.inhElems.filter((id) => !cur.has(id)).length;
+}
+
+// 表示する節のプランを用意（無ければ直前のプラン／実スカッドを引き継いで作成）
+function ensurePlan(gw) {
+  if (MT.plans[gw]) return MT.plans[gw];
+  const src = planSrc(gw);
+  let squad, bank, ft;
+  if (src) {
+    squad = src.plan.squad.map((p) => ({ ...p }));
+    bank = src.plan.bank;
+    // FTは「前節のFT − 使った数 ＋ 経過節数」を1〜5に丸める（FPLの繰り越しルール）
+    ft = Math.min(5, Math.max(1, src.plan.ft - planMade(src.plan) + (gw - src.gw)));
+  } else {
+    squad = MT.base.squad.map((p) => ({ ...p }));
+    bank = MT.base.bank;
+    ft = 1;  // 公開APIでは実FT数が取れないため既定1（ステータスのタップで変更可）
+  }
+  MT.plans[gw] = { squad, bank, ft, inhElems: squad.map((p) => p.element) };
+  return MT.plans[gw];
+}
+
+// この節を変更したら、これより後の節のプランは前提が崩れるので破棄
+function invalidateAfter(gw) {
+  let removed = false;
+  Object.keys(MT.plans).forEach((g) => {
+    if (+g > gw) { delete MT.plans[g]; removed = true; }
+  });
+  if (removed) MT.msg = "変更に合わせて、後の節のプランをリセットしました";
+}
+
+function savePlans() {
+  try {
+    localStorage.setItem(PLAN_STORE_PREFIX + MT.entry.id, JSON.stringify({
+      baseGw: MT.gw, planGw: MT.planGw, plans: MT.plans,
+    }));
+  } catch (e) {}
+}
+
+// 保存済みプランの復元。節が進んで実スカッドが変わっていたら破棄
+function restorePlans() {
+  try {
+    const s = JSON.parse(localStorage.getItem(PLAN_STORE_PREFIX + MT.entry.id));
+    if (s && s.baseGw === MT.gw && s.plans) {
+      MT.plans = s.plans;
+      if (s.planGw >= MT.basePlanGw && s.planGw <= 38) MT.planGw = s.planGw;
+    }
+  } catch (e) {}
+}
+
+// この節の移籍一覧（OUT→IN）。同ポジション同士で対応付ける
+function planDiffPairs(P) {
+  const inh = new Set(P.inhElems);
+  const curIds = P.squad.map((p) => p.element);
+  const curSet = new Set(curIds);
+  const outs = P.inhElems.filter((id) => !curSet.has(id));
+  const ins = curIds.filter((id) => !inh.has(id));
+  const posOf = (id) => (DATA.elements[String(id)] || {}).p || "?";
+  const pairs = [];
+  ["GK", "DF", "MF", "FW"].forEach((pos) => {
+    const o = outs.filter((id) => posOf(id) === pos);
+    const i = ins.filter((id) => posOf(id) === pos);
+    for (let k = 0; k < Math.max(o.length, i.length); k++) pairs.push({ out: o[k], in: i[k] });
+  });
+  return pairs;
+}
+
+/* ---- 移籍候補用：選手成績（data.jsonのランキング表から写真コードで引く） ---- */
+let _pStats = null;
+function playerStats(ph) {
+  if (!_pStats) {
+    _pStats = {};
+    ((DATA.players && DATA.players.all) || []).forEach((r) => {
+      if (r.photo) _pStats[r.photo] = { pt: r.points, vl: r.value, tid: r.team_id };
+    });
+  }
+  return _pStats[ph];
+}
+let _shortByName = null;
+function teamShortByName(nameJa) {
+  if (!_shortByName) {
+    _shortByName = {};
+    Object.values(DATA.teams_meta || {}).forEach((t) => { _shortByName[t.name] = t.short; });
+  }
+  return _shortByName[nameJa];
+}
+// 次の3試合を「BOU(H)・ARS(A)」形式で（オフシーズン中は空文字）
+function next3Text(tid) {
+  const lst = (DATA.team_next3 || {})[String(tid)] || [];
+  return lst.map((x) => `${teamShortByName(x.o) || x.o}(${x.h ? "H" : "A"})`).join("・");
 }
 
 // 選手の表示ポイント（主将は倍率を反映）。live未取得なら null
@@ -1014,24 +1124,27 @@ function mtCard(p) {
   </button>`;
 }
 
-function validFormation() {
+function validFormation(squad) {
   const c = { GK: 0, DF: 0, MF: 0, FW: 0 };
-  MT.squad.filter((p) => p.position <= 11).forEach((p) => { const e = elOf(p); c[e.p] = (c[e.p] || 0) + 1; });
+  squad.filter((p) => p.position <= 11).forEach((p) => { const e = elOf(p); c[e.p] = (c[e.p] || 0) + 1; });
   return c.GK === 1 && c.DF >= 3 && c.MF >= 2 && c.FW >= 1 && (c.DF + c.MF + c.FW === 10);
 }
 
 function renderSquadPitch() {
   const wrap = document.getElementById("mt-squad");
   if (!wrap || !MT) return;
-  const starters = MT.squad.filter((p) => p.position <= 11);
-  const bench = MT.squad.filter((p) => p.position > 11).sort((a, b) => a.position - b.position);
+  // 計画タブは「表示中の節のプラン」、直近節タブは実スカッドを描く
+  const squadSrc = MT.mode === "plan" ? ensurePlan(MT.planGw).squad : MT.base.squad;
+  const starters = squadSrc.filter((p) => p.position <= 11);
+  const bench = squadSrc.filter((p) => p.position > 11).sort((a, b) => a.position - b.position);
   const byPos = (pos) => starters.filter((p) => elOf(p).p === pos).sort((a, b) => a.position - b.position);
   const rows = ["GK", "DF", "MF", "FW"]
     .map((pos) => `<div class="mt-row">${byPos(pos).map(mtCard).join("")}</div>`).join("");
 
   if (MT.mode === "plan") {
-    // ===== 計画タブ：GWナビ＋ステータス（チップ/移籍/資金/コスト）＋編集 =====
-    const sel = MT.sel != null ? MT.squad.find((p) => p.position === MT.sel) : null;
+    // ===== 計画タブ：GWナビ＋ステータス＋編集＋移籍サマリー =====
+    const P = MT.plans[MT.planGw];
+    const sel = MT.sel != null ? P.squad.find((p) => p.position === MT.sel) : null;
     let bar = "";
     if (sel) {
       const el = elOf(sel);
@@ -1047,21 +1160,35 @@ function renderSquadPitch() {
     }
     if (MT.msg) { setTimeout(() => { MT.msg = null; }, 2600); }
 
-    const made = MT.squad.reduce((n, p) => n + (MT.origElements.has(p.element) ? 0 : 1), 0);
-    const free = MT.freeTransfers || 1;
+    const made = planMade(P);
+    const free = P.ft;
     const cost = Math.max(0, made - free) * 4;
+
+    // この節の移籍プラン（OUT→IN の一覧）
+    const pairs = planDiffPairs(P);
+    const trRows = pairs.map((t) => {
+      const o = t.out ? DATA.elements[String(t.out)] : null;
+      const i = t.in ? DATA.elements[String(t.in)] : null;
+      return `<div class="mt-tr-row">
+        <span class="mt-tr-side out"><span class="mt-tr-tag">OUT</span>${o ? esc(o.j || o.n) : "-"}<span class="sub">£${o ? o.c : "-"}m</span></span>
+        <span class="mt-tr-arrow">→</span>
+        <span class="mt-tr-side in"><span class="mt-tr-tag">IN</span>${i ? esc(i.j || i.n) : "-"}<span class="sub">£${i ? i.c : "-"}m</span></span>
+      </div>`;
+    }).join("") || `<div class="mt-tr-none">この節の移籍はまだありません（カード右上の✕から候補を選べます）</div>`;
 
     wrap.innerHTML = `
       <div class="mt-head">
         <div class="mt-gwnav">
-          <button type="button" class="mt-gw-btn" data-gw="prev" ${MT.planGw <= 1 ? "disabled" : ""}>‹ 前</button>
+          <button type="button" class="mt-gw-btn" data-gw="prev" ${MT.planGw <= MT.basePlanGw ? "disabled" : ""}>‹ 前</button>
           <span class="mt-gw-cur">第${MT.planGw}節</span>
           <button type="button" class="mt-gw-btn" data-gw="next" ${MT.planGw >= 38 ? "disabled" : ""}>次 ›</button>
         </div>
         <div class="mt-stats">
           <div class="mt-stat"><span class="mt-stat-l">チップ</span><span class="mt-stat-v">${MT.chip ? esc(MT.chip) : "なし"}</span></div>
-          <div class="mt-stat"><span class="mt-stat-l">移籍</span><span class="mt-stat-v">${made}/${free}</span></div>
-          <div class="mt-stat"><span class="mt-stat-l">資金</span><span class="mt-stat-v">£${MT.bank.toFixed(1)}m</span></div>
+          <button type="button" class="mt-stat mt-stat-btn" id="mt-ft-toggle" title="タップで無料移籍数を変更（1〜5）">
+            <span class="mt-stat-l">移籍/FT ✎</span><span class="mt-stat-v">${made}/${free}</span>
+          </button>
+          <div class="mt-stat"><span class="mt-stat-l">資金</span><span class="mt-stat-v">£${P.bank.toFixed(1)}m</span></div>
           <div class="mt-stat"><span class="mt-stat-l">コスト</span><span class="mt-stat-v${cost > 0 ? " neg" : ""}">${cost > 0 ? "-" + cost : "0"}</span></div>
         </div>
       </div>
@@ -1069,6 +1196,13 @@ function renderSquadPitch() {
       <div class="mt-pitch-wrap">
         <div class="mt-pitch">${rows}</div>
         <div class="mt-bench">${bench.map(mtCard).join("")}</div>
+      </div>
+      <div class="mt-transfers">
+        <div class="mt-tr-head">
+          <span>第${MT.planGw}節の移籍プラン${made ? `（${made}件）` : ""}</span>
+          <button type="button" id="mt-plan-reset" title="この節以降の変更をすべて取り消す">この節をリセット</button>
+        </div>
+        ${trRows}
       </div>
       <div id="mt-picker" class="mt-picker" hidden></div>`;
 
@@ -1088,10 +1222,26 @@ function renderSquadPitch() {
     }));
     wrap.querySelectorAll(".mt-actions button").forEach((b) => b.addEventListener("click", () => onMtAction(b.dataset.act)));
     wrap.querySelectorAll(".mt-gw-btn").forEach((b) => b.addEventListener("click", () => {
-      if (b.dataset.gw === "prev" && MT.planGw > 1) MT.planGw--;
+      if (b.dataset.gw === "prev" && MT.planGw > MT.basePlanGw) MT.planGw--;
       else if (b.dataset.gw === "next" && MT.planGw < 38) MT.planGw++;
+      MT.sel = null; MT.pickerFor = null;
+      savePlans();
       renderSquadPitch();
     }));
+    // 移籍/FTステータスのタップで無料移籍数を1〜5で切り替え（公開APIから取れないため手動設定）
+    wrap.querySelector("#mt-ft-toggle").addEventListener("click", () => {
+      P.ft = (P.ft % 5) + 1;
+      savePlans();
+      renderSquadPitch();
+    });
+    // この節以降のプランを破棄して引き継ぎ状態に戻す
+    wrap.querySelector("#mt-plan-reset").addEventListener("click", () => {
+      Object.keys(MT.plans).forEach((g) => { if (+g >= MT.planGw) delete MT.plans[g]; });
+      MT.sel = null; MT.pickerFor = null;
+      MT.msg = "この節以降のプランをリセットしました";
+      savePlans();
+      renderSquadPitch();
+    });
   } else {
     // ===== 直近節タブ：結果（ポイント）の読み取り専用 =====
     // 上部は計画タブと同じ（前/次は無し）＝第N節＋ステータス（チップ/移籍/資金/コスト）
@@ -1129,34 +1279,40 @@ function mtSelectOrSwap(pos) {
 }
 
 function tryMtSwap(a, b) {
-  const A = MT.squad.find((p) => p.position === a);
-  const B = MT.squad.find((p) => p.position === b);
+  const P = MT.plans[MT.planGw];
+  const A = P.squad.find((p) => p.position === a);
+  const B = P.squad.find((p) => p.position === b);
   const ea = elOf(A), eb = elOf(B);
   const roleChange = (a <= 11) !== (b <= 11);
   if (roleChange && (ea.p === "GK") !== (eb.p === "GK")) {
     MT.msg = "GKはGK同士でのみ入れ替えできます"; MT.sel = null; renderSquadPitch(); return;
   }
   [A.position, B.position] = [B.position, A.position];
-  if (!validFormation()) {
+  if (!validFormation(P.squad)) {
     [A.position, B.position] = [B.position, A.position];
     MT.msg = "そのフォーメーションは選べません（GK1・DF3+・MF2+・FW1+）";
     MT.sel = null; renderSquadPitch(); return;
   }
+  invalidateAfter(MT.planGw);
+  savePlans();
   MT.sel = null; renderSquadPitch();
 }
 
 function onMtAction(act) {
   if (act === "clear") { MT.sel = null; renderSquadPitch(); return; }
   if (MT.sel == null) return;
-  const pick = MT.squad.find((p) => p.position === MT.sel);
+  const P = MT.plans[MT.planGw];
+  const pick = P.squad.find((p) => p.position === MT.sel);
   if (act === "cap") {
-    MT.squad.forEach((p) => { p.is_captain = false; });
+    P.squad.forEach((p) => { p.is_captain = false; });
     pick.is_captain = true; pick.is_vice_captain = false;
+    invalidateAfter(MT.planGw); savePlans();
     MT.sel = null; renderSquadPitch(); return;
   }
   if (act === "vice") {
-    MT.squad.forEach((p) => { p.is_vice_captain = false; });
+    P.squad.forEach((p) => { p.is_vice_captain = false; });
     pick.is_vice_captain = true; pick.is_captain = false;
+    invalidateAfter(MT.planGw); savePlans();
     MT.sel = null; renderSquadPitch(); return;
   }
   if (act === "transfer") { MT.pickerFor = MT.sel; renderMtPicker(""); }
@@ -1165,27 +1321,45 @@ function onMtAction(act) {
 function renderMtPicker(query) {
   const box = document.getElementById("mt-picker");
   if (!box) return;
-  const pick = MT.squad.find((p) => p.position === MT.pickerFor);
+  const P = MT.plans[MT.planGw];
+  const pick = P.squad.find((p) => p.position === MT.pickerFor);
   const out = elOf(pick);
+  const ownedNow = new Set(P.squad.map((p) => p.element));
   const q = (query || "").trim();
   const ql = q.toLowerCase();
-  const list = Object.entries(DATA.elements)
+  const st = (e) => playerStats(e.ph);
+  let list = Object.entries(DATA.elements)
     .map(([id, e]) => ({ id: +id, ...e }))
-    .filter((e) => e.p === out.p && !MT.owned.has(e.id))
+    .filter((e) => e.p === out.p && !ownedNow.has(e.id))
     .filter((e) => !q || e.n.toLowerCase().includes(ql) || (e.j && e.j.includes(q)))
-    .sort((a, b) => b.c - a.c)
-    .slice(0, 100);
+    .filter((e) => MT.pickMax == null || e.c <= MT.pickMax);
+  // 並び替え：価格／今季ポイント／コスパ（成績が無い選手は後ろ）
+  if (MT.pickSort === "points") {
+    list.sort((a, b) => (((st(b) || {}).pt ?? -1) - ((st(a) || {}).pt ?? -1)) || b.c - a.c);
+  } else if (MT.pickSort === "value") {
+    list.sort((a, b) => (((st(b) || {}).vl ?? -1) - ((st(a) || {}).vl ?? -1)) || b.c - a.c);
+  } else {
+    list.sort((a, b) => b.c - a.c);
+  }
+  list = list.slice(0, 100);
+
   const rowHtml = list.map((e) => {
-    const after = MT.bank + out.c - e.c;
+    const after = P.bank + out.c - e.c;
     const kit = kitUrl(e);
+    const s = st(e);
+    const fx = s ? next3Text(s.tid) : "";
     return `<button type="button" class="mt-pick-row${after < 0 ? " over" : ""}" data-id="${e.id}">
       <span class="mt-pick-kit">${kit ? `<img src="${kit}" loading="lazy" onerror="this.style.visibility='hidden'">` : ""}</span>
-      <span class="mt-pick-name">${esc(e.n)}<span class="sub">${esc(e.t)}</span></span>
+      <span class="mt-pick-name">${esc(e.n)}<span class="sub">${esc(e.t)}${fx ? "　次3試合: " + esc(fx) : ""}</span></span>
+      <span class="mt-pick-pt">${s && s.pt != null ? s.pt + "pt" : "–"}</span>
       <span class="mt-pick-cost">£${e.c}m</span>
       <span class="mt-pick-after">残£${after.toFixed(1)}m</span>
       <span class="mt-pick-add" aria-hidden="true">＋</span>
     </button>`;
   }).join("") || `<div class="empty" style="box-shadow:none;">候補が見つかりません</div>`;
+
+  const srtBtn = (key, label) =>
+    `<button type="button" data-srt="${key}" class="${MT.pickSort === key ? "is-on" : ""}">${label}</button>`;
 
   box.hidden = false;
   box.innerHTML = `
@@ -1194,31 +1368,50 @@ function renderMtPicker(query) {
       <button type="button" id="mt-picker-close">✕</button>
     </div>
     <input type="search" id="mt-picker-q" placeholder="選手名で検索（英字／カタカナ）" value="${esc(q)}">
+    <div class="mt-picker-tools">
+      <div class="mt-sortbtns">
+        <span class="mt-tools-l">並び替え</span>
+        ${srtBtn("cost", "価格")}${srtBtn("points", "ポイント")}${srtBtn("value", "コスパ")}
+      </div>
+      <label class="mt-maxwrap">上限£<input id="mt-picker-max" type="number" inputmode="decimal" step="0.5" min="3.5" max="15.5" value="${MT.pickMax != null ? MT.pickMax : ""}" placeholder="なし">m</label>
+    </div>
     <div class="mt-picker-list">${rowHtml}</div>`;
   box.querySelector("#mt-picker-close").addEventListener("click", () => {
     box.hidden = true; MT.sel = null; MT.pickerFor = null; renderSquadPitch();
   });
   const qi = box.querySelector("#mt-picker-q");
   qi.addEventListener("input", () => renderMtPicker(qi.value));
+  box.querySelectorAll(".mt-sortbtns button").forEach((b) => b.addEventListener("click", () => {
+    MT.pickSort = b.dataset.srt;
+    renderMtPicker(qi.value);
+  }));
+  // 上限は入力確定（フォーカスアウト／Enter）で反映
+  const mx = box.querySelector("#mt-picker-max");
+  mx.addEventListener("change", () => {
+    const v = parseFloat(mx.value);
+    MT.pickMax = isNaN(v) ? null : v;
+    renderMtPicker(qi.value);
+  });
   box.querySelectorAll(".mt-pick-row").forEach((r) => r.addEventListener("click", () => doMtTransfer(+r.dataset.id)));
   box.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function doMtTransfer(inId) {
+  const P = MT.plans[MT.planGw];
   const pos = MT.pickerFor;
-  const pick = MT.squad.find((p) => p.position === pos);
+  const pick = P.squad.find((p) => p.position === pos);
   const out = elOf(pick);
   const inc = DATA.elements[String(inId)];
   if (!inc) return;
   // 同一チーム3人まで
   const teamCount = {};
-  MT.squad.forEach((p) => { if (p.position === pos) return; const e = elOf(p); teamCount[e.t] = (teamCount[e.t] || 0) + 1; });
+  P.squad.forEach((p) => { if (p.position === pos) return; const e = elOf(p); teamCount[e.t] = (teamCount[e.t] || 0) + 1; });
   if ((teamCount[inc.t] || 0) >= 3) { MT.msg = "同じチームから選べるのは3人までです"; renderMtPicker(document.getElementById("mt-picker-q")?.value || ""); return; }
-  MT.owned.delete(pick.element);
   pick.element = inId;
-  MT.owned.add(inId);
-  MT.bank = MT.bank + out.c - inc.c;
+  P.bank = P.bank + out.c - inc.c;
   MT.sel = null; MT.pickerFor = null;
+  invalidateAfter(MT.planGw);
+  savePlans();
   renderSquadPitch();
 }
 

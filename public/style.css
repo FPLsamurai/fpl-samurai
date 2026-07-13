@@ -1216,6 +1216,67 @@ tr.me-row td { background: #eafff3 !important; }
 .mt-stat-l { font-size: 0.6rem; color: var(--muted); }
 .mt-stat-v { font-size: 0.85rem; font-weight: 800; color: var(--pl-purple); }
 .mt-stat-v.neg { color: var(--hard); }
+/* タップで変更できるステータス（移籍/FT）。破線下線で「押せる」ことを示す */
+button.mt-stat-btn {
+  font: inherit;
+  cursor: pointer;
+}
+button.mt-stat-btn .mt-stat-v {
+  border-bottom: 1.5px dashed var(--pl-purple);
+}
+
+/* この節の移籍プラン（OUT→IN一覧）＋リセット */
+.mt-transfers {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  margin-top: 12px;
+  padding: 10px 12px;
+}
+.mt-tr-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--pl-purple);
+  margin-bottom: 6px;
+}
+.mt-tr-head button {
+  border: 1px solid var(--hard);
+  color: var(--hard);
+  background: #fff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mt-tr-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid #f0eef2;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.mt-tr-side { flex: 1; min-width: 0; }
+.mt-tr-side .sub { margin-left: 4px; }
+.mt-tr-side.in { text-align: right; }
+.mt-tr-tag {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 800;
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.mt-tr-side.out .mt-tr-tag { background: #fde8e8; color: var(--hard); }
+.mt-tr-side.in .mt-tr-tag { background: #e6f7ee; color: var(--easy); }
+.mt-tr-arrow { color: var(--muted); flex: 0 0 auto; }
+.mt-tr-none { font-size: 0.8rem; color: var(--muted); padding: 4px 0; }
 /* 計画タブのGWナビ（LiveFPL風 ‹前／第N節／次›） */
 .mt-gwnav {
   display: flex;
@@ -1457,6 +1518,59 @@ tr.me-row td { background: #eafff3 !important; }
 .mt-pick-cost { font-weight: 700; color: var(--pl-purple); font-size: 0.85rem; }
 .mt-pick-after { font-size: 0.72rem; color: var(--muted); min-width: 64px; text-align: right; }
 .mt-pick-row.over .mt-pick-after { color: var(--hard); font-weight: 700; }
+/* ピッカーのツール行（並び替え・価格上限） */
+.mt-picker-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 0 10px 8px;
+}
+.mt-sortbtns {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.mt-tools-l { font-size: 0.72rem; color: var(--muted); margin-right: 2px; }
+.mt-sortbtns button {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mt-sortbtns button.is-on {
+  background: var(--pl-purple);
+  border-color: var(--pl-purple);
+  color: #fff;
+}
+.mt-maxwrap {
+  font-size: 0.75rem;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.mt-maxwrap input {
+  width: 54px;
+  padding: 4px 6px;
+  font-size: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+/* 候補行の今季ポイント */
+.mt-pick-pt {
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--easy);
+  min-width: 40px;
+  text-align: right;
+}
 /* 候補行の＋ボタン（この選手を加える） */
 .mt-pick-add {
   flex: 0 0 22px;
