@@ -1010,7 +1010,28 @@ function initSquadEditor(entry, picksData, gw, livePoints) {
     pickMax: null,        // 移籍候補の価格上限（£m）
   };
   restorePlans();
+  bindMtOutsideClear();
   renderSquadPitch();
+}
+
+// スカッド外（カード・移籍候補・操作バー以外）をタップしたら、
+// 選択（黄色枠）・入れ替え（⇅）・移籍OUT（✕）の状態をすべて解除する
+let _mtOutsideBound = false;
+function bindMtOutsideClear() {
+  if (_mtOutsideBound) return;
+  _mtOutsideBound = true;
+  document.addEventListener("click", (e) => {
+    if (!MT || MT.mode !== "plan") return;
+    if (MT.sel == null && MT.swapFrom == null && !MT.outs.length) return;
+    const t = e.target;
+    // カード（⇅✕含む）・候補リスト・ピッチ上の操作バーの中は、それぞれの処理に任せる
+    if (t.closest && (t.closest(".mt-card") || t.closest(".mt-picker") || t.closest(".mt-overlay"))) return;
+    MT.sel = null;
+    MT.swapFrom = null;
+    MT.outs = [];
+    MT.pickQ = "";
+    renderSquadPitch();
+  });
 }
 
 /* ---- 節ごとのプラン管理 ---- */
