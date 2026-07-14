@@ -1460,8 +1460,7 @@ button.mt-stat-btn .mt-stat-v {
 .mt-pts.p23 { background: #e7e7e7; color: #1b1b1f; }
 .mt-pts.p49 { background: #12fc7a; color: #1b1b1f; }
 .mt-pts.p10 { background: #49b605; color: #1b1b1f; }
-.mt-card.is-sel .mt-name { background: var(--pl-green); }
-/* 詳細表示中（カード本体タップ）はカード全体を黄色枠で囲む（名前バーの緑背景はそのまま） */
+/* 詳細表示中（カード本体タップ）はカード全体を黄色枠で囲む（名前バーは通常の色のまま） */
 .mt-card.is-sel {
   outline: 2.5px solid #fff001;
   outline-offset: 2px;
