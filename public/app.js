@@ -765,25 +765,34 @@ function esc(s) {
    =========================================================== */
 
 const FPL_API = "https://fantasy.premierleague.com/api/";
-// 中継サービス（上から順に試す）
+// 中継サービス（全部に同時に投げて、最初に成功した応答を採用する）
 const PROXIES = [
   (u) => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
   (u) => "https://corsproxy.io/?url=" + encodeURIComponent(u),
 ];
 
-async function fplFetch(path) {
-  const url = FPL_API + path;
-  let lastErr = null;
-  for (const wrap of PROXIES) {
+// プロキシ2本を同時に競争させてテキストを取得（遅い方・失敗した方を待たない）
+async function proxyFetchText(url) {
+  const attempts = PROXIES.map((wrap) => (async () => {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 12000);  // ハングした中継を待ち続けない
     try {
-      const res = await fetch(wrap(url), { cache: "no-store" });
+      const res = await fetch(wrap(url), { cache: "no-store", signal: ctrl.signal });
       if (!res.ok) throw new Error("HTTP " + res.status);
-      return await res.json();
-    } catch (e) {
-      lastErr = e;
+      return await res.text();
+    } finally {
+      clearTimeout(timer);
     }
+  })());
+  return Promise.any(attempts);  // 最初に成功した方を返す（全滅なら reject）
+}
+
+async function fplFetch(path) {
+  try {
+    return JSON.parse(await proxyFetchText(FPL_API + path));
+  } catch (e) {
+    throw new Error("FPLサーバーに接続できませんでした。IDが正しいか、少し時間をおいて再度お試しください。");
   }
-  throw new Error("FPLサーバーに接続できませんでした。IDが正しいか、少し時間をおいて再度お試しください。");
 }
 
 function setupMyTeam() {
@@ -808,29 +817,66 @@ function setupMyTeam() {
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
 }
 
+// data.json が知っている「最新の節」の番号（例: "第38節" → 38）。取れなければ null
+function metaGw() {
+  const m = String((DATA && DATA.meta && DATA.meta.latest_gameweek) || "").match(/(\d+)/);
+  return m ? +m[1] : null;
+}
+
+// その節の選手別ポイントをバックグラウンドで取得し、届いたら得点だけ差し込む
+function startLivePoints(gw, picks) {
+  if (!gw || !picks) return;
+  fplFetch(`event/${gw}/live/`).then((live) => {
+    const lp = {};
+    (live.elements || []).forEach((e) => { lp[e.id] = (e.stats && e.stats.total_points) || 0; });
+    if (MT) { MT.livePoints = lp; if (MT.mode === "recent") renderSquadPitch(); }
+  }).catch(() => { /* 得点が取れなくてもスカッドは表示済み */ });
+}
+
+const SQUAD_CACHE_PREFIX = "fpl_squad_cache_v1_";  // 前回取得したチーム情報（再訪時に即表示）
+
 async function loadMyTeam(id) {
   const box = document.getElementById("myteam-result");
-  box.innerHTML = `<div class="empty">読み込み中…（10秒ほどかかることがあります）</div>`;
+
+  // 前回のデータがあれば即表示（裏で最新を取得して、変わっていたら差し替え）
+  const cacheKey = SQUAD_CACHE_PREFIX + id;
+  let cached = null;
+  try { cached = JSON.parse(localStorage.getItem(cacheKey)); } catch (e) {}
+  if (cached && cached.entry) {
+    renderMyTeam(cached.entry, cached.picks, cached.gw, null);
+    startLivePoints(cached.gw, cached.picks);
+  } else {
+    box.innerHTML = `<div class="empty">読み込み中…（10秒ほどかかることがあります）</div>`;
+  }
+
   try {
-    const entry = await fplFetch(`entry/${id}/`);
+    // entry と picks を並列で取得（picksのGWは data.json の最新節で先読みし、外れたら取り直す）
+    const guessGw = metaGw();
+    const entryPromise = fplFetch(`entry/${id}/`);
+    const guessPicksPromise = guessGw
+      ? fplFetch(`entry/${id}/event/${guessGw}/picks/`).catch(() => null)
+      : null;
+    const entry = await entryPromise;
     const gw = entry.current_event;
     let picks = null;
     if (gw) {
-      try { picks = await fplFetch(`entry/${id}/event/${gw}/picks/`); } catch (e) { picks = null; }
+      if (guessPicksPromise && guessGw === gw) picks = await guessPicksPromise;
+      if (!picks) {
+        try { picks = await fplFetch(`entry/${id}/event/${gw}/picks/`); } catch (e) { picks = null; }
+      }
     }
-    // まずスカッド（写真・名前・配置）を表示。得点は重いので待たない。
-    renderMyTeam(entry, picks, gw, null);
 
-    // その節の選手別ポイントはバックグラウンドで取得し、届いたら得点だけ差し込む。
-    if (gw && picks) {
-      fplFetch(`event/${gw}/live/`).then((live) => {
-        const lp = {};
-        (live.elements || []).forEach((e) => { lp[e.id] = (e.stats && e.stats.total_points) || 0; });
-        if (MT) { MT.livePoints = lp; if (MT.mode === "recent") renderSquadPitch(); }
-      }).catch(() => { /* 得点が取れなくてもスカッドは表示済み */ });
+    // 取得結果を保存。キャッシュ表示と同一内容なら再描画しない（ちらつき防止）
+    const freshStr = JSON.stringify({ entry, picks, gw });
+    try { localStorage.setItem(cacheKey, freshStr); } catch (e) {}
+    const cachedStr = cached ? JSON.stringify({ entry: cached.entry, picks: cached.picks, gw: cached.gw }) : null;
+    if (freshStr !== cachedStr) {
+      renderMyTeam(entry, picks, gw, null);
+      startLivePoints(gw, picks);
     }
   } catch (err) {
-    box.innerHTML = emptyMessage("取得に失敗しました。<br>" + esc(err.message || err));
+    // キャッシュを表示済みなら、裏の更新失敗は黙って無視（表示はそのまま使える）
+    if (!cached) box.innerHTML = emptyMessage("取得に失敗しました。<br>" + esc(err.message || err));
   }
 }
 
@@ -1487,15 +1533,11 @@ async function loadYouTube() {
   if (!grid) return;
   const feedUrl = "https://www.youtube.com/feeds/videos.xml?channel_id=" + YT_CHANNEL_ID;
   let xmlText = null;
-  for (const wrap of PROXIES) {
-    try {
-      const res = await fetch(wrap(feedUrl), { cache: "no-store" });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      xmlText = await res.text();
-      break;
-    } catch (e) { /* 次のプロキシを試す */ }
+  try {
+    xmlText = await proxyFetchText(feedUrl);  // プロキシ2本を競争させて速い方を採用
+  } catch (e) {
+    return;  // 取得失敗：固定動画のみ表示
   }
-  if (!xmlText) return;  // 取得失敗：固定動画のみ表示
 
   let entries;
   try {
