@@ -1134,6 +1134,13 @@ tr.me-row td { background: #eafff3 !important; }
   padding: 8px 10px;
   margin-bottom: 8px;
   text-align: center;
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+/* 3秒表示した後、うっすらフェードして消える（消える直前にタップできてしまわないように） */
+.mt-msg.is-fading {
+  opacity: 0;
+  pointer-events: none;
 }
 /* 選択時の操作バー・メッセージはピッチ上部に重ねて表示
    （レイアウトの高さを変えない＝計画タブと直近節タブのスカッド位置が同じになる） */
@@ -1552,45 +1559,33 @@ button.mt-stat-btn .mt-stat-v {
 .mt-pick-kit img { height: 30px; width: auto; }
 .mt-pick-name { flex: 1; font-size: 0.85rem; font-weight: 600; }
 .mt-pick-name .sub { display: block; font-weight: 400; }
-.mt-pick-cost { font-weight: 700; color: var(--pl-purple); font-size: 0.85rem; }
+.mt-pick-cost { font-weight: 700; color: var(--pl-purple); font-size: 0.78rem; min-width: 44px; text-align: right; }
 .mt-pick-after { font-size: 0.72rem; color: var(--muted); min-width: 64px; text-align: right; }
 .mt-pick-row.over .mt-pick-after { color: var(--hard); font-weight: 700; }
-/* ピッカーのツール行（並び替え・価格上限） */
+/* ピッカーのツール行（チーム絞り込み・コスト絞り込み） */
 .mt-picker-tools {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 14px;
   flex-wrap: wrap;
   padding: 0 10px 8px;
 }
-.mt-sortbtns {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.mt-tools-l { font-size: 0.72rem; color: var(--muted); margin-right: 2px; }
-.mt-sortbtns button {
-  border: 1px solid var(--border);
-  background: #fff;
-  color: var(--muted);
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-.mt-sortbtns button.is-on {
-  background: var(--pl-purple);
-  border-color: var(--pl-purple);
-  color: #fff;
-}
+.mt-fteam,
 .mt-maxwrap {
   font-size: 0.75rem;
   color: var(--muted);
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
+}
+.mt-fteam select {
+  padding: 4px 6px;
+  font-size: 0.78rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  max-width: 120px;
 }
 .mt-maxwrap input {
   width: 54px;
@@ -1599,10 +1594,40 @@ button.mt-stat-btn .mt-stat-v {
   border: 1px solid var(--border);
   border-radius: 6px;
 }
+/* 候補リストの列見出し行（タップで昇順・降順を切り替え） */
+.mt-pick-headrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 12px;
+  background: #f4eff6;
+  border-bottom: 1px solid var(--border);
+}
+.mt-pick-h {
+  flex: 0 0 auto;
+  min-width: 40px;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: right;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.mt-pick-h.is-on { color: var(--pl-purple); }
+.mt-pick-h:nth-of-type(2) { min-width: 44px; }  /* コスト列（mt-pick-costと同じ幅） */
+.mt-pick-h:nth-of-type(3) { min-width: 64px; }  /* 残コスト列（mt-pick-afterと同じ幅） */
 /* 候補行の今季ポイント */
 .mt-pick-pt {
   flex: 0 0 auto;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--easy);
   min-width: 40px;

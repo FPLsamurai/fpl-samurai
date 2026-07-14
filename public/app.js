@@ -1005,9 +1005,12 @@ function initSquadEditor(entry, picksData, gw, livePoints) {
     outs: [],             // 移籍OUT対象の position 一覧（✕タップ＝半透明。複数可・押した順）
     pickQ: "",            // 移籍候補の検索文字列（再描画時に保持）
     msg: null,
+    msgToken: 0,          // ポップアップの世代番号（フェード中に次のメッセージへ差し替わっても誤って消さないため）
     mode: "recent",       // recent=直近節の結果表示 ／ plan=次節以降のプラン編集
-    pickSort: "cost",     // 移籍候補の並び替え（cost/points/value）
-    pickMax: null,        // 移籍候補の価格上限（£m）
+    pickSort: "cost",     // 移籍候補の並び替えキー（cost/points/after）
+    pickDir: "desc",      // 並び替え方向（asc=小さい順・赤 / desc=大きい順・緑）
+    pickTeam: "",         // 移籍候補のチーム絞り込み（空文字＝すべて）
+    pickMax: null,        // 移籍候補のコスト絞り込み（£m以下）
   };
   restorePlans();
   bindMtOutsideClear();
@@ -1020,6 +1023,10 @@ let _mtOutsideBound = false;
 function bindMtOutsideClear() {
   if (_mtOutsideBound) return;
   _mtOutsideBound = true;
+  // キャプチャフェーズで判定する：候補リストやカード内のボタン（並び替え・フィルタ等）は
+  // クリック時に自分自身でDOMを再構築するため、バブリングフェーズで見ると要素が既に
+  // 差し替わっていて祖先判定(closest)に失敗し、誤って「外側タップ」扱いになってしまう。
+  // キャプチャフェーズなら、そのボタン自身のクリック処理が動く前に判定できるため安全。
   document.addEventListener("click", (e) => {
     if (!MT || MT.mode !== "plan") return;
     if (MT.sel == null && MT.swapFrom == null && !MT.outs.length) return;
@@ -1031,7 +1038,7 @@ function bindMtOutsideClear() {
     MT.outs = [];
     MT.pickQ = "";
     renderSquadPitch();
-  });
+  }, true);
 }
 
 /* ---- 節ごとのプラン管理 ---- */
@@ -1248,8 +1255,15 @@ function renderSquadPitch() {
       </div>`;
     } else if (MT.msg) {
       bar = `<div class="mt-msg">${esc(MT.msg)}</div>`;
+      // 3秒後にうっすらフェードして消える（同じ世代のメッセージがまだ表示中の時だけ）
+      const token = ++MT.msgToken;
+      setTimeout(() => {
+        if (MT.msgToken !== token) return;
+        const el = document.querySelector("#mt-squad .mt-msg");
+        if (el) el.classList.add("is-fading");
+        setTimeout(() => { if (MT.msgToken === token) MT.msg = null; }, 400);
+      }, 2600);
     }
-    if (MT.msg) { setTimeout(() => { MT.msg = null; }, 2600); }
 
     const made = planMade(P);
     const free = P.ft;
@@ -1429,6 +1443,17 @@ function onMtAction(act) {
   }
 }
 
+// 移籍候補のチーム絞り込み用の一覧（チーム名の五十音順）。DATA読み込み後に1回だけ作る
+let _teamFilterList = null;
+function teamFilterList() {
+  if (!_teamFilterList) {
+    _teamFilterList = Object.values(DATA.teams_meta || {})
+      .map((t) => t.name)
+      .sort((a, b) => a.localeCompare(b, "ja"));
+  }
+  return _teamFilterList;
+}
+
 function renderMtPicker(query) {
   const box = document.getElementById("mt-picker");
   if (!box || !MT.outs.length) return;
@@ -1443,24 +1468,27 @@ function renderMtPicker(query) {
   MT.pickQ = q;
   const ql = q.toLowerCase();
   const st = (e) => playerStats(e.ph);
+  const afterOf = (e) => { const o = outFor(e); return P.bank + (o ? o.c : 0) - e.c; };
+
   let list = Object.entries(DATA.elements)
     .map(([id, e]) => ({ id: +id, ...e }))
     .filter((e) => posTypes.includes(e.p) && !ownedNow.has(e.id))
     .filter((e) => !q || e.n.toLowerCase().includes(ql) || (e.j && e.j.includes(q)))
+    .filter((e) => !MT.pickTeam || e.t === MT.pickTeam)
     .filter((e) => MT.pickMax == null || e.c <= MT.pickMax);
-  // 並び替え：価格／今季ポイント／コスパ（成績が無い選手は後ろ）
-  if (MT.pickSort === "points") {
-    list.sort((a, b) => (((st(b) || {}).pt ?? -1) - ((st(a) || {}).pt ?? -1)) || b.c - a.c);
-  } else if (MT.pickSort === "value") {
-    list.sort((a, b) => (((st(b) || {}).vl ?? -1) - ((st(a) || {}).vl ?? -1)) || b.c - a.c);
-  } else {
-    list.sort((a, b) => b.c - a.c);
-  }
+
+  // 並び替え：見出しタップで選んだ列（ポイント／コスト／残コスト）×昇順・降順
+  const dirSign = MT.pickDir === "asc" ? 1 : -1;
+  const valueOf = (e) => {
+    if (MT.pickSort === "points") return (st(e) || {}).pt ?? -1;
+    if (MT.pickSort === "after") return afterOf(e);
+    return e.c;
+  };
+  list.sort((a, b) => (valueOf(a) - valueOf(b)) * dirSign || b.c - a.c);
   list = list.slice(0, 100);
 
   const rowHtml = list.map((e) => {
-    const o = outFor(e);
-    const after = P.bank + (o ? o.c : 0) - e.c;
+    const after = afterOf(e);
     const kit = kitUrl(e);
     const s = st(e);
     const fx = s ? next3Text(s.tid) : "";
@@ -1475,8 +1503,14 @@ function renderMtPicker(query) {
     </button>`;
   }).join("") || `<div class="empty" style="box-shadow:none;">候補が見つかりません</div>`;
 
-  const srtBtn = (key, label) =>
-    `<button type="button" data-srt="${key}" class="${MT.pickSort === key ? "is-on" : ""}">${label}</button>`;
+  // 列見出し（タップで昇順・降順を切り替え。↑昇順=赤／↓降順=緑：他の表と同じ配色）
+  const headBtn = (key, label) => {
+    const on = MT.pickSort === key;
+    const arrHtml = on ? `<span class="arr ${MT.pickDir === "asc" ? "arr-asc" : "arr-desc"}">${MT.pickDir === "asc" ? "↑" : "↓"}</span>` : `<span class="arr"></span>`;
+    return `<button type="button" class="mt-pick-h${on ? " is-on" : ""}" data-key="${key}">${label}${arrHtml}</button>`;
+  };
+  const teamOptHtml = teamFilterList().map((name) =>
+    `<option value="${esc(name)}" ${MT.pickTeam === name ? "selected" : ""}>${esc(name)}</option>`).join("");
 
   box.hidden = false;
   box.innerHTML = `
@@ -1486,11 +1520,18 @@ function renderMtPicker(query) {
     </div>
     <input type="search" id="mt-picker-q" placeholder="選手名で検索（英字／カタカナ）" value="${esc(q)}">
     <div class="mt-picker-tools">
-      <div class="mt-sortbtns">
-        <span class="mt-tools-l">並び替え</span>
-        ${srtBtn("cost", "価格")}${srtBtn("points", "ポイント")}${srtBtn("value", "コスパ")}
-      </div>
-      <label class="mt-maxwrap">上限£<input id="mt-picker-max" type="number" inputmode="decimal" step="0.5" min="3.5" max="15.5" value="${MT.pickMax != null ? MT.pickMax : ""}" placeholder="なし">m</label>
+      <label class="mt-fteam">チーム
+        <select id="mt-picker-team"><option value="">すべて</option>${teamOptHtml}</select>
+      </label>
+      <label class="mt-maxwrap">コスト£<input id="mt-picker-max" type="number" inputmode="decimal" step="0.5" min="3.5" max="15.5" value="${MT.pickMax != null ? MT.pickMax : ""}" placeholder="なし">m以下</label>
+    </div>
+    <div class="mt-pick-headrow">
+      <span class="mt-pick-kit"></span>
+      <span class="mt-pick-name"></span>
+      ${headBtn("points", "Pt")}
+      ${headBtn("cost", "コスト")}
+      ${headBtn("after", "残")}
+      <span class="mt-pick-add" style="background:none;"></span>
     </div>
     <div class="mt-picker-list">${rowHtml}</div>`;
   box.querySelector("#mt-picker-close").addEventListener("click", () => {
@@ -1498,11 +1539,16 @@ function renderMtPicker(query) {
   });
   const qi = box.querySelector("#mt-picker-q");
   qi.addEventListener("input", () => renderMtPicker(qi.value));
-  box.querySelectorAll(".mt-sortbtns button").forEach((b) => b.addEventListener("click", () => {
-    MT.pickSort = b.dataset.srt;
+  box.querySelectorAll(".mt-pick-h").forEach((b) => b.addEventListener("click", () => {
+    if (MT.pickSort === b.dataset.key) MT.pickDir = MT.pickDir === "asc" ? "desc" : "asc";
+    else { MT.pickSort = b.dataset.key; MT.pickDir = "desc"; }
     renderMtPicker(qi.value);
   }));
-  // 上限は入力確定（フォーカスアウト／Enter）で反映
+  box.querySelector("#mt-picker-team").addEventListener("change", (e) => {
+    MT.pickTeam = e.target.value;
+    renderMtPicker(qi.value);
+  });
+  // コスト上限は入力確定（フォーカスアウト／Enter）で反映
   const mx = box.querySelector("#mt-picker-max");
   mx.addEventListener("change", () => {
     const v = parseFloat(mx.value);
@@ -1527,7 +1573,7 @@ function doMtTransfer(inId) {
   // 同一チーム3人まで
   const teamCount = {};
   P.squad.forEach((p) => { if (p.position === pos) return; const e = elOf(p); teamCount[e.t] = (teamCount[e.t] || 0) + 1; });
-  if ((teamCount[inc.t] || 0) >= 3) { MT.msg = "同じチームから選べるのは3人までです"; renderMtPicker(MT.pickQ || ""); return; }
+  if ((teamCount[inc.t] || 0) >= 3) { MT.msg = "同じチームから選べるのは3人までです"; renderSquadPitch(); return; }
   pick.element = inId;
   P.bank = P.bank + out.c - inc.c;
   MT.outs = MT.outs.filter((q) => q !== pos);
