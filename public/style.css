@@ -1142,19 +1142,26 @@ tr.me-row td { background: #eafff3 !important; }
   opacity: 0;
   pointer-events: none;
 }
-/* 選択時の操作バー・メッセージはピッチ上部に重ねて表示
-   （レイアウトの高さを変えない＝計画タブと直近節タブのスカッド位置が同じになる） */
-.mt-overlay {
-  position: absolute;
-  top: 1%;
-  left: 2%;
-  right: 2%;
-  z-index: 5;
+/* スカッド上の情報スロット（計画＝操作説明/選手バー/通知、直近節＝合計と平均）。
+   高さを固定して、内容が切り替わってもスカッドが上下に動かないようにする */
+.mt-info-slot {
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-bottom: 8px;
 }
-.mt-overlay .mt-actions,
-.mt-overlay .mt-msg {
-  margin-bottom: 0;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+.mt-info-slot .mt-actions,
+.mt-info-slot .mt-msg,
+.mt-info-slot .mt-hint { margin-bottom: 0; }
+/* 常時表示の説明文（両タブ共通デザイン） */
+.mt-hint {
+  font-size: 0.78rem;
+  color: var(--pl-purple);
+  background: #f4eff6;
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: center;
 }
 .mt-actions {
   display: flex;
@@ -1559,7 +1566,7 @@ button.mt-stat-btn .mt-stat-v {
 .mt-pick-kit img { height: 30px; width: auto; }
 .mt-pick-name { flex: 1; font-size: 0.85rem; font-weight: 600; }
 .mt-pick-name .sub { display: block; font-weight: 400; }
-.mt-pick-cost { font-weight: 700; color: var(--pl-purple); font-size: 0.78rem; min-width: 44px; text-align: right; }
+.mt-pick-cost { font-weight: 700; color: var(--pl-purple); font-size: 0.78rem; min-width: 48px; text-align: right; }
 .mt-pick-after { font-size: 0.72rem; color: var(--muted); min-width: 64px; text-align: right; }
 .mt-pick-row.over .mt-pick-after { color: var(--hard); font-weight: 700; }
 /* ピッカーのツール行（チーム絞り込み・コスト絞り込み） */
@@ -1605,32 +1612,38 @@ button.mt-stat-btn .mt-stat-v {
 }
 .mt-pick-h {
   flex: 0 0 auto;
-  min-width: 40px;
   border: none;
   background: none;
   padding: 0;
   margin: 0;
   font: inherit;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--muted);
-  text-align: right;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 2px;
+  justify-content: flex-start;   /* 見出しは列の左寄り */
+  text-align: left;
 }
 .mt-pick-h.is-on { color: var(--pl-purple); }
-.mt-pick-h:nth-of-type(2) { min-width: 44px; }  /* コスト列（mt-pick-costと同じ幅） */
-.mt-pick-h:nth-of-type(3) { min-width: 64px; }  /* 残コスト列（mt-pick-afterと同じ幅） */
+/* 矢印はテキストの右側の固定枠に表示（付いたり消えたりしてもテキストが動かない） */
+.mt-pick-h .arr {
+  display: inline-block;
+  width: 13px;
+  text-align: left;
+}
+/* 列幅（見出しとデータで同じ幅にして縦を揃える） */
+.mt-pick-h[data-key="points"] { min-width: 58px; }
+.mt-pick-h[data-key="cost"] { min-width: 48px; }
+.mt-pick-h[data-key="after"] { min-width: 64px; }
 /* 候補行の今季ポイント */
 .mt-pick-pt {
   flex: 0 0 auto;
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--easy);
-  min-width: 40px;
+  min-width: 58px;
   text-align: right;
 }
 /* 候補行の＋ボタン（この選手を加える） */

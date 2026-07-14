@@ -1031,8 +1031,8 @@ function bindMtOutsideClear() {
     if (!MT || MT.mode !== "plan") return;
     if (MT.sel == null && MT.swapFrom == null && !MT.outs.length) return;
     const t = e.target;
-    // カード（⇅✕含む）・候補リスト・ピッチ上の操作バーの中は、それぞれの処理に任せる
-    if (t.closest && (t.closest(".mt-card") || t.closest(".mt-picker") || t.closest(".mt-overlay"))) return;
+    // カード（⇅✕含む）・候補リスト・スカッド上の操作バーの中は、それぞれの処理に任せる
+    if (t.closest && (t.closest(".mt-card") || t.closest(".mt-picker") || t.closest(".mt-info-slot"))) return;
     MT.sel = null;
     MT.swapFrom = null;
     MT.outs = [];
@@ -1255,14 +1255,19 @@ function renderSquadPitch() {
       </div>`;
     } else if (MT.msg) {
       bar = `<div class="mt-msg">${esc(MT.msg)}</div>`;
-      // 3秒後にうっすらフェードして消える（同じ世代のメッセージがまだ表示中の時だけ）
+      // 3秒後にうっすらフェードして消え、通常の説明文に戻る（同じ世代のメッセージが表示中の時だけ）
       const token = ++MT.msgToken;
       setTimeout(() => {
         if (MT.msgToken !== token) return;
         const el = document.querySelector("#mt-squad .mt-msg");
         if (el) el.classList.add("is-fading");
-        setTimeout(() => { if (MT.msgToken === token) MT.msg = null; }, 400);
+        setTimeout(() => {
+          if (MT.msgToken === token) { MT.msg = null; renderSquadPitch(); }
+        }, 400);
       }, 2600);
+    } else {
+      // 何も選択していないときは操作の説明を常時表示
+      bar = `<div class="mt-hint">⇅でスタメンとベンチを入れ替えます。✕で選手を移籍できます。</div>`;
     }
 
     const made = planMade(P);
@@ -1297,8 +1302,8 @@ function renderSquadPitch() {
           <div class="mt-stat"><span class="mt-stat-l">コスト</span><span class="mt-stat-v${cost > 0 ? " neg" : ""}">${cost > 0 ? "-" + cost : "0"}</span></div>
         </div>
       </div>
+      <div class="mt-info-slot">${bar}</div>
       <div class="mt-pitch-wrap">
-        ${bar ? `<div class="mt-overlay">${bar}</div>` : ""}
         <div class="mt-pitch">${rows}</div>
         <div class="mt-bench">${bench.map(mtCard).join("")}</div>
       </div>
@@ -1377,8 +1382,17 @@ function renderSquadPitch() {
     } else {
       header = `<div class="mt-loading-msg">ポイント反映まで時間がかかっています...</div>`;
     }
+    // スカッド上の情報行：スタメン合計と1人あたり平均（ライブポイント未取得の間は「−」）
+    let total = "−", avg = "−";
+    if (MT.livePoints) {
+      const st = MT.base.squad.filter((p) => p.position <= 11);
+      const t = st.reduce((n, p) => n + (mtPoints(p) || 0), 0);
+      total = t;
+      avg = (t / st.length).toFixed(1);
+    }
     wrap.innerHTML = `
       <div class="mt-head${MT.livePoints ? "" : " mt-head-center"}">${header}</div>
+      <div class="mt-info-slot"><div class="mt-hint">合計：${total}ポイント　プレイヤー平均：${avg}ポイント</div></div>
       <div class="mt-pitch-wrap mt-readonly">
         <div class="mt-pitch">${rows}</div>
         <div class="mt-bench">${bench.map(mtCard).join("")}</div>
@@ -1528,9 +1542,9 @@ function renderMtPicker(query) {
     <div class="mt-pick-headrow">
       <span class="mt-pick-kit"></span>
       <span class="mt-pick-name"></span>
-      ${headBtn("points", "Pt")}
+      ${headBtn("points", "ポイント")}
       ${headBtn("cost", "コスト")}
-      ${headBtn("after", "残")}
+      ${headBtn("after", "残コスト")}
       <span class="mt-pick-add" style="background:none;"></span>
     </div>
     <div class="mt-picker-list">${rowHtml}</div>`;
