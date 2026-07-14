@@ -765,6 +765,10 @@ def main():
             "league_avg_xg": mu,
             "source": "Fantasy Premier League 公式API",
             "data_fresh": ok1 and ok2,
+            # 節ごとの「FPLプレイヤー全体の平均ポイント」（公式のAverage）。マイチームの直近節で表示
+            "event_averages": {str(ev["id"]): ev["average_entry_score"]
+                               for ev in bootstrap["events"]
+                               if ev.get("average_entry_score") is not None},
         },
         "players": player_tables,
         "elements": build_element_map(bootstrap, team_map, pos_map, jp_names),

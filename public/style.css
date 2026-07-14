@@ -1145,7 +1145,7 @@ tr.me-row td { background: #eafff3 !important; }
 /* スカッド上の情報スロット（計画＝操作説明/選手バー/通知、直近節＝合計と平均）。
    高さを固定して、内容が切り替わってもスカッドが上下に動かないようにする */
 .mt-info-slot {
-  min-height: 52px;
+  min-height: 54px;   /* 計画タブの説明文（2行）が収まる高さ。両タブでスカッド位置を揃えるため */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1347,13 +1347,23 @@ button.mt-stat-btn .mt-stat-v {
 
 /* スカッドの背景はピッチ画像（ヘッダー・ゴール・薄緑ベンチ枠込み）。
    選手は画像の上に重ね、ベンチは下部の薄緑エリアに配置。 */
+/* pitch.png は上端に透明な余白（画像の6%）を含むため、その分だけスカッドを引き上げて
+   情報スロットの上下の余白が見た目でそろうようにする。
+   負マージンの%は「親の幅」基準なので、親(.mt-pitch-outer)を枠と同じ最大幅にして計算を合わせる。 */
+.mt-pitch-outer {
+  max-width: 440px;
+  margin: 0 auto;
+}
 .mt-pitch-wrap {
   position: relative;
   max-width: 440px;
-  margin: 0 auto;
+  margin: -5.78% auto 0;   /* 透明帯 = 幅の5.78%（67/1110 × 1220/1274） */
   aspect-ratio: 1274 / 1220;
   background: url("pitch.png") center / 100% 100% no-repeat;
+  /* 透明帯が情報スロットに重なるので、枠自体はタップを受けない（カードだけ受ける） */
+  pointer-events: none;
 }
+.mt-pitch-wrap .mt-card { pointer-events: auto; }
 .mt-badge {
   position: absolute;
   top: 14%;

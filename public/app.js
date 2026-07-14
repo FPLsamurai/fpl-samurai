@@ -1303,9 +1303,11 @@ function renderSquadPitch() {
         </div>
       </div>
       <div class="mt-info-slot">${bar}</div>
-      <div class="mt-pitch-wrap">
-        <div class="mt-pitch">${rows}</div>
-        <div class="mt-bench">${bench.map(mtCard).join("")}</div>
+      <div class="mt-pitch-outer">
+        <div class="mt-pitch-wrap">
+          <div class="mt-pitch">${rows}</div>
+          <div class="mt-bench">${bench.map(mtCard).join("")}</div>
+        </div>
       </div>
       <div id="mt-picker" class="mt-picker" hidden></div>
       <div class="mt-transfers">
@@ -1382,20 +1384,22 @@ function renderSquadPitch() {
     } else {
       header = `<div class="mt-loading-msg">ポイント反映まで時間がかかっています...</div>`;
     }
-    // スカッド上の情報行：スタメン合計と1人あたり平均（ライブポイント未取得の間は「−」）
-    let total = "−", avg = "−";
+    // スカッド上の情報行：自分のスタメン合計と、FPLプレイヤー全体のその節の平均ポイント（公式のAverage）
+    let total = "−";
     if (MT.livePoints) {
       const st = MT.base.squad.filter((p) => p.position <= 11);
-      const t = st.reduce((n, p) => n + (mtPoints(p) || 0), 0);
-      total = t;
-      avg = (t / st.length).toFixed(1);
+      total = st.reduce((n, p) => n + (mtPoints(p) || 0), 0);
     }
+    const avgMap = (DATA.meta && DATA.meta.event_averages) || {};
+    const avg = avgMap[String(MT.gw)] != null ? avgMap[String(MT.gw)] : "−";
     wrap.innerHTML = `
       <div class="mt-head${MT.livePoints ? "" : " mt-head-center"}">${header}</div>
       <div class="mt-info-slot"><div class="mt-hint">合計：${total}ポイント　プレイヤー平均：${avg}ポイント</div></div>
-      <div class="mt-pitch-wrap mt-readonly">
-        <div class="mt-pitch">${rows}</div>
-        <div class="mt-bench">${bench.map(mtCard).join("")}</div>
+      <div class="mt-pitch-outer">
+        <div class="mt-pitch-wrap mt-readonly">
+          <div class="mt-pitch">${rows}</div>
+          <div class="mt-bench">${bench.map(mtCard).join("")}</div>
+        </div>
       </div>`;
   }
 }
