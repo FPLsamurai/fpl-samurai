@@ -1135,17 +1135,20 @@ tr.me-row td { background: #eafff3 !important; }
   margin-bottom: 8px;
   text-align: center;
 }
-/* 説明文・操作バー用の固定スロット。
-   ⇅や選択でバーが出てもスカッド（ピッチ）が上下に動かないよう、空でも高さを確保する */
-.mt-bar-slot {
-  min-height: 54px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  margin-bottom: 8px;
+/* 選択時の操作バー・メッセージはピッチ上部に重ねて表示
+   （レイアウトの高さを変えない＝計画タブと直近節タブのスカッド位置が同じになる） */
+.mt-overlay {
+  position: absolute;
+  top: 1%;
+  left: 2%;
+  right: 2%;
+  z-index: 5;
 }
-.mt-bar-slot .mt-actions,
-.mt-bar-slot .mt-msg { margin-bottom: 0; }
+.mt-overlay .mt-actions,
+.mt-overlay .mt-msg {
+  margin-bottom: 0;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+}
 .mt-actions {
   display: flex;
   align-items: center;
@@ -1466,6 +1469,17 @@ button.mt-stat-btn .mt-stat-v {
 }
 /* 移籍候補を表示中の選手（OUT対象）は半透明で示す */
 .mt-card.is-out { opacity: 0.5; }
+/* ⇅の入れ替え中：元の選手は赤枠、入れ替えできる相手は緑枠 */
+.mt-card.is-swapsrc {
+  outline: 2.5px solid var(--hard);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.mt-card.is-swapok {
+  outline: 2.5px solid var(--pl-green);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
 
 /* 計画タブ：カード左上の⇅（入れ替え）・右上の✕（移籍）アイコン（LiveFPL風） */
 .mt-ctrl {

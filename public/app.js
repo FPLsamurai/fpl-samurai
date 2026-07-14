@@ -1140,9 +1140,13 @@ function mtCard(p) {
   const cv = p.is_captain ? `<span class="mt-cv c">C</span>`
     : (p.is_vice_captain ? `<span class="mt-cv v">V</span>` : "");
   const sel = MT.sel === p.position ? " is-sel" : "";
-  // 移籍OUT対象（✕・複数可）／入れ替え元（⇅）の選手は緑枠ではなく半透明で示す
-  const outSel = (MT.outs.includes(p.position) || MT.swapFrom === p.position) ? " is-out" : "";
+  // 移籍OUT対象（✕・複数可）は半透明で示す
+  const outSel = MT.outs.includes(p.position) ? " is-out" : "";
   const plan = MT.mode === "plan";
+  // ⇅の入れ替え中：元の選手は赤枠、入れ替えできる相手は緑枠でガイド
+  const swapSrc = MT.swapFrom === p.position ? " is-swapsrc" : "";
+  const swapOk = (plan && MT.swapFrom != null && MT.swapFrom !== p.position && mtSwapTargetOk(MT.swapFrom, p.position))
+    ? " is-swapok" : "";
   // 計画タブ：左上=スタメン⇄ベンチ入れ替え、右上=移籍（LiveFPL風）。C/Vは⇅の下に表示（CSS側で位置指定）
   const ctrls = plan
     ? `<span class="mt-ctrl mt-ctrl-swap" data-pos="${p.position}" role="button" title="スタメン⇄ベンチ入れ替え">⇅</span>
@@ -1167,7 +1171,7 @@ function mtCard(p) {
     }
   }
   const nm = el.j || el.n;
-  return `<button type="button" class="mt-card${plan ? " is-plan" : ""}${sel}${outSel}" data-pos="${p.position}">
+  return `<button type="button" class="mt-card${plan ? " is-plan" : ""}${sel}${outSel}${swapSrc}${swapOk}" data-pos="${p.position}">
     <span class="mt-photo-wrap">${img}${ctrls}${cv}</span>
     <span class="mt-name">${esc(nm)}</span>
     ${foot}
@@ -1178,6 +1182,22 @@ function validFormation(squad) {
   const c = { GK: 0, DF: 0, MF: 0, FW: 0 };
   squad.filter((p) => p.position <= 11).forEach((p) => { const e = elOf(p); c[e.p] = (c[e.p] || 0) + 1; });
   return c.GK === 1 && c.DF >= 3 && c.MF >= 2 && c.FW >= 1 && (c.DF + c.MF + c.FW === 10);
+}
+
+// a の選手の入れ替え先として b が有効か（実際には入れ替えず判定だけ）。
+// スタメン同士は並び順が変わるだけなので対象外。GK制限とフォーメーション制限を確認
+function mtSwapTargetOk(a, b) {
+  if (a <= 11 && b <= 11) return false;
+  const P = MT.plans[MT.planGw];
+  const A = P.squad.find((p) => p.position === a);
+  const B = P.squad.find((p) => p.position === b);
+  if (!A || !B) return false;
+  const roleChange = (a <= 11) !== (b <= 11);
+  if (roleChange && (elOf(A).p === "GK") !== (elOf(B).p === "GK")) return false;
+  [A.position, B.position] = [B.position, A.position];
+  const ok = validFormation(P.squad);
+  [A.position, B.position] = [B.position, A.position];
+  return ok;
 }
 
 function renderSquadPitch() {
@@ -1205,9 +1225,6 @@ function renderSquadPitch() {
         <button type="button" data-act="transfer">移籍</button>
         <button type="button" data-act="clear">解除</button>
       </div>`;
-    } else if (MT.swapFrom != null) {
-      const swEl = elOf(P.squad.find((p) => p.position === MT.swapFrom));
-      bar = `<div class="mt-msg">⇅「${esc(swEl.j || swEl.n)}」と入れ替える選手をタップ（もう一度⇅で解除）</div>`;
     } else if (MT.msg) {
       bar = `<div class="mt-msg">${esc(MT.msg)}</div>`;
     }
@@ -1245,19 +1262,19 @@ function renderSquadPitch() {
           <div class="mt-stat"><span class="mt-stat-l">コスト</span><span class="mt-stat-v${cost > 0 ? " neg" : ""}">${cost > 0 ? "-" + cost : "0"}</span></div>
         </div>
       </div>
-      <div class="mt-bar-slot">${bar}</div>
       <div class="mt-pitch-wrap">
+        ${bar ? `<div class="mt-overlay">${bar}</div>` : ""}
         <div class="mt-pitch">${rows}</div>
         <div class="mt-bench">${bench.map(mtCard).join("")}</div>
       </div>
+      <div id="mt-picker" class="mt-picker" hidden></div>
       <div class="mt-transfers">
         <div class="mt-tr-head">
           <span>第${MT.planGw}節の移籍プラン${made ? `（${made}件）` : ""}</span>
           <button type="button" id="mt-plan-reset" title="この節以降の変更をすべて取り消す">この節をリセット</button>
         </div>
         ${trRows}
-      </div>
-      <div id="mt-picker" class="mt-picker" hidden></div>`;
+      </div>`;
 
     wrap.querySelectorAll(".mt-card").forEach((c) => c.addEventListener("click", onMtCardClick));
     // 左上⇅＝入れ替えフロー（詳細バーは出さない）。半透明で入れ替え元を示し、次のタップで実行
@@ -1265,7 +1282,10 @@ function renderSquadPitch() {
       e.stopPropagation();
       const pos = +s.dataset.pos;
       if (MT.swapFrom === pos) { MT.swapFrom = null; renderSquadPitch(); return; }  // もう一度⇅で解除
-      if (MT.swapFrom != null) { tryMtSwap(MT.swapFrom, pos); return; }             // 2人目→入れ替え実行
+      if (MT.swapFrom != null) {
+        if (mtSwapTargetOk(MT.swapFrom, pos)) tryMtSwap(MT.swapFrom, pos);
+        return;  // 緑枠以外は無視（入れ替えモード継続）
+      }
       MT.swapFrom = pos;
       MT.sel = null;
       MT.outs = [];
@@ -1331,13 +1351,13 @@ function renderSquadPitch() {
   }
 }
 
-// カード本体タップ：入れ替え待ちなら実行、そうでなければ詳細（主将C等のバー）を開閉
+// カード本体タップ：入れ替え待ちなら緑枠の相手のみ実行、そうでなければ詳細（主将C等のバー）を開閉
 function onMtCardClick(e) {
   const pos = +e.currentTarget.dataset.pos;
   if (MT.swapFrom != null) {
     if (MT.swapFrom === pos) { MT.swapFrom = null; renderSquadPitch(); return; }
-    tryMtSwap(MT.swapFrom, pos);
-    return;
+    if (mtSwapTargetOk(MT.swapFrom, pos)) tryMtSwap(MT.swapFrom, pos);
+    return;  // 緑枠以外は無視（入れ替えモード継続）
   }
   MT.sel = (MT.sel === pos) ? null : pos;
   renderSquadPitch();
