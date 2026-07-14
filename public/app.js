@@ -1266,8 +1266,8 @@ function renderSquadPitch() {
         }, 400);
       }, 2600);
     } else {
-      // 何も選択していないときは操作の説明を常時表示
-      bar = `<div class="mt-hint">⇅でスタメンとベンチを入れ替えます。✕で選手を移籍できます。</div>`;
+      // 何も選択していないときは操作の説明を常時表示（⇅✕はスカッドのアイコンと同じ見た目）
+      bar = `<div class="mt-hint"><span class="mt-hint-ic ic-swap">⇅</span>でスタメンとベンチを入れ替えます。<span class="mt-hint-ic ic-x">✕</span>で選手を移籍できます。</div>`;
     }
 
     const made = planMade(P);
@@ -1394,7 +1394,7 @@ function renderSquadPitch() {
     const avg = avgMap[String(MT.gw)] != null ? avgMap[String(MT.gw)] : "−";
     wrap.innerHTML = `
       <div class="mt-head${MT.livePoints ? "" : " mt-head-center"}">${header}</div>
-      <div class="mt-info-slot"><div class="mt-hint">合計：${total}ポイント　プレイヤー平均：${avg}ポイント</div></div>
+      <div class="mt-info-slot"><div class="mt-hint"><b>合計：</b>${total}ポイント　<b>プレイヤー平均：</b>${avg}ポイント</div></div>
       <div class="mt-pitch-outer">
         <div class="mt-pitch-wrap mt-readonly">
           <div class="mt-pitch">${rows}</div>

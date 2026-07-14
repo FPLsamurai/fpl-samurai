@@ -1163,6 +1163,23 @@ tr.me-row td { background: #eafff3 !important; }
   padding: 8px 10px;
   text-align: center;
 }
+/* 説明文中の⇅✕アイコン（スカッドのカードに付くものと同じ見た目の縮小版） */
+.mt-hint-ic {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  border-radius: 50%;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 0 0 1.5px #fff;
+  vertical-align: -2px;
+  margin: 0 2px;
+}
+.mt-hint-ic.ic-swap { background: var(--pl-purple); }
+.mt-hint-ic.ic-x { background: var(--hard); }
 .mt-actions {
   display: flex;
   align-items: center;
