@@ -837,6 +837,8 @@ table.rich th, table.rich td,
 table.squad th, table.squad td { text-align: center; }
 table.rich td.col-name, table.rich th.col-name,
 table.squad td.col-name { text-align: left; }
+/* 「チーム」見出しも左寄せに統一（並び替えは無いが他の見出しと揃える） */
+table.rich th.col-team { text-align: left; }
 .name, .sub, .name-ja { text-align: left; }
 
 /* チームデータ用テーブル（列が少なめなので最低幅を抑える） */

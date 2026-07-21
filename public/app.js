@@ -172,7 +172,7 @@ function renderSetPieces() {
 const COL_META = {
   rank:        { label: "順位",      type: "rank",  frozen: true, width: 42, lock: true, noSort: true },
   photo:       { label: "写真",      type: "photo", frozen: true, width: 46, noSort: true },
-  team:        { label: "チーム",    type: "team",  frozen: true, width: 46 },
+  team:        { label: "チーム",    type: "team",  frozen: true, width: 46, noSort: true },
   name:        { label: "選手名",    type: "name",  frozen: true, width: 130, lock: true },
   position:    { label: "POS",      type: "pos",   frozen: true, width: 46 },
   cost:        { label: "コスト",    type: "num",   frozen: true, width: 56 },
@@ -378,7 +378,7 @@ function buildPlayerHead() {
     // 1行目：見出し（写真列だけ見出し文字を消す）
     const sortable = !c.noSort;
     const headText = (c.type === "photo") ? "" : esc(c.label);
-    r1 += `<th class="col-${c.key} ${frz}${numc}${sortable ? "sortable" : ""}" ${sortable ? `data-sort="${c.key}"` : ""} style="${st}">${headText}<span class="arr"></span></th>`;
+    r1 += `<th class="col-${c.key} ${frz}${numc}${sortable ? "sortable" : ""}" ${sortable ? `data-sort="${c.key}"` : ""} style="${st}">${headText}${sortable ? '<span class="arr"></span>' : ""}</th>`;
     // 2行目：フィルタ
     let f = "";
     if (c.type === "name") {
@@ -647,7 +647,7 @@ function teamBadgeByName(teamName) {
 // 合計・直近・ホーム・アウェイ 共通の項目（種類は従来の「合計」と同じ）
 const TEAM_RANK_COLS = [
   { key: "rank",      label: "順位",        cls: "rank",     noSort: true },
-  { key: "team",      label: "チーム",      cls: "col-name", kind: "team" },
+  { key: "team",      label: "チーム",      cls: "col-name", kind: "team", noSort: true },
   { key: "points",    label: "ポイント",    kind: "main" },
   { key: "goals",     label: "ゴール" },
   { key: "assists",   label: "アシスト" },
@@ -674,9 +674,10 @@ function drawTeamRankTable(box, rows) {
   const head = TEAM_RANK_COLS.map((c) => {
     const cls = [c.cls, c.noSort ? "" : "sortable"].filter(Boolean).join(" ");
     const on = key === c.key && !c.noSort;
-    const arr = on
-      ? `<span class="arr ${dir === "asc" ? "arr-asc" : "arr-desc"}">${dir === "asc" ? "↑" : "↓"}</span>`
-      : `<span class="arr"></span>`;
+    const arr = c.noSort ? ""
+      : (on
+        ? `<span class="arr ${dir === "asc" ? "arr-asc" : "arr-desc"}">${dir === "asc" ? "↑" : "↓"}</span>`
+        : `<span class="arr"></span>`);
     return `<th class="${cls}"${c.noSort ? "" : ` data-sort="${c.key}"`}>${esc(c.label)}${arr}</th>`;
   }).join("");
 
