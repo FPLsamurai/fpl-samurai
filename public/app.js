@@ -307,8 +307,8 @@ function renderPlayerRich(key) {
     </div>` : "";
 
   box.innerHTML = `
-    ${segHtml}
     <div id="col-manager"></div>
+    ${segHtml}
     <p class="note" style="margin:6px 0;">該当：<span id="player-count"></span>人</p>
     <div class="fullbleed">
       <div class="data-table-wrap">
