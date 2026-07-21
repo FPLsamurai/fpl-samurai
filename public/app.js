@@ -581,21 +581,53 @@ function afterColLayoutChange() {
 /* ===========================================================
    チームタブ
    =========================================================== */
+// チームランキング表の並び替え状態（選手タブと同じく見出しタップで昇順⇄降順）
+let teamSort = { key: "points", dir: "desc" };
+// 「直近」タブ内の期間切替（選手と共通の RECENT_WINDOWS を使用）。選んだ期間は記憶
+let teamRecentWindow = (() => {
+  try { const s = localStorage.getItem("fpl_team_recent_window"); if (RECENT_KEYS.includes(s)) return s; } catch (e) {}
+  return "last5";
+})();
+
 function renderTeams(key) {
   const note = document.getElementById("teams-note");
   const box = document.getElementById("teams-content");
   const teams = DATA.teams || {};
 
   if (key === "totals") {
-    note.textContent = "シーズン合計。失点＝実際に取られた得点、無失点率＝無失点で終えた割合。xG=攻撃の期待値、被xG=守備で許した期待値。";
-    drawTeamTotals(box, teams.totals || []);
+    note.textContent = "シーズン合計。失点＝実際に取られた得点、無失点率＝無失点で終えた割合。xG=攻撃の期待値、被xG=守備で許した期待値。見出しをタップで並べ替え。";
+    drawTeamRankTable(box, teams.totals || []);
+  } else if (key === "recent") {
+    renderTeamRecent(box, note);
+  } else if (key === "home") {
+    note.textContent = "ホーム試合のみの合計。見出しをタップで並べ替え。";
+    drawTeamRankTable(box, teams.home || []);
+  } else if (key === "away") {
+    note.textContent = "アウェイ試合のみの合計。見出しをタップで並べ替え。";
+    drawTeamRankTable(box, teams.away || []);
   } else if (key === "by_gw") {
     note.textContent = "チームを選ぶと、節ごとの各データが見られます。";
     drawTeamByGw(box, teams.by_gw || []);
-  } else if (key === "form") {
-    note.textContent = "直近5試合の1試合あたり平均（xGのみ直近10も表示）。";
-    drawTeamForm(box, teams.recent || []);
   }
+}
+
+// 「直近」タブ：期間セグメント（1/3/5/10試合）＋ランキング表
+function renderTeamRecent(box, note) {
+  note.textContent = "直近N試合の合計（期間は下のボタンで切替）。見出しをタップで並べ替え。";
+  const win = teamRecentWindow;
+  const rows = (DATA.teams && DATA.teams[win]) || [];
+  const seg = `<div class="recent-seg" id="team-recent-seg">
+      <span class="recent-seg-l">直近</span>
+      ${RECENT_WINDOWS.map(([k, lbl]) =>
+        `<button type="button" data-win="${k}" class="${k === win ? "is-on" : ""}">${lbl}</button>`).join("")}
+    </div>`;
+  box.innerHTML = seg + `<div id="team-recent-table"></div>`;
+  drawTeamRankTable(document.getElementById("team-recent-table"), rows);
+  box.querySelectorAll("#team-recent-seg button[data-win]").forEach((b) => b.addEventListener("click", () => {
+    teamRecentWindow = b.dataset.win;
+    try { localStorage.setItem("fpl_team_recent_window", teamRecentWindow); } catch (e) {}
+    renderTeamRecent(box, note);
+  }));
 }
 
 // 横長テーブルを全幅スクロールで囲む
@@ -612,27 +644,61 @@ function teamBadgeByName(teamName) {
     : esc(teamName);
 }
 
-function drawTeamTotals(box, rows) {
+// 合計・直近・ホーム・アウェイ 共通の項目（種類は従来の「合計」と同じ）
+const TEAM_RANK_COLS = [
+  { key: "rank",      label: "順位",        cls: "rank",     noSort: true },
+  { key: "team",      label: "チーム",      cls: "col-name", kind: "team" },
+  { key: "points",    label: "ポイント",    kind: "main" },
+  { key: "goals",     label: "ゴール" },
+  { key: "assists",   label: "アシスト" },
+  { key: "conceded",  label: "失点" },
+  { key: "defcon",    label: "DEFCON" },
+  { key: "yellow",    label: "イエロー" },
+  { key: "red",       label: "レッド" },
+  { key: "xg_total",  label: "xG合計" },
+  { key: "xgc_total", label: "被xG合計" },
+  { key: "cs_pct",    label: "無失点率",    kind: "pct" },
+  { key: "cs_count",  label: "無失点/試合", kind: "csper" },
+];
+
+// チームのランキング表（見出しタップで昇順↑赤／降順↓緑に並べ替え。順位・チーム列は左に固定）
+function drawTeamRankTable(box, rows) {
   if (!rows.length) return (box.innerHTML = emptyMessage("まだデータがありません。"));
-  let html = `<table class="rich teamtbl"><thead><tr>
-      <th class="rank">順位</th><th class="col-name">チーム</th>
-      <th>ポイント</th><th>ゴール</th><th>アシスト</th><th>失点</th>
-      <th>DEFCON</th><th>イエロー</th><th>レッド</th>
-      <th>xG合計</th><th>被xG合計</th><th>無失点率</th><th>無失点/試合</th>
-    </tr></thead><tbody>`;
-  rows.forEach((r) => {
-    html += `<tr>
-      <td class="rank">${r.rank}</td>
-      <td class="col-name"><div class="name">${teamBadgeByName(r.team)}</div></td>
-      <td class="main-num">${r.points}</td>
-      <td>${r.goals}</td><td>${r.assists}</td><td>${r.conceded}</td>
-      <td>${r.defcon}</td><td>${r.yellow}</td><td>${r.red}</td>
-      <td>${r.xg_total}</td><td>${r.xgc_total}</td>
-      <td>${r.cs_pct}%</td><td>${r.cs_count} / ${r.matches}</td>
-    </tr>`;
+  const { key, dir } = teamSort;
+  const sorted = [...rows].sort((a, b) => {
+    if (key === "team") return dir === "asc" ? a.team.localeCompare(b.team, "ja") : b.team.localeCompare(a.team, "ja");
+    const av = Number(a[key]), bv = Number(b[key]);
+    return dir === "asc" ? av - bv : bv - av;
   });
-  html += `</tbody></table>`;
-  box.innerHTML = wideTable(html);
+
+  const head = TEAM_RANK_COLS.map((c) => {
+    const cls = [c.cls, c.noSort ? "" : "sortable"].filter(Boolean).join(" ");
+    const on = key === c.key && !c.noSort;
+    const arr = on
+      ? `<span class="arr ${dir === "asc" ? "arr-asc" : "arr-desc"}">${dir === "asc" ? " ↑" : " ↓"}</span>`
+      : `<span class="arr"></span>`;
+    return `<th class="${cls}"${c.noSort ? "" : ` data-sort="${c.key}"`}>${esc(c.label)}${arr}</th>`;
+  }).join("");
+
+  const cell = (r, c) => {
+    if (c.kind === "team") return `<td class="col-name"><div class="name">${teamBadgeByName(r.team)}</div></td>`;
+    if (c.cls === "rank") return `<td class="rank">${r.rank}</td>`;
+    if (c.kind === "main") return `<td class="main-num">${r[c.key]}</td>`;
+    if (c.kind === "pct") return `<td>${r.cs_pct}%</td>`;
+    if (c.kind === "csper") return `<td>${r.cs_count} / ${r.matches}</td>`;
+    return `<td>${r[c.key]}</td>`;
+  };
+  const body = sorted.map((r) => `<tr>${TEAM_RANK_COLS.map((c) => cell(r, c)).join("")}</tr>`).join("");
+
+  box.innerHTML = wideTable(`<table class="rich teamtbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`);
+  box.querySelector("thead").addEventListener("click", (e) => {
+    const th = e.target.closest("th.sortable");
+    if (!th) return;
+    const k = th.dataset.sort;
+    if (teamSort.key === k) teamSort.dir = teamSort.dir === "desc" ? "asc" : "desc";
+    else { teamSort.key = k; teamSort.dir = (k === "team") ? "asc" : "desc"; }
+    drawTeamRankTable(box, rows);
+  });
 }
 
 function drawTeamByGw(box, byGw) {
@@ -663,28 +729,6 @@ function drawTeamByGw(box, byGw) {
   };
   picker.addEventListener("change", render);
   render();
-}
-
-function drawTeamForm(box, rows) {
-  if (!rows.length) return (box.innerHTML = emptyMessage("まだデータがありません。"));
-  let html = `<table class="rich teamtbl"><thead><tr>
-      <th class="rank">順位</th><th class="col-name">チーム</th>
-      <th>ポイント</th><th>ゴール</th><th>アシスト</th><th>失点</th>
-      <th>DEFCON</th><th>イエロー</th><th>レッド</th>
-      <th>xG<br>(5)</th><th>被xG<br>(5)</th><th>xG<br>(10)</th><th>被xG<br>(10)</th>
-    </tr></thead><tbody>`;
-  rows.forEach((r) => {
-    html += `<tr>
-      <td class="rank">${r.rank}</td>
-      <td class="col-name"><div class="name">${teamBadgeByName(r.team)}</div></td>
-      <td class="main-num">${r.r5_points}</td>
-      <td>${r.r5_goals}</td><td>${r.r5_assists}</td><td>${r.r5_conceded}</td>
-      <td>${r.r5_defcon}</td><td>${r.r5_yellow}</td><td>${r.r5_red}</td>
-      <td>${r.r5_xg}</td><td>${r.r5_xgc}</td><td>${r.r10_xg}</td><td>${r.r10_xgc}</td>
-    </tr>`;
-  });
-  html += `</tbody></table>`;
-  box.innerHTML = wideTable(html);
 }
 
 /* ===========================================================

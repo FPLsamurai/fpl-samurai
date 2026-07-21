@@ -518,6 +518,7 @@ def compute_team_matches(bootstrap, fixtures, histories, team_map):
             team_id = info[0] if home else info[1]   # その試合での所属チーム
             slot = bucket.setdefault(team_id, {}).setdefault(fid, {
                 "round": r.get("round"), "kickoff": r.get("kickoff_time"),
+                "home": home,   # そのチームにとってホーム試合か
                 "xg_sum": 0.0, "xgc_list": [], "conceded": None,
                 "points": 0, "goals": 0, "assists": 0,
                 "defcon": 0, "yellow": 0, "red": 0,
@@ -545,7 +546,7 @@ def compute_team_matches(bootstrap, fixtures, histories, team_map):
         for fid, s in fixtures_d.items():
             xgc = sum(s["xgc_list"]) / len(s["xgc_list"]) if s["xgc_list"] else 0.0
             rows.append({
-                "round": s["round"], "kickoff": s["kickoff"],
+                "round": s["round"], "kickoff": s["kickoff"], "home": s["home"],
                 "xg": round(s["xg_sum"], 2), "xgc": round(xgc, 2),
                 "points": s["points"], "goals": s["goals"], "assists": s["assists"],
                 "conceded": s["conceded"] or 0, "defcon": s["defcon"],
@@ -562,23 +563,45 @@ def compute_league_avg_xg(team_matches):
     return round(sum(values) / len(values), 3) if values else 1.0
 
 
+def _team_window(name, subset):
+    """試合の部分集合（直近N・ホーム・アウェイ）を、合計タブと同じ項目で集計する。"""
+    n = len(subset)
+    cs_count = sum(1 for r in subset if r["conceded"] == 0)
+    return {
+        "team": name, "matches": n,
+        "points": sum(r["points"] for r in subset),
+        "goals": sum(r["goals"] for r in subset),
+        "assists": sum(r["assists"] for r in subset),
+        "conceded": sum(r["conceded"] for r in subset),
+        "defcon": sum(r["defcon"] for r in subset),
+        "yellow": sum(r["yellow"] for r in subset),
+        "red": sum(r["red"] for r in subset),
+        "xg_total": round(sum(r["xg"] for r in subset), 2),
+        "xgc_total": round(sum(r["xgc"] for r in subset), 2),
+        "cs_count": cs_count,
+        "cs_pct": round(cs_count / n * 100) if n else 0,
+    }
+
+
 def compute_team_section(team_matches, team_map, clean_sheets):
-    """チームの節別・合計・直近フォームをまとめる"""
+    """チームの 合計 / 直近(1・3・5・10) / ホーム / アウェイ / チーム別 をまとめる。
+    直近・ホーム・アウェイは合計タブと同じ項目（合計値）で集計する。"""
     cs_by_team = {c["team"]: c for c in clean_sheets}
-    by_gw, totals, recent = [], [], []
+    by_gw, totals = [], []
+    windows = {"last1": [], "last3": [], "last5": [], "last10": [], "home": [], "away": []}
     STAT_KEYS = ["points", "goals", "assists", "conceded", "defcon", "yellow", "red"]
 
     for team_id, rows in team_matches.items():
         name = team_map.get(team_id, {}).get("name_ja", "?")
 
-        # 節別（各試合：xG/被xG＋7指標）
+        # チーム別（各試合：xG/被xG＋7指標）＝旧「節別」
         by_gw.append({
             "team": name,
             "matches": [{"round": r["round"], "xg": r["xg"], "xgc": r["xgc"],
                          **{k: r[k] for k in STAT_KEYS}} for r in rows],
         })
 
-        # 合計（GW別データの合計）＋無失点率
+        # 合計（GW別データの合計）＋無失点率（公式集計の clean_sheets を使用）
         cs = cs_by_team.get(name, {})
         totals.append({
             "team": name, "matches": len(rows),
@@ -595,25 +618,21 @@ def compute_team_section(team_matches, team_map, clean_sheets):
             "cs_count": cs.get("clean_sheets", 0),
         })
 
-        # 直近フォーム（直近5試合の平均。xGのみ直近10も）
-        def avg(vals):
-            return round(sum(vals) / len(vals), 2) if vals else 0.0
-        last5 = rows[-5:]
-        rec = {
-            "team": name, "team_id": team_id,
-            "r5_xg": avg([r["xg"] for r in last5]),
-            "r5_xgc": avg([r["xgc"] for r in last5]),
-            "r10_xg": avg([r["xg"] for r in rows[-10:]]),
-            "r10_xgc": avg([r["xgc"] for r in rows[-10:]]),
-        }
-        for k in STAT_KEYS:
-            rec["r5_" + k] = avg([r[k] for r in last5])
-        recent.append(rec)
+        # 直近N試合・ホーム・アウェイ（合計タブと同じ項目で集計）
+        windows["last1"].append(_team_window(name, rows[-1:]))
+        windows["last3"].append(_team_window(name, rows[-3:]))
+        windows["last5"].append(_team_window(name, rows[-5:]))
+        windows["last10"].append(_team_window(name, rows[-10:]))
+        windows["home"].append(_team_window(name, [r for r in rows if r.get("home")]))
+        windows["away"].append(_team_window(name, [r for r in rows if not r.get("home")]))
 
     totals.sort(key=lambda r: r["points"], reverse=True)
     by_gw.sort(key=lambda r: r["team"])
-    recent.sort(key=lambda r: r["r5_points"], reverse=True)
-    return {"by_gw": by_gw, "totals": _ranked(totals), "recent": _ranked(recent)}
+    out = {"by_gw": by_gw, "totals": _ranked(totals)}
+    for k, lst in windows.items():
+        lst.sort(key=lambda r: r["points"], reverse=True)
+        out[k] = _ranked(lst)
+    return out
 
 
 # ----------------------------------------------------------------------
