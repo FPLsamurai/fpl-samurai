@@ -412,8 +412,8 @@ def sorted_history(history):
 
 
 def compute_player_tables(bootstrap, histories, team_map, pos_map, jp_names):
-    """全試合・直近3/5/10・ホーム・アウェイの表を作る"""
-    all_rows, last3, last5, last10, home_rows, away_rows = [], [], [], [], [], []
+    """全試合・直近1（直近節）/3/5/10・ホーム・アウェイの表を作る"""
+    all_rows, last1, last3, last5, last10, home_rows, away_rows = [], [], [], [], [], [], []
 
     for el in bootstrap["elements"]:
         if el.get("minutes", 0) <= 0:
@@ -458,6 +458,7 @@ def compute_player_tables(bootstrap, histories, team_map, pos_map, jp_names):
         }})
 
         # 直近N試合 ＝ チームの直近N試合すべて（欠場・ベンチ=0分も1試合として数える）
+        last1.append(window_row(base, el, hist[-1:]))   # 直近節（直近1試合分のみ）
         last3.append(window_row(base, el, hist[-3:]))
         last5.append(window_row(base, el, hist[-5:]))
         last10.append(window_row(base, el, hist[-10:]))
@@ -479,6 +480,7 @@ def compute_player_tables(bootstrap, histories, team_map, pos_map, jp_names):
 
     return {
         "all": full(all_rows),
+        "last1": full(last1),
         "last3": full(last3), "last5": full(last5), "last10": full(last10),
         "home": full(home_rows), "away": full(away_rows),
     }

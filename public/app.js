@@ -92,7 +92,7 @@ function renderHeader() {
 /* ===========================================================
    選手タブ
    =========================================================== */
-const RICH_KEYS = ["all", "last3", "last5", "last10", "home", "away"];
+const RICH_KEYS = ["all", "last1", "last3", "last5", "last10", "home", "away"];
 function renderPlayers(key) {
   if (RICH_KEYS.includes(key)) {
     renderPlayerRich(key);
