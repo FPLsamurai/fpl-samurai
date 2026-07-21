@@ -94,7 +94,9 @@ function renderHeader() {
    =========================================================== */
 const RICH_KEYS = ["all", "last1", "last3", "last5", "last10", "home", "away"];
 function renderPlayers(key) {
-  if (RICH_KEYS.includes(key)) {
+  if (key === "recent") {
+    renderPlayerRich(recentWindow);   // 「直近」タブ＝記憶している期間のリッチ表＋期間切替
+  } else if (RICH_KEYS.includes(key)) {
     renderPlayerRich(key);
   } else if (key === "setpiece") {
     renderSetPieces();
@@ -219,6 +221,13 @@ let playerFilters = { name: "", pos: "", team: "", min: {}, max: {} };
 let colState = loadColState();
 let cmOpen = false;  // 列設定パネルが開いているか
 let currentRichKey = "all";  // 高機能テーブルがいま表示している期間
+// 「直近」タブ内の期間切替（1/3/5/10試合）。選んだ期間はブラウザに記憶
+const RECENT_WINDOWS = [["last1", "1試合"], ["last3", "3試合"], ["last5", "5試合"], ["last10", "10試合"]];
+const RECENT_KEYS = RECENT_WINDOWS.map((w) => w[0]);
+let recentWindow = (() => {
+  try { const s = localStorage.getItem("fpl_recent_window"); if (RECENT_KEYS.includes(s)) return s; } catch (e) {}
+  return "last5";
+})();
 
 /* ---- 列の表示設定の保存・読み込み（ブラウザに記憶） ---- */
 function defaultColState() {
@@ -288,7 +297,17 @@ function renderPlayerRich(key) {
   const rows = (DATA.players && DATA.players[currentRichKey]) || [];
   if (!rows.length) { box.innerHTML = emptyMessage("まだデータがありません。"); return; }
 
+  // 「直近」タブのとき、表の上に期間切替（1/3/5/10試合）を出す
+  const isRecent = RECENT_KEYS.includes(currentRichKey);
+  const segHtml = isRecent ? `
+    <div class="recent-seg" id="recent-seg">
+      <span class="recent-seg-l">直近</span>
+      ${RECENT_WINDOWS.map(([k, lbl]) =>
+        `<button type="button" data-win="${k}" class="${k === currentRichKey ? "is-on" : ""}">${lbl}</button>`).join("")}
+    </div>` : "";
+
   box.innerHTML = `
+    ${segHtml}
     <div id="col-manager"></div>
     <p class="note" style="margin:6px 0;">該当：<span id="player-count"></span>人</p>
     <div class="fullbleed">
@@ -299,6 +318,16 @@ function renderPlayerRich(key) {
         </table>
       </div>
     </div>`;
+
+  // 期間切替（1/3/5/10試合）。選んだ期間を記憶して再描画（並べ替え・絞り込み・列設定は保持）
+  const seg = document.getElementById("recent-seg");
+  if (seg) {
+    seg.querySelectorAll("button[data-win]").forEach((b) => b.addEventListener("click", () => {
+      recentWindow = b.dataset.win;
+      try { localStorage.setItem("fpl_recent_window", recentWindow); } catch (e) {}
+      renderPlayerRich(recentWindow);
+    }));
+  }
 
   // イベントは親に1回だけ付ける（中身を作り替えても効く）
   const head = document.getElementById("player-head");
