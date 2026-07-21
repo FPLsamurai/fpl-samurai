@@ -454,7 +454,11 @@ function refreshPlayerBody() {
     getActiveColumns().all.forEach((c) => {
       const st = frozenCss(c);
       const frz = c.frozen ? "frz " : "";
-      if (c.type === "rank") tds += `<td class="rank ${frz}" style="${st}">${i + 1}</td>`;
+      if (c.type === "rank") {
+        // 順位＝並び替えに追従（降順は1・2…、昇順は最大…と逆から数える）
+        const rankNum = playerSort.dir === "asc" ? filtered.length - i : i + 1;
+        tds += `<td class="rank ${frz}" style="${st}">${rankNum}</td>`;
+      }
       else if (c.type === "photo") {
         const ph = r.photo ? `<img class="player-photo" loading="lazy" alt="" src="${PHOTO_BASE}${esc(r.photo)}.png" onerror="this.style.visibility='hidden'">` : "";
         tds += `<td class="col-photo ${frz}" style="${st}">${ph}</td>`;
@@ -681,15 +685,19 @@ function drawTeamRankTable(box, rows) {
     return `<th class="${cls}"${c.noSort ? "" : ` data-sort="${c.key}"`}>${esc(c.label)}${arr}</th>`;
   }).join("");
 
-  const cell = (r, c) => {
+  const cell = (r, c, rankNum) => {
     if (c.kind === "team") return `<td class="col-name"><div class="name">${teamBadgeByName(r.team)}</div></td>`;
-    if (c.cls === "rank") return `<td class="rank">${r.rank}</td>`;
+    if (c.cls === "rank") return `<td class="rank">${rankNum}</td>`;
     if (c.kind === "main") return `<td class="main-num">${r[c.key]}</td>`;
     if (c.kind === "pct") return `<td>${r.cs_pct}%</td>`;
     if (c.kind === "csper") return `<td>${r.cs_count} / ${r.matches}</td>`;
     return `<td>${r[c.key]}</td>`;
   };
-  const body = sorted.map((r) => `<tr>${TEAM_RANK_COLS.map((c) => cell(r, c)).join("")}</tr>`).join("");
+  // 順位＝並び替えに追従（降順は1・2…、昇順は最大…と逆から数える）
+  const body = sorted.map((r, i) => {
+    const rankNum = dir === "asc" ? sorted.length - i : i + 1;
+    return `<tr>${TEAM_RANK_COLS.map((c) => cell(r, c, rankNum)).join("")}</tr>`;
+  }).join("");
 
   box.innerHTML = wideTable(`<table class="rich teamtbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`);
   box.querySelector("thead").addEventListener("click", (e) => {

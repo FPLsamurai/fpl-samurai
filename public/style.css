@@ -849,12 +849,17 @@ table.rich.teamtbl th.rank, table.rich.teamtbl td.rank {
   width: 42px; min-width: 42px; max-width: 42px;
   position: sticky; left: 0; z-index: 3;
 }
-/* 順位列のある表（合計・直近フォーム）：チーム列は順位列(42px)の右に固定 */
+/* 順位列のある表（合計・直近・ホーム・アウェイ）：チーム列は順位列(42px)の右に固定・広め */
 table.rich.teamtbl:not(.tbl-gw) th.col-name,
 table.rich.teamtbl:not(.tbl-gw) td.col-name {
-  width: 46px; min-width: 46px; max-width: 46px;
+  width: 68px; min-width: 68px; max-width: 68px;
   position: sticky; left: 42px; z-index: 3;
   box-shadow: 1px 0 0 var(--border);   /* 固定列の右に区切り線 */
+}
+/* チーム表のエンブレムは列幅に合わせて大きめに */
+table.rich.teamtbl .team-badge {
+  width: 38px;
+  height: 38px;
 }
 /* 節別の表（順位列なし）：先頭の節列を左端に固定 */
 table.rich.teamtbl.tbl-gw th.col-name,
