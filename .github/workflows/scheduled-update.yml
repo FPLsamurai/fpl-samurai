@@ -1,0 +1,68 @@
+# FPLの最新データを定期取得して、自動で公開サイトへ反映します。
+#
+# 頻度の切り替え（cron は下の schedule の1行だけ変えればOK。時刻は常にUTC）:
+#   オフシーズン（FPL未開幕）: "0 8 * * 2"  = 毎週火曜 17:00 JST
+#   シーズン開幕後           : "0 8 * * *"  = 毎日   17:00 JST
+#   （17:00 JST = 08:00 UTC。日本はサマータイム無しなので年中固定）
+#
+# 手動でも「Actions」タブの Run workflow から実行できます（開幕前の動作テスト用）。
+
+name: 定期データ更新
+
+on:
+  schedule:
+    - cron: "0 8 * * 2"   # ← 開幕したら "0 8 * * *" に変えるだけで毎日更新になります
+  workflow_dispatch: {}
+
+# GITHUB_TOKEN に付与する権限：data.json のコミット(write)＋Pages公開
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# deploy.yml と同じグループにして、Pages公開が同時に走らないようにする
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: ソースを取得
+        uses: actions/checkout@v4
+
+      - name: Python を準備
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 最新データを取得・集計（scripts/update.py）
+        run: python3 scripts/update.py
+
+      - name: 変更があればコミット＆プッシュ
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/site/data.json public/data.json
+          if git diff --cached --quiet; then
+            echo "データに変更はありませんでした。"
+          else
+            git commit -m "データ更新（自動更新 $(date -u '+%Y-%m-%d %H:%M UTC')）"
+            git push
+          fi
+
+      - name: Pages の設定
+        uses: actions/configure-pages@v5
+
+      - name: 公開フォルダ(public)をアップロード
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: 公開
+        id: deployment
+        uses: actions/deploy-pages@v4
