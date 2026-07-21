@@ -64,7 +64,7 @@
       <button class="tab" data-target="players"><img class="tab-ic" src="icons/player.png" alt="">選手</button>
       <button class="tab" data-target="teams"><img class="tab-ic" src="icons/team.png" alt="">チーム</button>
       <button class="tab" data-target="next"><img class="tab-ic" src="icons/next.png" alt="">次節</button>
-      <button class="tab" data-target="myteam"><img class="tab-ic" src="icons/myteam.png" alt="">マイチーム</button>
+      <button class="tab" data-target="myteam"><img class="tab-ic" src="icons/myteam.png" alt="">スカッド</button>
       <button class="tab" data-target="rules"><img class="tab-ic" src="icons/rule.png" alt="">ルール</button>
     </nav>
   </header>
@@ -117,7 +117,7 @@
         <button class="linkcard nav-card" data-go="players"><span class="lc-ic data"><img class="lc-ic-img" src="icons/player.png" alt=""></span><span class="lc-body"><span class="lc-title">選手データ</span><span class="lc-sub">得点・コスパ・xGなどで並べ替え＆絞り込み</span></span></button>
         <button class="linkcard nav-card" data-go="teams"><span class="lc-ic data"><img class="lc-ic-img" src="icons/team.png" alt=""></span><span class="lc-body"><span class="lc-title">チームデータ</span><span class="lc-sub">攻撃力・守備力・無失点率</span></span></button>
         <button class="linkcard nav-card" data-go="next"><span class="lc-ic data"><img class="lc-ic-img" src="icons/next.png" alt=""></span><span class="lc-body"><span class="lc-title">次節予測</span><span class="lc-sub">クリーンシート率・相手の強さ</span></span></button>
-        <button class="linkcard nav-card" data-go="myteam"><span class="lc-ic data"><img class="lc-ic-img" src="icons/myteam.png" alt=""></span><span class="lc-body"><span class="lc-title">マイチーム検索</span><span class="lc-sub">FPL IDでスカッド・ミニリーグ確認</span></span></button>
+        <button class="linkcard nav-card" data-go="myteam"><span class="lc-ic data"><img class="lc-ic-img" src="icons/myteam.png" alt=""></span><span class="lc-body"><span class="lc-title">スカッド検索</span><span class="lc-sub">FPL IDでスカッド・ミニリーグ確認</span></span></button>
         <button class="linkcard nav-card" data-go="rules"><span class="lc-ic data"><img class="lc-ic-img" src="icons/rule.png" alt=""></span><span class="lc-body"><span class="lc-title">FPLルール解説</span><span class="lc-sub">初心者向けの基本ルール</span></span></button>
 
         <p class="updated" id="updated">読み込み中…</p>
@@ -165,7 +165,7 @@
 
     <!-- ============ マイチーム ============ -->
     <section id="myteam" class="panel">
-      <h2>マイチーム検索</h2>
+      <h2>スカッド検索</h2>
       <p class="note">
         FPL ID を入力すると、そのチームのスカッド（15人）とミニリーグ順位を表示します。<br>
         IDの調べ方：FPL公式サイトにログイン →「Points」ページのアドレスにある
@@ -340,7 +340,7 @@
           <li>種類は2つ：<b>Classic</b>（シーズン合計ポイントで競う）／<b>Head-to-Head</b>（毎週1対1の対戦形式）</li>
           <li>シーズン途中からの参加でもOK</li>
         </ul>
-        <button class="nav-card rules-cta" data-go="myteam">👥 マイチームタブで自分のミニリーグ順位を見る</button>
+        <button class="nav-card rules-cta" data-go="myteam">👥 スカッドタブで自分のミニリーグ順位を見る</button>
 
         <h3 id="rule-faq">よくある質問</h3>
         <details class="faq-item">
@@ -373,7 +373,7 @@
           <li><b>選手</b>タブ：得点・コスパ・xGなどで並べ替え＆絞り込み → 移籍候補さがし</li>
           <li><b>チーム</b>タブ：攻撃力・守備力の比較</li>
           <li><b>次節</b>タブ：クリーンシート率・対戦相手の強さ → キャプテン選び</li>
-          <li><b>マイチーム</b>タブ：自分のスカッドとミニリーグ順位を確認</li>
+          <li><b>スカッド</b>タブ：自分のスカッドとミニリーグ順位を確認</li>
         </ul>
 
         <p class="rules-foot">正式・最新のルールは <b>公式サイト</b>（fantasy.premierleague.com）の Help / Rules も確認してください。</p>

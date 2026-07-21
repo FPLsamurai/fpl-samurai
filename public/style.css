@@ -277,6 +277,21 @@ body {
   .tabs {
     flex: 1 1 100%;
     border-top: 1px solid rgba(255, 255, 255, 0.12);
+    overflow-x: visible;   /* 6タブを等分して収めるので横スクロール不要 */
+  }
+  /* 各タブを「アイコン上・文字下」の2段にして横幅を詰め、全タブを画面内に収める */
+  .tab {
+    flex: 1 1 0;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+    padding: 6px 2px 5px;
+    font-size: 0.66rem;
+    letter-spacing: -0.02em;
+  }
+  .tab-ic {
+    width: 20px;
+    height: 20px;
   }
 }
 
