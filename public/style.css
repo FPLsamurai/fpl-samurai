@@ -616,19 +616,20 @@ main {
   flex: 1 1 0;
   min-width: 56px;
   padding: 7px 4px;
-  /* スカッドの「総合ポイント」と同じ配色（薄紫の背景＋白寄りグレーの文字） */
-  border: 1px solid #57215c;
-  background: #57215c;
-  color: #d9c8df;
+  /* タップ前：全試合・直近などのサブタブと同じ（白背景＋グレー文字） */
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
 }
 .recent-seg button.is-on {
-  background: #009e3f;
-  border-color: #009e3f;
-  /* 文字色はタップ前と同じ（#d9c8df）のまま */
+  /* タップ後：スカッドの「総合ポイント」と同じ配色（薄紫の背景＋白寄りグレーの文字） */
+  background: #57215c;
+  border-color: #57215c;
+  color: #d9c8df;
 }
 
 /* ---------- 高機能テーブル（選手・全試合） ---------- */
