@@ -654,15 +654,20 @@ table.rich td {
   white-space: nowrap;
   padding: 8px 8px;
 }
-/* 並べ替えできる見出し */
+/* 並べ替えできる見出し（左寄せにして、矢印スペースを右に常時確保。列幅が動かない） */
 table.rich th.sortable {
   cursor: pointer;
   user-select: none;
+  text-align: left;
 }
 table.rich th.sortable:hover {
   background: #e2d6e6;
 }
 .arr {
+  display: inline-block;
+  width: 12px;           /* 昇順↑/降順↓の有無に関わらず常にこの幅を確保 */
+  margin-left: 3px;
+  text-align: left;
   font-weight: 700;
 }
 .arr-desc { color: var(--pl-green); }   /* 大きい順↓＝緑（そのまま） */

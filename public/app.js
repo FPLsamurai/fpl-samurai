@@ -439,7 +439,7 @@ function refreshPlayerBody() {
   document.querySelectorAll("#player-head th.sortable").forEach((th) => {
     const arr = th.querySelector(".arr");
     if (th.dataset.sort === key) {
-      arr.textContent = dir === "asc" ? " ↑" : " ↓";
+      arr.textContent = dir === "asc" ? "↑" : "↓";
       arr.className = "arr " + (dir === "asc" ? "arr-asc" : "arr-desc");
     } else {
       arr.textContent = "";
@@ -655,8 +655,8 @@ const TEAM_RANK_COLS = [
   { key: "defcon",    label: "DEFCON" },
   { key: "yellow",    label: "イエロー" },
   { key: "red",       label: "レッド" },
-  { key: "xg_total",  label: "xG合計" },
-  { key: "xgc_total", label: "被xG合計" },
+  { key: "xg_total",  label: "xG" },
+  { key: "xgc_total", label: "被xG" },
   { key: "cs_pct",    label: "無失点率",    kind: "pct" },
   { key: "cs_count",  label: "無失点/試合", kind: "csper" },
 ];
@@ -675,7 +675,7 @@ function drawTeamRankTable(box, rows) {
     const cls = [c.cls, c.noSort ? "" : "sortable"].filter(Boolean).join(" ");
     const on = key === c.key && !c.noSort;
     const arr = on
-      ? `<span class="arr ${dir === "asc" ? "arr-asc" : "arr-desc"}">${dir === "asc" ? " ↑" : " ↓"}</span>`
+      ? `<span class="arr ${dir === "asc" ? "arr-asc" : "arr-desc"}">${dir === "asc" ? "↑" : "↓"}</span>`
       : `<span class="arr"></span>`;
     return `<th class="${cls}"${c.noSort ? "" : ` data-sort="${c.key}"`}>${esc(c.label)}${arr}</th>`;
   }).join("");
