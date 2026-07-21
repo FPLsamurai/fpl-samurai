@@ -595,6 +595,9 @@ main {
   flex: 0 0 auto;
 }
 
+/* ⚙列の表示・並び替えの下の余白を、上（サブタブとの間＝12px）と同じにする */
+#col-manager { margin-bottom: 12px; }
+
 /* 「直近」タブ内の期間切替（1/3/5/10試合）のセグメントボタン */
 .recent-seg {
   display: flex;
@@ -613,9 +616,10 @@ main {
   flex: 1 1 0;
   min-width: 56px;
   padding: 7px 4px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--pl-purple);
+  /* スカッドの「総合ポイント」と同じ配色（薄紫の背景＋白寄りグレーの文字） */
+  border: 1px solid #57215c;
+  background: #57215c;
+  color: #d9c8df;
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 700;
@@ -624,7 +628,7 @@ main {
 .recent-seg button.is-on {
   background: #009e3f;
   border-color: #009e3f;
-  /* 文字色はタップ前と同じ（紫）のまま */
+  /* 文字色はタップ前と同じ（#d9c8df）のまま */
 }
 
 /* ---------- 高機能テーブル（選手・全試合） ---------- */
