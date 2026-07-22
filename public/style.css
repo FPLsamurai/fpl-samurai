@@ -642,8 +642,10 @@ main {
 }
 table.rich {
   font-size: 0.8rem;
-  width: 100%;
-  min-width: 1200px;           /* 全列が入る最低幅。狭い画面では横スクロール */
+  /* 幅は中身ぴったり。列を減らすと表全体が縮む（各列は引き伸ばさない）。
+     はみ出す分は横スクロール、収まるときは左寄せで自然な幅になる */
+  width: max-content;
+  min-width: 0;
   /* 固定列(position:sticky)を効かせるため collapse/overflow を上書き */
   border-collapse: separate;
   border-spacing: 0;
@@ -654,6 +656,8 @@ table.rich td {
   white-space: nowrap;
   padding: 8px 8px;
 }
+/* 数値列の最低幅（見出し＋矢印スペースが収まる幅を確保。固定列はインライン指定が優先） */
+table.rich th.num, table.rich td.num { min-width: 46px; }
 /* 並べ替えできる見出し（左寄せにして、矢印スペースを右に常時確保。列幅が動かない） */
 table.rich th.sortable {
   cursor: pointer;
@@ -841,8 +845,11 @@ table.squad td.col-name { text-align: left; }
 table.rich th.col-team { text-align: left; }
 .name, .sub, .name-ja { text-align: left; }
 
-/* チームデータ用テーブル（列が少なめなので最低幅を抑える） */
-table.rich.teamtbl { min-width: 820px; }
+/* チームデータ用テーブル：幅は中身ぴったり（列を減らしても引き伸ばさない） */
+table.rich.teamtbl { min-width: 0; }
+/* 数値列の最低幅（見出し＋矢印スペース分。順位・チーム列はそれぞれの固定幅が優先） */
+table.rich.teamtbl th:not(.rank):not(.col-name),
+table.rich.teamtbl td:not(.rank):not(.col-name) { min-width: 46px; }
 
 /* チーム列の幅を選手タブ（順位42px・チーム46px）と合わせ、順位〜チーム列を左に固定 */
 table.rich.teamtbl th.rank, table.rich.teamtbl td.rank {
