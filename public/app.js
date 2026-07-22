@@ -32,6 +32,8 @@ async function init() {
     renderPlayers("all");
     renderTeams("totals");
     renderNext("predict");
+    window.addEventListener("resize", scheduleLayoutRichTables);
+    layoutRichTables();
   } catch (err) {
     showLoadError(err);
   }
@@ -45,6 +47,34 @@ function activateTab(target) {
   document.querySelectorAll(".panel").forEach((p) =>
     p.classList.toggle("is-active", p.id === target));
   window.scrollTo({ top: 0 });
+  layoutRichTables();   // 表示された表を中央寄せ（列が少ないとき左に寄りすぎないように）
+}
+
+/* 全幅テーブルの水平位置を調整する。
+   列が少なく表が狭いときは画面中央に寄せ、ただし左端はタイトル（本文の左端）より
+   左には行かないように制限する。表が広いときはタイトル位置に固定して横スクロール。 */
+function layoutRichTables() {
+  const mainEl = document.querySelector("main");
+  if (!mainEl) return;
+  const vw = document.documentElement.clientWidth;
+  const tl = mainEl.getBoundingClientRect().left + parseFloat(getComputedStyle(mainEl).paddingLeft || "0");
+  document.querySelectorAll(".data-table-wrap").forEach((wrap) => {
+    const table = wrap.querySelector("table.rich");
+    if (!table) return;
+    // いったんリセットして自然な表幅を測る
+    wrap.style.marginLeft = "";
+    wrap.style.maxWidth = "";
+    if (!wrap.offsetParent) return;   // 非表示タブ内はスキップ
+    const tw = table.offsetWidth;
+    const left = Math.max(tl, Math.round((vw - tw) / 2));
+    wrap.style.marginLeft = left + "px";
+    wrap.style.maxWidth = (vw - left) + "px";
+  });
+}
+let _layoutTimer = null;
+function scheduleLayoutRichTables() {
+  clearTimeout(_layoutTimer);
+  _layoutTimer = setTimeout(layoutRichTables, 120);
 }
 
 function setupParentTabs() {
@@ -495,6 +525,7 @@ function refreshPlayerBody() {
   const colspan = getActiveColumns().all.length;
   document.getElementById("player-body").innerHTML =
     html || `<tr><td colspan="${colspan}" class="empty" style="box-shadow:none;">条件に合う選手がいません。</td></tr>`;
+  layoutRichTables();
 }
 
 /* ---- 列の表示・並び替えパネル（動画用） ---- */
@@ -700,6 +731,7 @@ function drawTeamRankTable(box, rows) {
   }).join("");
 
   box.innerHTML = wideTable(`<table class="rich teamtbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`);
+  layoutRichTables();
   box.querySelector("thead").addEventListener("click", (e) => {
     const th = e.target.closest("th.sortable");
     if (!th) return;
@@ -735,6 +767,7 @@ function drawTeamByGw(box, byGw) {
     });
     html += `</tbody></table>`;
     document.getElementById("team-gw-table").innerHTML = wideTable(html);
+    layoutRichTables();
   };
   picker.addEventListener("change", render);
   render();
