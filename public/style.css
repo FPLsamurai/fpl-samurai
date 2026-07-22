@@ -639,9 +639,6 @@ main {
   border-radius: 10px;
   /* 枠内を縦スクロールにして、見出し行を枠の上端に固定する */
   max-height: calc(100vh - var(--topbar-h) - 8px);
-  /* 幅は表の中身ぴったり（JSが margin-left / max-width で中央寄せ＆左端制限を付ける） */
-  width: max-content;
-  max-width: 100vw;
 }
 table.rich {
   font-size: 0.8rem;
