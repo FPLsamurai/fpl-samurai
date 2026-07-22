@@ -646,6 +646,7 @@ table.rich {
      はみ出す分は横スクロール、収まるときは左寄せで自然な幅になる */
   width: max-content;
   min-width: 0;
+  margin-inline: auto;   /* 列が少なく画面に収まるときは中央寄せ（広いときは左端＋横スクロール） */
   /* 固定列(position:sticky)を効かせるため collapse/overflow を上書き */
   border-collapse: separate;
   border-spacing: 0;
