@@ -706,7 +706,13 @@ function drawTeamRankTable(box, rows) {
     const k = th.dataset.sort;
     if (teamSort.key === k) teamSort.dir = teamSort.dir === "desc" ? "asc" : "desc";
     else { teamSort.key = k; teamSort.dir = (k === "team") ? "asc" : "desc"; }
+    // 表を作り直すと横スクロール位置が失われるので、並び替え前の位置を保持して復元する
+    const oldWrap = box.querySelector(".data-table-wrap");
+    const sl = oldWrap ? oldWrap.scrollLeft : 0;
+    const stp = oldWrap ? oldWrap.scrollTop : 0;
     drawTeamRankTable(box, rows);
+    const newWrap = box.querySelector(".data-table-wrap");
+    if (newWrap) { newWrap.scrollLeft = sl; newWrap.scrollTop = stp; }
   });
 }
 
