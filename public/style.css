@@ -1918,3 +1918,29 @@ code {
   font-size: 0.8rem;
   padding: 8px;
 }
+
+/* ---------- 開幕前フォールバック（25/26実績＋26/27価格）の案内 ---------- */
+/* 第1節終了後は JS 側で挿入されなくなるため、自動的に消える */
+.fallback-banner {
+  margin: 10px 12px 0;
+  padding: 8px 12px;
+  border: 1px solid var(--gold-soft);
+  border-left: 4px solid var(--gold);
+  border-radius: 8px;
+  background: #fffaf0;
+  color: var(--text);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+.fallback-banner b { color: var(--pl-purple); }
+.myteam-notice {
+  margin: 10px 0 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--gold-soft);
+  border-left: 4px solid var(--gold);
+  border-radius: 8px;
+  background: #fffaf0;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
