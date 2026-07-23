@@ -5,9 +5,7 @@
    =========================================================== */
 
 const DATA_URL = "data.json";
-const FALLBACK_URL = "data_2526.json";   // 開幕前に表示する昨季(25/26)の実績＋今季(26/27)価格
 let DATA = null;
-let IS_FALLBACK = false;                  // true = 開幕前フォールバック（25/26実績）を表示中
 
 document.addEventListener("DOMContentLoaded", init);
 
@@ -29,7 +27,6 @@ async function init() {
     const res = await fetch(DATA_URL, { cache: "no-cache" });
     if (!res.ok) throw new Error("データファイルを読み込めませんでした");
     DATA = await res.json();
-    await applyPreseasonFallback();   // 26/27がまだ空なら昨季データで代替表示
     renderHeader();
     // 各タブの初期表示
     renderPlayers("all");
@@ -37,42 +34,6 @@ async function init() {
     renderNext("predict");
   } catch (err) {
     showLoadError(err);
-  }
-}
-
-/* ---------- 開幕前フォールバック（25/26実績＋26/27価格） ----------
-   26/27にまだ試合データが無い間だけ、選手・チームのランキングを昨季(25/26)の
-   実績で表示する（価格だけは data_2526.json 生成時に26/27へ差し替え済み）。
-   第1節が消化されて data.json に実データが入れば empty=false となり、
-   この分岐は自動的に無効化＝通常の26/27表示に戻る（バナー等も出なくなる）。 */
-async function applyPreseasonFallback() {
-  const empty = !DATA || !DATA.players || !Array.isArray(DATA.players.all) || DATA.players.all.length === 0;
-  if (!empty) return;                    // 26/27にデータあり＝通常表示
-  try {
-    const res = await fetch(FALLBACK_URL, { cache: "no-cache" });
-    if (!res.ok) return;                 // フォールバックが無ければ空表示のまま続行
-    const fb = await res.json();
-    DATA.players = fb.players;           // ランキング（選手）だけ昨季に差し替え
-    DATA.teams = fb.teams;               // ランキング（チーム）だけ昨季に差し替え
-    DATA.team_next3 = {};                // 昨季の所属で今季日程は出せないので「次の3試合」は—にする
-    IS_FALLBACK = true;
-    injectPreseasonNotices();
-  } catch (e) { /* 失敗しても通常フロー（空表示）で続行 */ }
-}
-
-// 注意バナー（選手・チーム）とスカッドの待ち案内を差し込む。開幕後は呼ばれないので自動的に消える。
-function injectPreseasonNotices() {
-  const banner = '<div class="fallback-banner">📊 開幕前のため<b>25/26シーズンの実績</b>を表示中（<b>価格のみ26/27</b>）。第1節終了後、自動で26/27に更新されます。</div>';
-  ["players", "teams"].forEach((id) => {
-    const panel = document.getElementById(id);
-    if (panel && !panel.querySelector(".fallback-banner")) panel.insertAdjacentHTML("afterbegin", banner);
-  });
-  const my = document.getElementById("myteam");
-  if (my && !my.querySelector(".myteam-notice")) {
-    const notice = '<div class="myteam-notice">第1節終了後に更新されます。お待ちください。</div>';
-    const h = my.querySelector("h2");
-    if (h) h.insertAdjacentHTML("afterend", notice);
-    else my.insertAdjacentHTML("afterbegin", notice);
   }
 }
 
@@ -507,12 +468,9 @@ function refreshPlayerBody() {
       } else if (c.type === "pos") {
         tds += `<td class="col-position ${frz}" style="${st}">${esc(r.position)}</td>`;
       } else if (c.type === "team") {
-        // エンブレムは選手行が持つ team_code（クラブ固有・季節不変）を優先。
-        // これで開幕前フォールバック（昨季所属）でも正しいエンブレムが出る。
         const tm = (DATA.teams_meta && DATA.teams_meta[String(r.team_id)]) || null;
-        const code = r.team_code || (tm && tm.code);
-        const badge = code
-          ? `<img class="team-badge" loading="lazy" alt="${esc(r.team)}" title="${esc(r.team)}" src="${BADGE_BASE}${code}.png" onerror="this.replaceWith(document.createTextNode('${esc(r.team)}'))">`
+        const badge = (tm && tm.code)
+          ? `<img class="team-badge" loading="lazy" alt="${esc(r.team)}" title="${esc(r.team)}" src="${BADGE_BASE}${tm.code}.png" onerror="this.replaceWith(document.createTextNode('${esc(r.team)}'))">`
           : esc(r.team);
         tds += `<td class="${frz}col-team" style="${st}">${badge}</td>`;
       } else if (c.type === "next3") {
