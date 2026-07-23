@@ -1137,7 +1137,7 @@ function initSquadEditor(entry, picksData, gw, livePoints) {
     mode: "recent",       // recent=直近節の結果表示 ／ plan=次節以降のプラン編集
     pickTeam: "",         // 移籍候補のチーム絞り込み（空文字＝すべて）
     pickMax: null,        // 移籍候補のコスト絞り込み（£m以下）
-    pickStat: null,       // 移籍候補のスタッツ絞り込み（選ぶとそのスタッツ降順＋行に表示）
+    pickStat: "cost",     // 移籍候補のスタッツ絞り込みの初期値＝コスト（コスト降順＋£表示。「なし」も選べる）
     pickOpen: null,       // 詳細を開いている候補の element_id（プルダウン展開）
   };
   restorePlans();
