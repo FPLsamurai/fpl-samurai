@@ -1370,18 +1370,9 @@ function renderSquadPitch() {
   if (MT.mode === "plan") {
     // ===== 計画タブ：GWナビ＋ステータス＋編集＋移籍サマリー =====
     const P = MT.plans[MT.planGw];
-    const sel = MT.sel != null ? P.squad.find((p) => p.position === MT.sel) : null;
+    // 操作説明は固定表示。選手の詳細・C/V選択・移籍はカードのタップ／✕から行う
     let bar = "";
-    if (sel) {
-      const el = elOf(sel);
-      bar = `<div class="mt-actions">
-        <span class="mt-sel-name">${esc(el.j || el.n)}</span>
-        <button type="button" data-act="cap">主将C</button>
-        <button type="button" data-act="vice">副V</button>
-        <button type="button" data-act="transfer">移籍</button>
-        <button type="button" data-act="clear">解除</button>
-      </div>`;
-    } else if (MT.msg) {
+    if (MT.msg) {
       bar = `<div class="mt-msg">${esc(MT.msg)}</div>`;
       // 3秒後にうっすらフェードして消え、通常の説明文に戻る（同じ世代のメッセージが表示中の時だけ）
       const token = ++MT.msgToken;
@@ -1395,7 +1386,7 @@ function renderSquadPitch() {
       }, 2600);
     } else {
       // 何も選択していないときは操作の説明を常時表示（⇅✕はスカッドのアイコンと同じ見た目）
-      bar = `<div class="mt-hint"><span class="mt-hint-ic ic-swap">⇅</span>でスタメンとベンチを入れ替えます。<span class="mt-hint-ic ic-x">✕</span>で選手を移籍できます。</div>`;
+      bar = `<div class="mt-hint"><span class="mt-hint-ic ic-swap">⇅</span>でスタメンとベンチを入れ替え<span class="mt-hint-ic ic-x">✕</span>で移籍</div>`;
     }
 
     const made = planMade(P);
@@ -1471,7 +1462,6 @@ function renderSquadPitch() {
       else MT.outs.push(pos);
       renderSquadPitch();  // OUT対象があれば候補リストも自動で開く
     }));
-    wrap.querySelectorAll(".mt-actions button").forEach((b) => b.addEventListener("click", () => onMtAction(b.dataset.act)));
     wrap.querySelectorAll(".mt-gw-btn").forEach((b) => b.addEventListener("click", () => {
       if (b.dataset.gw === "prev" && MT.planGw > MT.basePlanGw) MT.planGw--;
       else if (b.dataset.gw === "next" && MT.planGw < 38) MT.planGw++;
@@ -1568,7 +1558,55 @@ const EXPLAIN_JA = {
   defensive_contribution: "守備貢献",
 };
 
-// 直近節タブ：カードをタップしたら、その選手の得点内訳を画面下からポップアップ表示
+// 選手写真のimg HTML（無ければユニフォーム、それも無ければ非表示）
+function mtPhotoImg(el) {
+  const kit = kitUrl(el);
+  if (el.ph) {
+    const fb = kit ? `this.onerror=null;this.src='${kit}'` : `this.style.visibility='hidden'`;
+    return `<img src="${PHOTO_BASE}${esc(el.ph)}.png" alt="" onerror="${fb}">`;
+  }
+  if (kit) return `<img src="${kit}" alt="" onerror="this.style.visibility='hidden'">`;
+  return "";
+}
+
+// ポップアップの外枠を作ってピッチ枠（フィールド）の中に挿入し、閉じる処理を配線する。
+// 下端をフィールド下端に合わせる。headerRight＝名前の右のバッジ、onWire＝追加のイベント配線。
+function openMtPopup({ el, cvTag, headerRight, body, ariaLabel, onWire }) {
+  const img = mtPhotoImg(el);
+  const host = document.querySelector("#mt-squad .mt-pitch-wrap") || document.body;
+  const old = document.getElementById("mt-bd-overlay");
+  if (old) old.remove();
+  host.insertAdjacentHTML("beforeend", `
+    <div class="mt-bd-overlay" id="mt-bd-overlay">
+      <div class="mt-bd-sheet" role="dialog" aria-label="${ariaLabel}">
+        <div class="mt-bd-head">
+          <span class="mt-bd-photo">${img}</span>
+          <span class="mt-bd-id">
+            <span class="mt-bd-name">${esc(el.j || el.n)}${cvTag || ""}</span>
+            <span class="mt-bd-meta">${esc(el.t)} ・ ${el.p}</span>
+          </span>
+          ${headerRight || ""}
+          <button type="button" class="mt-bd-close" aria-label="閉じる">×</button>
+        </div>
+        <div class="mt-bd-body">${body}</div>
+      </div>
+    </div>`);
+  const ov = document.getElementById("mt-bd-overlay");
+  const closeBd = () => {
+    ov.remove();
+    // 閉じたら黄色枠（選択状態）も解除する
+    MT.sel = null;
+    document.querySelectorAll("#mt-squad .mt-card.is-sel").forEach((x) => x.classList.remove("is-sel"));
+  };
+  // ×ボタン、または暗幕（シートの外）をタップで閉じる。シート内のタップでは閉じない
+  ov.addEventListener("click", (e) => {
+    if (e.target === ov || e.target.closest(".mt-bd-close")) closeBd();
+  });
+  if (onWire) onWire(ov, closeBd);
+  requestAnimationFrame(() => ov.classList.add("is-open"));
+}
+
+// 直近節タブ：カードをタップしたら、その選手の得点内訳をポップアップ表示
 function openMtBreakdown(pos) {
   if (!MT || !MT.liveExplain) return;
   const pick = MT.base.squad.find((p) => p.position === pos);
@@ -1597,55 +1635,85 @@ function openMtBreakdown(pos) {
        <div class="mt-bd-row mt-bd-total-row"><span>合計（C ×${mult}）</span><span>${total}</span></div>`
     : `<div class="mt-bd-row mt-bd-total-row"><span>合計</span><span>${total}</span></div>`;
 
-  // 選手写真（無ければユニフォーム、それも無ければ非表示）
-  const kit = kitUrl(el);
-  let img = "";
-  if (el.ph) {
-    const fb = kit ? `this.onerror=null;this.src='${kit}'` : `this.style.visibility='hidden'`;
-    img = `<img src="${PHOTO_BASE}${esc(el.ph)}.png" alt="" onerror="${fb}">`;
-  } else if (kit) {
-    img = `<img src="${kit}" alt="" onerror="this.style.visibility='hidden'">`;
-  }
   const cvTag = pick.is_captain ? ` <span class="mt-bd-c">(C)</span>`
     : (pick.is_vice_captain ? ` <span class="mt-bd-c">(V)</span>` : "");
   const body = lines.length
     ? rowsHtml + totalHtml
     : `<div class="mt-bd-none">この節は出場していません</div>`;
 
-  // ポップアップはピッチ枠（フィールド）の中に入れ、下端をフィールド下端に合わせる
-  const host = document.querySelector("#mt-squad .mt-pitch-wrap") || document.body;
-  const old = document.getElementById("mt-bd-overlay");
-  if (old) old.remove();
-  host.insertAdjacentHTML("beforeend", `
-    <div class="mt-bd-overlay" id="mt-bd-overlay">
-      <div class="mt-bd-sheet" role="dialog" aria-label="得点内訳">
-        <div class="mt-bd-head">
-          <span class="mt-bd-photo">${img}</span>
-          <span class="mt-bd-id">
-            <span class="mt-bd-name">${esc(el.j || el.n)}${cvTag}</span>
-            <span class="mt-bd-meta">${esc(el.t)} ・ ${el.p}</span>
-          </span>
-          <span class="mt-pts ${ptsClass(total)} mt-bd-total">${total}pt</span>
-          <button type="button" class="mt-bd-close" aria-label="閉じる">×</button>
-        </div>
-        <div class="mt-bd-body">${body}</div>
-      </div>
-    </div>`);
-  const ov = document.getElementById("mt-bd-overlay");
-  const closeBd = () => {
-    ov.remove();
-    // 閉じたら黄色枠（選択状態）も解除する
-    MT.sel = null;
-    document.querySelectorAll("#mt-squad .mt-card.is-sel").forEach((x) => x.classList.remove("is-sel"));
-  };
-  // ×ボタン、または暗幕（シートの外）をタップで閉じる。シート内のタップでは閉じない
-  ov.addEventListener("click", (e) => {
-    if (e.target === ov || e.target.closest(".mt-bd-close")) closeBd();
+  openMtPopup({
+    el, cvTag, ariaLabel: "得点内訳", body,
+    headerRight: `<span class="mt-pts ${ptsClass(total)} mt-bd-total">${total}pt</span>`,
   });
-  requestAnimationFrame(() => ov.classList.add("is-open"));
 }
 
-// カード本体タップ：入れ替え待ちなら緑枠の相手のみ実行、そうでなければ詳細（主将C等のバー）を開閉
+// 計画タブ：ポジション別に表示するシーズンスタッツ
+const SEASON_STAT_LABELS = {
+  points: "ポイント", goals: "ゴール", assists: "アシスト", clean_sheets: "無失点",
+  saves: "セーブ", pk_saved: "PKストップ", defcon90: "DEFCON/90",
+  xg90: "xG/90", xa90: "xA/90", bonus: "ボーナス",
+};
+const POS_STATS = {
+  GK: ["points", "assists", "clean_sheets", "saves", "pk_saved", "bonus"],
+  DF: ["points", "goals", "assists", "clean_sheets", "defcon90", "bonus"],
+  MF: ["points", "goals", "assists", "xg90", "defcon90", "bonus"],
+  FW: ["points", "goals", "assists", "xg90", "xa90", "bonus"],
+};
+const SEASON_STAT_FLOAT = { defcon90: 1, xg90: 1, xa90: 1 };  // 小数2桁で表示する項目
+
+// 写真コード → シーズンスタッツ（data.json の players.all）。初回だけ作る
+let _seasonByPhoto = null;
+function seasonStatsFor(el) {
+  if (!_seasonByPhoto) {
+    _seasonByPhoto = {};
+    ((DATA.players && DATA.players.all) || []).forEach((r) => {
+      if (r.photo) _seasonByPhoto[String(r.photo)] = r;
+    });
+  }
+  return el.ph ? _seasonByPhoto[String(el.ph)] : null;
+}
+
+// 計画タブ：カードをタップしたら、ポジション別スタッツ＋C/V選択のポップアップを表示
+function openMtPlanStats(pos) {
+  const P = MT.plans[MT.planGw];
+  const pick = P.squad.find((p) => p.position === pos);
+  if (!pick) return;
+  const el = elOf(pick);
+  const stats = seasonStatsFor(el);
+  const posKey = POS_STATS[el.p] ? el.p : "MF";
+  const rowsHtml = POS_STATS[posKey].map((f) => {
+    let v = stats ? stats[f] : null;
+    if (v == null) v = "−";
+    else if (SEASON_STAT_FLOAT[f]) v = Number(v).toFixed(2);
+    return `<div class="mt-bd-row"><span>${SEASON_STAT_LABELS[f]}</span><span>${v}</span></div>`;
+  }).join("");
+  // 名前の右にC/V選択バッジ（現在の主将/副将をハイライト）
+  const headerRight = `<span class="mt-bd-cv">
+    <button type="button" class="mt-bd-cvbtn c${pick.is_captain ? " is-on" : ""}" data-cv="cap">C</button>
+    <button type="button" class="mt-bd-cvbtn v${pick.is_vice_captain ? " is-on" : ""}" data-cv="vice">V</button>
+  </span>`;
+  openMtPopup({
+    el, cvTag: "", ariaLabel: "選手スタッツ", body: rowsHtml, headerRight,
+    onWire: (ov) => {
+      ov.querySelectorAll("[data-cv]").forEach((b) => b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (b.dataset.cv === "cap") {
+          P.squad.forEach((p) => { p.is_captain = false; });
+          pick.is_captain = true; pick.is_vice_captain = false;
+        } else {
+          P.squad.forEach((p) => { p.is_vice_captain = false; });
+          pick.is_vice_captain = true; pick.is_captain = false;
+        }
+        invalidateAfter(MT.planGw); savePlans();
+        MT.sel = null;
+        renderSquadPitch();  // カードのC/Vバッジに反映（ポップアップは閉じる）
+      }));
+    },
+  });
+}
+
+// カード本体タップ：入れ替え待ちなら緑枠の相手のみ実行、そうでなければ
+// 黄色枠＋シーズンスタッツ＋C/V選択のポップアップを開く
 function onMtCardClick(e) {
   const pos = +e.currentTarget.dataset.pos;
   if (MT.swapFrom != null) {
@@ -1653,8 +1721,11 @@ function onMtCardClick(e) {
     if (mtSwapTargetOk(MT.swapFrom, pos)) tryMtSwap(MT.swapFrom, pos);
     return;  // 緑枠以外は無視（入れ替えモード継続）
   }
-  MT.sel = (MT.sel === pos) ? null : pos;
-  renderSquadPitch();
+  MT.sel = pos;
+  const wrap = document.getElementById("mt-squad");
+  wrap.querySelectorAll(".mt-card.is-sel").forEach((x) => x.classList.remove("is-sel"));
+  e.currentTarget.classList.add("is-sel");
+  openMtPlanStats(pos);
 }
 
 function tryMtSwap(a, b) {
@@ -1675,31 +1746,6 @@ function tryMtSwap(a, b) {
   invalidateAfter(MT.planGw);
   savePlans();
   MT.sel = null; MT.swapFrom = null; renderSquadPitch();
-}
-
-function onMtAction(act) {
-  if (act === "clear") { MT.sel = null; renderSquadPitch(); return; }
-  if (MT.sel == null) return;
-  const P = MT.plans[MT.planGw];
-  const pick = P.squad.find((p) => p.position === MT.sel);
-  if (act === "cap") {
-    P.squad.forEach((p) => { p.is_captain = false; });
-    pick.is_captain = true; pick.is_vice_captain = false;
-    invalidateAfter(MT.planGw); savePlans();
-    MT.sel = null; renderSquadPitch(); return;
-  }
-  if (act === "vice") {
-    P.squad.forEach((p) => { p.is_vice_captain = false; });
-    pick.is_vice_captain = true; pick.is_captain = false;
-    invalidateAfter(MT.planGw); savePlans();
-    MT.sel = null; renderSquadPitch(); return;
-  }
-  if (act === "transfer") {
-    // 緑枠（詳細の選択）を外し、対象選手をOUT対象（半透明）に加えて候補を表示
-    if (!MT.outs.includes(MT.sel)) MT.outs.push(MT.sel);
-    MT.sel = null;
-    renderSquadPitch();
-  }
 }
 
 // 移籍候補のチーム絞り込み用の一覧（チーム名の五十音順）。DATA読み込み後に1回だけ作る
