@@ -1769,27 +1769,37 @@ button.mt-stat-btn .mt-stat-v {
   font-size: 0.9rem;
 }
 .mt-picker-list { max-height: 360px; overflow-y: auto; }
-.mt-pick-row {
+.mt-pick-item { border-bottom: 1px solid var(--border); background: #fff; }
+.mt-pick-item.is-open { background: #faf8fc; }
+.mt-pick-row { display: flex; align-items: center; }
+.mt-pick-row:active { background: #f4eff6; }
+/* 行の本体（写真＋名前＋スタッツ）。タップで詳細プルダウンを開閉 */
+.mt-pick-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 100%;
   border: none;
-  border-bottom: 1px solid var(--border);
-  background: #fff;
+  background: none;
   padding: 8px 12px;
   cursor: pointer;
   text-align: left;
+  font: inherit;
 }
-.mt-pick-row:active { background: #f4eff6; }
-.mt-pick-kit { flex: 0 0 28px; height: 30px; display: flex; align-items: center; }
+.mt-pick-kit { flex: 0 0 26px; height: 30px; display: flex; align-items: center; }
 .mt-pick-kit img { height: 30px; width: auto; }
-.mt-pick-name { flex: 1; font-size: 0.85rem; font-weight: 600; }
-.mt-pick-name .sub { display: block; font-weight: 400; }
-.mt-pick-cost { font-weight: 700; color: var(--pl-purple); font-size: 0.78rem; min-width: 48px; text-align: right; }
-.mt-pick-after { font-size: 0.72rem; color: var(--muted); min-width: 64px; text-align: right; }
-.mt-pick-row.over .mt-pick-after { color: var(--hard); font-weight: 700; }
-/* ピッカーのツール行（チーム絞り込み・コスト絞り込み） */
+.mt-pick-name { flex: 1; font-size: 0.9rem; font-weight: 600; }
+/* スタッツ絞り込み時に＋の左へ出る値 */
+.mt-pick-stat {
+  flex: 0 0 auto;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--pl-purple);
+  min-width: 52px;
+  text-align: right;
+}
+/* ピッカーのツール行（チーム・スタッツ・コスト絞り込み） */
 .mt-picker-tools {
   display: flex;
   align-items: center;
@@ -1799,6 +1809,7 @@ button.mt-stat-btn .mt-stat-v {
   padding: 0 10px 8px;
 }
 .mt-fteam,
+.mt-fstat,
 .mt-maxwrap {
   font-size: 0.75rem;
   color: var(--muted);
@@ -1806,7 +1817,8 @@ button.mt-stat-btn .mt-stat-v {
   align-items: center;
   gap: 4px;
 }
-.mt-fteam select {
+.mt-fteam select,
+.mt-fstat select {
   padding: 4px 6px;
   font-size: 0.78rem;
   border: 1px solid var(--border);
@@ -1821,65 +1833,58 @@ button.mt-stat-btn .mt-stat-v {
   border: 1px solid var(--border);
   border-radius: 6px;
 }
-/* 候補リストの列見出し行（タップで昇順・降順を切り替え） */
-.mt-pick-headrow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 4px 12px;
-  background: #f4eff6;
-  border-bottom: 1px solid var(--border);
-}
-.mt-pick-h {
-  flex: 0 0 auto;
-  border: none;
-  background: none;
-  padding: 0;
-  margin: 0;
-  font: inherit;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--muted);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;   /* 見出しは列の左寄り */
-  text-align: left;
-}
-.mt-pick-h.is-on { color: var(--pl-purple); }
-/* 矢印はテキストの右側の固定枠に表示（付いたり消えたりしてもテキストが動かない） */
-.mt-pick-h .arr {
-  display: inline-block;
-  width: 13px;
-  text-align: left;
-}
-/* 列幅（見出しとデータで同じ幅にして縦を揃える） */
-.mt-pick-h[data-key="points"] { min-width: 58px; }
-.mt-pick-h[data-key="cost"] { min-width: 48px; }
-.mt-pick-h[data-key="after"] { min-width: 64px; }
-/* 候補行の今季ポイント */
-.mt-pick-pt {
-  flex: 0 0 auto;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--easy);
-  min-width: 58px;
-  text-align: right;
-}
-/* 候補行の＋ボタン（この選手を加える） */
+/* 候補行の＋ボタン（クイック追加） */
 .mt-pick-add {
   flex: 0 0 22px;
   width: 22px;
   height: 22px;
   line-height: 22px;
+  margin: 0 12px 0 6px;
+  padding: 0;
+  border: none;
   border-radius: 50%;
   background: var(--easy);
   color: #fff;
   font-size: 0.9rem;
   font-weight: 800;
   text-align: center;
+  cursor: pointer;
 }
 .mt-pick-row.over .mt-pick-add { background: #c9c9cf; }
+/* 候補タップで開く詳細プルダウン（差額＋ポジション別スタッツ＋入れる） */
+.mt-pick-detail { padding: 6px 12px 12px; }
+.mt-pick-tr {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  background: #ece5f0;
+  border-radius: 8px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.mt-pick-tr .bad { color: var(--hard); }
+.mt-pick-drow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  padding: 4px 0;
+  border-bottom: 1px solid #f0eef2;
+}
+.mt-pick-drow span:first-child { color: var(--muted); }
+.mt-pick-do {
+  margin-top: 10px;
+  width: 100%;
+  padding: 9px;
+  border: none;
+  border-radius: 8px;
+  background: var(--easy);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+}
 code {
   background: #efe9f1;
   padding: 1px 5px;
