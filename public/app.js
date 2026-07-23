@@ -516,6 +516,8 @@ function renderColManager() {
         <button type="button" data-cm-down="${k}" ${i === colState.dataOrder.length - 1 ? "disabled" : ""}>↓</button>
       </span></div>`;
   }).join("");
+  // データ列の「全て選択」チェック（全データ列が表示中なら on）
+  const allDataShown = colState.dataOrder.every((k) => !colState.hidden[k]);
   // 「どこまで固定するか」の選択肢
   const fu = colState.freezeUntil ?? "points";
   const freezeOptions = [
@@ -532,8 +534,14 @@ function renderColManager() {
         <select id="cm-freeze" class="cm-freeze">${freezeOptions}</select>
       </div>
       <div class="cm-section"><div class="cm-title">基本列の表示</div>${frozenToggles}</div>
-      <div class="cm-section"><div class="cm-title">データ列（チェックで表示 ／ ↑↓で並び替え）</div>${dataItems}</div>
-      <button type="button" id="cm-reset" class="cm-reset">標準に戻す</button>
+      <div class="cm-section"><div class="cm-title">データ列（チェックで表示 ／ ↑↓で並び替え）</div>
+        <label class="coltoggle cm-all"><input type="checkbox" id="cm-all" ${allDataShown ? "checked" : ""}> 全て選択</label>
+        ${dataItems}
+      </div>
+      <div class="cm-actions">
+        <button type="button" id="cm-reset" class="cm-reset">標準に戻す</button>
+        <button type="button" id="cm-close" class="cm-reset">閉じる</button>
+      </div>
     </details>`;
   const det = document.querySelector("#col-manager details");
   det.addEventListener("toggle", () => { cmOpen = det.open; });
@@ -550,10 +558,20 @@ function setupColManagerEvents() {
       refreshPlayerBody();
       return;
     }
+    // データ列を全て選択／全て解除（基本列には影響しない）
+    if (e.target.id === "cm-all") {
+      const show = e.target.checked;
+      colState.dataOrder.forEach((k) => { colState.hidden[k] = !show; });
+      afterColLayoutChange();
+      return;
+    }
     const cb = e.target.closest("[data-cm-show]");
     if (!cb) return;
     colState.hidden[cb.dataset.cmShow] = !cb.checked;
     saveColState();
+    // データ列を個別に切り替えたら「全て選択」の状態も合わせる
+    const all = document.getElementById("cm-all");
+    if (all) all.checked = colState.dataOrder.every((k) => !colState.hidden[k]);
     buildPlayerHead();
     refreshPlayerBody();
   });
@@ -561,9 +579,24 @@ function setupColManagerEvents() {
     const up = e.target.closest("[data-cm-up]");
     const down = e.target.closest("[data-cm-down]");
     const reset = e.target.closest("#cm-reset");
+    const close = e.target.closest("#cm-close");
     if (up) moveDataCol(up.dataset.cmUp, -1);
     else if (down) moveDataCol(down.dataset.cmDown, 1);
     else if (reset) { colState = defaultColState(); afterColLayoutChange(); }
+    else if (close) {
+      cmOpen = false;
+      const det = document.querySelector("#col-manager details");
+      if (det) det.open = false;
+      // 閉じた後、⚙見出しが固定ヘッダー直下に来るようスクロールを戻す
+      // （下部のボタンを押した位置のまま表の途中が表示されるのを防ぐ）
+      const mgr = document.getElementById("col-manager");
+      const bar = document.querySelector(".topbar");
+      if (mgr) {
+        const offset = bar ? bar.offsetHeight : 0;
+        const y = window.scrollY + mgr.getBoundingClientRect().top - offset;
+        window.scrollTo({ top: Math.max(0, y), behavior: "auto" });
+      }
+    }
   });
 }
 function moveDataCol(key, dir) {

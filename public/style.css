@@ -772,14 +772,27 @@ details.col-manager > summary {
   border-radius: 6px;
   background: #fff;
 }
-.cm-reset {
+.cm-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
   margin: 10px 0 4px;
+}
+.cm-reset {
   padding: 6px 14px;
   border: 1px solid var(--pl-purple);
   background: #fff;
   color: var(--pl-purple);
   border-radius: 6px;
   cursor: pointer;
+}
+/* データ列の「全て選択」は先頭に置き、下に区切りを入れて一覧と分ける */
+.cm-all {
+  margin-bottom: 4px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f0eef2;
+  width: 100%;
+  font-weight: 700;
 }
 
 /* フィルタ行 */
