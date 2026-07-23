@@ -944,13 +944,20 @@ function metaGw() {
   return m ? +m[1] : null;
 }
 
-// その節の選手別ポイントをバックグラウンドで取得し、届いたら得点だけ差し込む
+// その節の選手別ポイントをバックグラウンドで取得し、届いたら得点と内訳を差し込む
 function startLivePoints(gw, picks) {
   if (!gw || !picks) return;
   fplFetch(`event/${gw}/live/`).then((live) => {
-    const lp = {};
-    (live.elements || []).forEach((e) => { lp[e.id] = (e.stats && e.stats.total_points) || 0; });
-    if (MT) { MT.livePoints = lp; if (MT.mode === "recent") renderSquadPitch(); }
+    const lp = {};    // {element_id: その節の合計ポイント}
+    const ex = {};    // {element_id: [{identifier, points, value}, ...]} 得点内訳
+    (live.elements || []).forEach((e) => {
+      lp[e.id] = (e.stats && e.stats.total_points) || 0;
+      // 得点内訳。ダブルGW（1週2試合）は全試合分をまとめて1リストにする
+      const lines = [];
+      (e.explain || []).forEach((fx) => { (fx.stats || []).forEach((s) => lines.push(s)); });
+      ex[e.id] = lines;
+    });
+    if (MT) { MT.livePoints = lp; MT.liveExplain = ex; if (MT.mode === "recent") renderSquadPitch(); }
   }).catch(() => { /* 得点が取れなくてもスカッドは表示済み */ });
 }
 
@@ -1522,7 +1529,120 @@ function renderSquadPitch() {
           <div class="mt-bench">${bench.map(mtCard).join("")}</div>
         </div>
       </div>`;
+    // カードをタップ→黄色枠（計画タブと同じ）＋得点内訳ポップアップ（ポイント取得済みのときだけ）
+    if (MT.livePoints) {
+      wrap.querySelectorAll(".mt-card").forEach((c) =>
+        c.addEventListener("click", () => {
+          const pos = +c.dataset.pos;
+          MT.sel = pos;
+          wrap.querySelectorAll(".mt-card.is-sel").forEach((x) => x.classList.remove("is-sel"));
+          c.classList.add("is-sel");
+          openMtBreakdown(pos);
+        }));
+    }
   }
+}
+
+// ポイントバッジの色分け（0〜1=赤 / 2,3=灰 / 4〜9=薄緑 / 10〜=濃緑）
+function ptsClass(pts) {
+  if (pts <= 1) return "p01";
+  if (pts <= 3) return "p23";
+  if (pts <= 9) return "p49";
+  return "p10";
+}
+
+// FPLの得点内訳の項目名（identifier）→日本語ラベル
+const EXPLAIN_JA = {
+  minutes: "出場",
+  goals_scored: "ゴール",
+  assists: "アシスト",
+  clean_sheets: "無失点",
+  goals_conceded: "失点",
+  own_goals: "オウンゴール",
+  penalties_saved: "PKセーブ",
+  penalties_missed: "PK失敗",
+  saves: "セーブ",
+  yellow_cards: "イエロー",
+  red_cards: "レッド",
+  bonus: "ボーナス",
+  defensive_contribution: "守備貢献",
+};
+
+// 直近節タブ：カードをタップしたら、その選手の得点内訳を画面下からポップアップ表示
+function openMtBreakdown(pos) {
+  if (!MT || !MT.liveExplain) return;
+  const pick = MT.base.squad.find((p) => p.position === pos);
+  if (!pick) return;
+  const el = elOf(pick);
+  // 0ポイントの項目（例：イエロー0枚）は出さない
+  const lines = (MT.liveExplain[pick.element] || []).filter((s) => s.points);
+  const base = MT.livePoints ? (MT.livePoints[pick.element] || 0) : 0;
+  const mult = pick.is_captain ? (MT.chip === "3xc" ? 3 : 2) : 1;
+  const total = base * mult;
+
+  // ボーナス・守備貢献は value が得点そのもの／達成度なので「×N」を付けない
+  const noCount = { bonus: 1, defensive_contribution: 1 };
+  const rowsHtml = lines.map((s) => {
+    const ja = EXPLAIN_JA[s.identifier] || s.identifier;
+    let label;
+    if (s.identifier === "minutes") label = `出場（${s.value}分）`;
+    else if (s.value > 1 && !noCount[s.identifier]) label = `${ja} ×${s.value}`;
+    else label = ja;
+    const pts = s.points > 0 ? `+${s.points}` : `${s.points}`;
+    return `<div class="mt-bd-row"><span>${label}</span><span>${pts}</span></div>`;
+  }).join("");
+  // 各項目の下に合計行（主将は 小計→合計（C×N））
+  const totalHtml = mult > 1
+    ? `<div class="mt-bd-row mt-bd-sub"><span>小計</span><span>${base}</span></div>
+       <div class="mt-bd-row mt-bd-total-row"><span>合計（C ×${mult}）</span><span>${total}</span></div>`
+    : `<div class="mt-bd-row mt-bd-total-row"><span>合計</span><span>${total}</span></div>`;
+
+  // 選手写真（無ければユニフォーム、それも無ければ非表示）
+  const kit = kitUrl(el);
+  let img = "";
+  if (el.ph) {
+    const fb = kit ? `this.onerror=null;this.src='${kit}'` : `this.style.visibility='hidden'`;
+    img = `<img src="${PHOTO_BASE}${esc(el.ph)}.png" alt="" onerror="${fb}">`;
+  } else if (kit) {
+    img = `<img src="${kit}" alt="" onerror="this.style.visibility='hidden'">`;
+  }
+  const cvTag = pick.is_captain ? ` <span class="mt-bd-c">(C)</span>`
+    : (pick.is_vice_captain ? ` <span class="mt-bd-c">(V)</span>` : "");
+  const body = lines.length
+    ? rowsHtml + totalHtml
+    : `<div class="mt-bd-none">この節は出場していません</div>`;
+
+  // ポップアップはピッチ枠（フィールド）の中に入れ、下端をフィールド下端に合わせる
+  const host = document.querySelector("#mt-squad .mt-pitch-wrap") || document.body;
+  const old = document.getElementById("mt-bd-overlay");
+  if (old) old.remove();
+  host.insertAdjacentHTML("beforeend", `
+    <div class="mt-bd-overlay" id="mt-bd-overlay">
+      <div class="mt-bd-sheet" role="dialog" aria-label="得点内訳">
+        <div class="mt-bd-head">
+          <span class="mt-bd-photo">${img}</span>
+          <span class="mt-bd-id">
+            <span class="mt-bd-name">${esc(el.j || el.n)}${cvTag}</span>
+            <span class="mt-bd-meta">${esc(el.t)} ・ ${el.p}</span>
+          </span>
+          <span class="mt-pts ${ptsClass(total)} mt-bd-total">${total}pt</span>
+          <button type="button" class="mt-bd-close" aria-label="閉じる">×</button>
+        </div>
+        <div class="mt-bd-body">${body}</div>
+      </div>
+    </div>`);
+  const ov = document.getElementById("mt-bd-overlay");
+  const closeBd = () => {
+    ov.remove();
+    // 閉じたら黄色枠（選択状態）も解除する
+    MT.sel = null;
+    document.querySelectorAll("#mt-squad .mt-card.is-sel").forEach((x) => x.classList.remove("is-sel"));
+  };
+  // ×ボタン、または暗幕（シートの外）をタップで閉じる。シート内のタップでは閉じない
+  ov.addEventListener("click", (e) => {
+    if (e.target === ov || e.target.closest(".mt-bd-close")) closeBd();
+  });
+  requestAnimationFrame(() => ov.classList.add("is-open"));
 }
 
 // カード本体タップ：入れ替え待ちなら緑枠の相手のみ実行、そうでなければ詳細（主将C等のバー）を開閉
