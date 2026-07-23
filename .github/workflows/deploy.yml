@@ -1,4 +1,5 @@
 # GitHubにプッシュすると、自動で public/ フォルダを GitHub Pages に公開します。
+# さらに毎日10:00(JST)に FPL公式APIから最新データを取得して更新→公開します。
 # （初回だけ GitHub の設定で Pages の Source を「GitHub Actions」にしてください。手順は README.md）
 
 name: Deploy to GitHub Pages
@@ -6,10 +7,12 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '0 1 * * *'   # 毎日 10:00(JST) = 01:00(UTC) に自動更新
   workflow_dispatch: {}   # GitHubの画面から手動でも実行できるように
 
 permissions:
-  contents: read
+  contents: write   # データ自動更新のコミットに必要
   pages: write
   id-token: write
 
@@ -26,6 +29,39 @@ jobs:
     steps:
       - name: ソースを取得
         uses: actions/checkout@v4
+
+      # ↓ ここから「定期実行・手動実行」のときだけデータを取得（push時はコミット済みデータをそのまま公開）
+      - name: Python を用意
+        if: github.event_name != 'push'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: 生データをキャッシュ（API失敗時のフォールバック用）
+        if: github.event_name != 'push'
+        uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: fpl-raw-${{ github.run_id }}
+          restore-keys: fpl-raw-
+
+      - name: 最新データを取得（FPL公式API）
+        if: github.event_name != 'push'
+        run: python3 scripts/update.py
+
+      - name: 更新したデータをコミット
+        if: github.event_name != 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/data.json data/site/data.json
+          if git diff --cached --quiet; then
+            echo "データに変更はありませんでした"
+          else
+            git commit -m "データ自動更新 $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M') JST [skip ci]"
+            git push
+          fi
+      # ↑ ここまで（[skip ci] を付けて、このコミットで再度ワークフローが走らないようにする）
 
       - name: Pages の設定
         uses: actions/configure-pages@v5
