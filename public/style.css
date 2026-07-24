@@ -920,6 +920,8 @@ table.setpiece { table-layout: fixed; width: 100%; }
 table.setpiece th, table.setpiece td { padding: 6px 3px; }
 table.setpiece td { vertical-align: top; }
 table.setpiece th { font-size: 0.76rem; line-height: 1.25; }
+/* 担当者列（PK/直接FK/CK・間接FK）は番号1〜4を列内の左側に揃える（チーム列だけ中央） */
+table.setpiece th:not(.sp-team), table.setpiece td:not(.sp-team) { text-align: left; }
 /* チーム列はロゴ1個ぶんの細幅、残り3列は均等 */
 table.setpiece th.sp-team, table.setpiece td.sp-team { width: 40px; text-align: center; }
 table.setpiece td.sp-team .team-badge { width: 30px; height: 30px; }
