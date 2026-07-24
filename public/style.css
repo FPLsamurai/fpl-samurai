@@ -1116,6 +1116,11 @@ tbody tr:nth-child(even) {
 .strength.easy { background: var(--easy); }
 .strength.normal { background: var(--normal); }
 .strength.hard { background: var(--hard); }
+/* 相手の強さ 4段階の色分け（濃い背景＝白文字／明るい背景＝黒文字） */
+.strength.st-vhard { background: #81072d; color: #fff; }
+.strength.st-hard  { background: #fe1752; color: #fff; }
+.strength.st-mid   { background: #e7e7e7; color: #1b1b1f; }
+.strength.st-weak  { background: #12fc7a; color: #1b1b1f; }
 
 /* ---------- マイチーム検索 ---------- */
 .idform {

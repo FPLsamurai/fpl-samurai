@@ -34,7 +34,7 @@ async function init() {
     // 各タブの初期表示
     renderPlayers("all");
     renderTeams("totals");
-    renderNext("predict");
+    renderNext("schedule");
   } catch (err) {
     showLoadError(err);
   }
@@ -816,9 +816,29 @@ function renderNext(key) {
       `予測の前提：リーグ平均xG（μ）＝${pred.league_avg_xg}。クリーンシート率＝相手が無失点に抑えられる確率。ゴール期待値＝そのチームが決めそうな得点数。`;
     drawPredictions(box, pred);
   } else if (key === "schedule") {
-    note.textContent = "次節の試合と「相手の強さ」（弱い／普通／強い）。";
+    note.textContent = "次節の試合と「相手の強さ」（とても強い／強い／普通／弱い）。";
     drawSchedule(box, DATA.next_fixtures || {});
   }
+}
+
+/* 次節タブ用：長いチーム名を短縮して表示する（エンブレム検索にはフル名を使うので表示専用） */
+const NEXT_TEAM_SHORT = {
+  "マンチェスターユナイテッド": "マンユナイテッド",
+  "マンチェスターシティ": "マンシティ",
+};
+function shortTeam(name) { return NEXT_TEAM_SHORT[name] || name; }
+
+/* 相手の強さ：4段階のラベル＋色分け（とても強い/強い/普通/弱い）。とても弱いは弱いに寄せる */
+function strengthPill(word) {
+  const M = {
+    "とても強い": ["とても強い", "st-vhard"],
+    "強い":       ["強い",       "st-hard"],
+    "普通":       ["普通",       "st-mid"],
+    "弱い":       ["弱い",       "st-weak"],
+    "とても弱い": ["弱い",       "st-weak"],
+  };
+  const [label, cls] = M[word] || [word, "st-mid"];
+  return `<span class="strength ${cls}">${esc(label)}</span>`;
 }
 
 function drawPredictions(box, pred) {
@@ -846,7 +866,7 @@ function drawPredictions(box, pred) {
     const gHi = Number(r.goal_expect) >= 1.1 ? " hi-goal" : "";
     const csHi = Number(r.clean_sheet_pct) >= 44 ? " hi-cs" : "";
     return `<div class="pred-row">
-      <span class="pred-team">${teamBadgeByName(r.team)}<span class="pred-tname">${esc(r.team)}</span></span>
+      <span class="pred-team">${teamBadgeByName(r.team)}<span class="pred-tname">${esc(shortTeam(r.team))}</span></span>
       <span class="pred-cell${gHi}">${r.goal_expect}</span>
       <span class="pred-cell${csHi}">${Math.round(r.clean_sheet_pct)}%</span>
     </div>`;
@@ -876,13 +896,13 @@ function drawSchedule(box, fx) {
       <div class="match-time">${esc(m.kickoff)}</div>
       <div class="match-teams">
         <div class="match-team home">
-          <div class="tname">${esc(m.home)}</div>
-          <span class="strength ${m.home_opponent_strength_class}">相手：${esc(m.home_opponent_strength)}</span>
+          <div class="tname">${esc(shortTeam(m.home))}</div>
+          ${strengthPill(m.home_opponent_strength)}
         </div>
         <div class="match-vs">vs</div>
         <div class="match-team away">
-          <div class="tname">${esc(m.away)}</div>
-          <span class="strength ${m.away_opponent_strength_class}">相手：${esc(m.away_opponent_strength)}</span>
+          <div class="tname">${esc(shortTeam(m.away))}</div>
+          ${strengthPill(m.away_opponent_strength)}
         </div>
       </div>
     </div>`;
