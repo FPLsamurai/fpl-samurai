@@ -915,9 +915,16 @@ table.rich.teamtbl thead tr:first-child th.col-name { z-index: 6; }
   font-variant-numeric: tabular-nums;
 }
 
-/* セットプレー担当 */
+/* セットプレー担当（チーム＝ロゴ、PK/直接FK/CK・間接FKの3列をスマホ幅に等幅で収める） */
+table.setpiece { table-layout: fixed; width: 100%; }
+table.setpiece th, table.setpiece td { padding: 6px 3px; }
 table.setpiece td { vertical-align: top; }
-.sp-taker { white-space: nowrap; }
+table.setpiece th { font-size: 0.76rem; line-height: 1.25; }
+/* チーム列はロゴ1個ぶんの細幅、残り3列は均等 */
+table.setpiece th.sp-team, table.setpiece td.sp-team { width: 40px; text-align: center; }
+table.setpiece td.sp-team .team-badge { width: 30px; height: 30px; }
+/* 担当者名は列内で折り返して3列に収める（長い英名対策） */
+.sp-taker { white-space: normal; overflow-wrap: anywhere; font-size: 0.8rem; line-height: 1.35; margin-bottom: 2px; }
 .sp-no {
   display: inline-block;
   background: #efe9f1;

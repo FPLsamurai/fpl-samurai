@@ -168,14 +168,14 @@ function renderSetPieces() {
     return;
   }
   let html = `<table class="squad setpiece"><thead><tr>
-      <th>チーム</th><th>PK</th><th>直接FK</th><th>CK・間接FK</th>
+      <th class="sp-team">チーム</th><th>PK</th><th>直接FK</th><th>CK・間接FK</th>
     </tr></thead><tbody>`;
   rows.forEach((t) => {
     const fmt = (arr) => arr.length
       ? arr.map((n, i) => `<div class="sp-taker"><span class="sp-no">${i + 1}</span>${esc(n)}</div>`).join("")
       : `<span class="sub">—</span>`;
     html += `<tr>
-      <td class="name">${esc(t.team)}</td>
+      <td class="sp-team">${teamBadgeByName(t.team)}</td>
       <td>${fmt(t.pens)}</td>
       <td>${fmt(t.fks)}</td>
       <td>${fmt(t.cks)}</td>
@@ -821,13 +821,6 @@ function renderNext(key) {
   }
 }
 
-/* 次節タブ用：長いチーム名を短縮して表示する（エンブレム検索にはフル名を使うので表示専用） */
-const NEXT_TEAM_SHORT = {
-  "マンチェスターユナイテッド": "マンユナイテッド",
-  "マンチェスターシティ": "マンシティ",
-};
-function shortTeam(name) { return NEXT_TEAM_SHORT[name] || name; }
-
 /* 相手の強さ：4段階のラベル＋色分け（とても強い/強い/普通/弱い）。とても弱いは弱いに寄せる */
 function strengthPill(word) {
   const M = {
@@ -866,7 +859,7 @@ function drawPredictions(box, pred) {
     const gHi = Number(r.goal_expect) >= 1.1 ? " hi-goal" : "";
     const csHi = Number(r.clean_sheet_pct) >= 44 ? " hi-cs" : "";
     return `<div class="pred-row">
-      <span class="pred-team">${teamBadgeByName(r.team)}<span class="pred-tname">${esc(shortTeam(r.team))}</span></span>
+      <span class="pred-team">${teamBadgeByName(r.team)}<span class="pred-tname">${esc(r.team)}</span></span>
       <span class="pred-cell${gHi}">${r.goal_expect}</span>
       <span class="pred-cell${csHi}">${Math.round(r.clean_sheet_pct)}%</span>
     </div>`;
@@ -896,12 +889,12 @@ function drawSchedule(box, fx) {
       <div class="match-time">${esc(m.kickoff)}</div>
       <div class="match-teams">
         <div class="match-team home">
-          <div class="tname">${esc(shortTeam(m.home))}</div>
+          <div class="tname">${esc(m.home)}</div>
           ${strengthPill(m.home_opponent_strength)}
         </div>
         <div class="match-vs">vs</div>
         <div class="match-team away">
-          <div class="tname">${esc(shortTeam(m.away))}</div>
+          <div class="tname">${esc(m.away)}</div>
           ${strengthPill(m.away_opponent_strength)}
         </div>
       </div>
