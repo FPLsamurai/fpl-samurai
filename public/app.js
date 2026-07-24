@@ -5,6 +5,8 @@
    =========================================================== */
 
 const DATA_URL = "data.json";
+const FALLBACK_URL = "data_2526.json";   // 26/27にデータが入るまで表示する昨季(25/26)実績＋今季価格
+
 let DATA = null;
 
 document.addEventListener("DOMContentLoaded", init);
@@ -27,6 +29,7 @@ async function init() {
     const res = await fetch(DATA_URL, { cache: "no-cache" });
     if (!res.ok) throw new Error("データファイルを読み込めませんでした");
     DATA = await res.json();
+    await applyPreseasonFallback();   // 26/27がまだ空なら選手・チームを昨季データで代替表示
     renderHeader();
     // 各タブの初期表示
     renderPlayers("all");
@@ -35,6 +38,24 @@ async function init() {
   } catch (err) {
     showLoadError(err);
   }
+}
+
+/* ---------- 開幕前フォールバック（25/26実績＋26/27価格） ----------
+   26/27にまだ試合データが無い間だけ、選手・チームのランキングを昨季(25/26)の
+   実績で表示する（価格だけは data_2526.json 生成時に26/27へ差し替え済み）。
+   第1節が消化されて data.json に実データが入れば empty=false となり、
+   この分岐は自動的に無効化＝通常の26/27表示に戻る。注意書き等は出さない。 */
+async function applyPreseasonFallback() {
+  const empty = !DATA || !DATA.players || !Array.isArray(DATA.players.all) || DATA.players.all.length === 0;
+  if (!empty) return;                    // 26/27にデータあり＝通常表示
+  try {
+    const res = await fetch(FALLBACK_URL, { cache: "no-cache" });
+    if (!res.ok) return;                 // フォールバックが無ければ空表示のまま続行
+    const fb = await res.json();
+    DATA.players = fb.players;            // ランキング（選手）だけ昨季に差し替え
+    DATA.teams = fb.teams;               // ランキング（チーム）だけ昨季に差し替え
+    DATA.team_next3 = {};                // 昨季の所属で今季日程は出せないので「次の3試合」は—にする
+  } catch (e) { /* 失敗しても通常フロー（空表示）で続行 */ }
 }
 
 /* ---------- タブの仕組み ---------- */
@@ -468,9 +489,12 @@ function refreshPlayerBody() {
       } else if (c.type === "pos") {
         tds += `<td class="col-position ${frz}" style="${st}">${esc(r.position)}</td>`;
       } else if (c.type === "team") {
+        // エンブレムは選手行が持つ team_code（クラブ固有・季節不変）を優先。
+        // これで開幕前フォールバック（昨季所属）でも正しいエンブレムが出る。
         const tm = (DATA.teams_meta && DATA.teams_meta[String(r.team_id)]) || null;
-        const badge = (tm && tm.code)
-          ? `<img class="team-badge" loading="lazy" alt="${esc(r.team)}" title="${esc(r.team)}" src="${BADGE_BASE}${tm.code}.png" onerror="this.replaceWith(document.createTextNode('${esc(r.team)}'))">`
+        const code = r.team_code || (tm && tm.code);
+        const badge = code
+          ? `<img class="team-badge" loading="lazy" alt="${esc(r.team)}" title="${esc(r.team)}" src="${BADGE_BASE}${code}.png" onerror="this.replaceWith(document.createTextNode('${esc(r.team)}'))">`
           : esc(r.team);
         tds += `<td class="${frz}col-team" style="${st}">${badge}</td>`;
       } else if (c.type === "next3") {
