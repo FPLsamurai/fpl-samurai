@@ -639,6 +639,13 @@ main {
   border-radius: 10px;
   /* 枠内を縦スクロールにして、見出し行を枠の上端に固定する */
   max-height: calc(100vh - var(--topbar-h) - 8px);
+  /* dvh＝アドレスバーを除いた実際に見えている高さ（横画面で特に重要。非対応ブラウザは上のvhが残る） */
+  max-height: calc(100dvh - var(--topbar-h) - 8px);
+  /* 枠ごとトップバー直下に貼り付ける。こうしないとページを下までスクロールしたとき、
+     枠が画面上へ抜けて見出し行だけメニューの裏に隠れてしまう（横画面で顕著）。
+     stickyが動くための「余地」は JS の syncTableStickyRoom() が親(.fullbleed)に作る */
+  position: sticky;
+  top: var(--topbar-h);
 }
 table.rich {
   font-size: 0.8rem;
@@ -752,7 +759,31 @@ details.col-manager > summary {
   justify-content: space-between;
   padding: 3px 0;
   border-bottom: 1px solid #f0eef2;
+  background: var(--card);
+  /* 長押しでつかむので、選択・長押しメニューは出さない */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
+/* ⠿ グリップ（ここは長押し不要ですぐつかめる） */
+.cm-grip {
+  color: #b9b2bd;
+  font-size: 1rem;
+  padding: 2px 8px 2px 2px;
+  cursor: grab;
+  touch-action: none;
+}
+.colitem .coltoggle { flex: 1 1 auto; }
+/* つかんでいる列 */
+.colitem.is-drag {
+  background: #f3e9f6;
+  border-radius: 6px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+  opacity: 0.95;
+}
+.colitem.is-drag .cm-grip { cursor: grabbing; }
+/* ドラッグ中はリスト内のスクロールを止める */
+.cm-dragging { touch-action: none; }
 .colmove button {
   border: 1px solid var(--border);
   background: #fff;
@@ -828,6 +859,68 @@ details.col-manager > summary {
   border-radius: 5px;
   text-align: center;
 }
+/* チーム／POSの複数選択ボタン（選択中は色付き） */
+.filter-row .fsel {
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.filter-row .fsel.is-on {
+  background: var(--pl-purple);
+  border-color: var(--pl-purple);
+  color: #fff;
+  font-weight: 700;
+}
+/* チェックボックス一覧（body直下に出すので表の枠に隠れない） */
+.fsel-panel {
+  position: fixed;
+  z-index: 50;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 8px 10px 10px;
+  min-width: 150px;
+  max-width: 240px;
+}
+.fsel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+  color: var(--pl-purple);
+}
+.fsel-head b { flex: 1 1 auto; }
+.fsel-clear, .fsel-close {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.74rem;
+  cursor: pointer;
+  color: var(--muted);
+}
+.fsel-list {
+  max-height: 46vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.fsel-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 2px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f4f2f6;
+}
+.fsel-item:last-child { border-bottom: none; }
 /* チーム列（ロゴを中央表示。ロゴが無い場合はチーム名を中央寄せ・小さめ） */
 table.rich td.col-team {
   text-align: center;

@@ -19,6 +19,25 @@ function syncTopbarHeight() {
 }
 window.addEventListener("resize", syncTopbarHeight);
 
+/* 表の見出し行をトップバー直下に固定し続けるための「余地」を、表の親(.fullbleed)に作る。
+   .data-table-wrap は position:sticky だが、親の高さが表と同じだと動く余地が無く固定が効かない。
+   増やした余地は同じだけ負のマージンで打ち消すので、見た目の余白は増えない。 */
+const STICKY_ROOM = 220;   // 余地(px)。ページ下部のフッターぶんをカバーできれば足りる
+function syncTableStickyRoom() {
+  document.querySelectorAll(".fullbleed").forEach((fb) => {
+    const wrap = fb.querySelector(".data-table-wrap");
+    if (!wrap) {
+      fb.style.minHeight = "";
+      fb.style.marginBottom = "";
+      return;
+    }
+    fb.style.minHeight = (wrap.offsetHeight + STICKY_ROOM) + "px";
+    fb.style.marginBottom = -STICKY_ROOM + "px";
+  });
+}
+window.addEventListener("resize", syncTableStickyRoom);
+window.addEventListener("orientationchange", () => setTimeout(syncTableStickyRoom, 200));
+
 async function init() {
   syncTopbarHeight();
   setupParentTabs();
@@ -238,7 +257,8 @@ const BADGE_BASE = "https://resources.premierleague.com/premierleague/badges/70/
 const CONFIG_KEY = "fpl_player_cols_v4";
 
 let playerSort = { key: "points", dir: "desc" };
-let playerFilters = { name: "", pos: "", team: "", min: {}, max: {} };
+// チーム・ポジションは複数選択（空配列＝絞り込みなし）
+let playerFilters = { name: "", pos: [], team: [], min: {}, max: {} };
 let colState = loadColState();
 let cmOpen = false;  // 列設定パネルが開いているか
 let currentRichKey = "all";  // 高機能テーブルがいま表示している期間
@@ -367,8 +387,6 @@ function renderPlayerRich(key) {
   const onFilter = (e) => {
     const t = e.target;
     if (t.id === "f-name") playerFilters.name = t.value.trim().toLowerCase();
-    else if (t.id === "f-pos") playerFilters.pos = t.value;
-    else if (t.id === "f-team") playerFilters.team = t.value;
     else if (t.dataset.min !== undefined) setNumFilter("min", t.dataset.min, t.value);
     else if (t.dataset.max !== undefined) setNumFilter("max", t.dataset.max, t.value);
     else return;
@@ -405,13 +423,9 @@ function buildPlayerHead() {
     if (c.type === "name") {
       f = `<input type="text" id="f-name" placeholder="検索" value="${esc(playerFilters.name)}">`;
     } else if (c.type === "team") {
-      const opts = ['<option value="">ー</option>'].concat(
-        teamOptions().map((t) => `<option value="${esc(t)}" ${playerFilters.team === t ? "selected" : ""}>${esc(t)}</option>`)
-      ).join("");
-      f = `<select id="f-team" class="colsel" title="チームで絞り込み（ーで全部）">${opts}</select>`;
+      f = multiFilterButton("team");
     } else if (c.type === "pos") {
-      const opt = (v, lbl) => `<option value="${v}" ${playerFilters.pos === v ? "selected" : ""}>${lbl}</option>`;
-      f = `<select id="f-pos" class="colsel" title="ポジションで絞り込み（ーで全部）">${opt("", "ー")}${opt("GK", "GK")}${opt("DF", "DF")}${opt("MF", "MF")}${opt("FW", "FW")}</select>`;
+      f = multiFilterButton("pos");
     } else if (c.type === "num") {
       const mn = playerFilters.min[c.key] ?? "";
       const mx = playerFilters.max[c.key] ?? "";
@@ -423,6 +437,77 @@ function buildPlayerHead() {
   document.getElementById("player-head").innerHTML =
     `<tr>${r1}</tr><tr class="filter-row">${r2}</tr>`;
 }
+
+/* ---- チーム／ポジションの複数選択フィルタ ---- */
+const MULTI_FILTERS = {
+  team: { title: "チーム", options: () => teamOptions() },
+  pos:  { title: "ポジション", options: () => ["GK", "DF", "MF", "FW"] },
+};
+
+// フィルタ行に出すボタン（タップでチェックボックス一覧を開く）
+function multiFilterButton(kind) {
+  const sel = playerFilters[kind];
+  let text = "ー";
+  if (sel.length === 1) text = kind === "pos" ? sel[0] : "1件";
+  else if (sel.length > 1) text = `${sel.length}件`;
+  return `<button type="button" class="colsel fsel${sel.length ? " is-on" : ""}" data-fsel="${kind}"
+    title="${MULTI_FILTERS[kind].title}で絞り込み（複数選択できます）">${esc(text)}</button>`;
+}
+
+let fselPanel = null;
+function closeFilterPanel() {
+  if (fselPanel) { fselPanel.remove(); fselPanel = null; }
+}
+// チェックボックス一覧を body 直下に出す（表の枠内に置くと横スクロールで隠れるため）
+function openFilterPanel(kind, btn) {
+  closeFilterPanel();
+  const conf = MULTI_FILTERS[kind];
+  const sel = playerFilters[kind];
+  const items = conf.options().map((v) =>
+    `<label class="fsel-item"><input type="checkbox" value="${esc(v)}" ${sel.includes(v) ? "checked" : ""}>${esc(v)}</label>`
+  ).join("");
+  const p = document.createElement("div");
+  p.className = "fsel-panel";
+  p.innerHTML = `
+    <div class="fsel-head"><b>${esc(conf.title)}</b>
+      <button type="button" class="fsel-clear">クリア</button>
+      <button type="button" class="fsel-close" aria-label="閉じる">✕</button>
+    </div>
+    <div class="fsel-list">${items}</div>`;
+  document.body.appendChild(p);
+  fselPanel = p;
+
+  // 画面内に収まる位置へ（ボタンの下、入りきらなければ上）
+  const r = btn.getBoundingClientRect();
+  p.style.left = Math.round(Math.min(Math.max(6, r.left), window.innerWidth - p.offsetWidth - 6)) + "px";
+  const below = r.bottom + 4;
+  p.style.top = Math.round(below + p.offsetHeight > window.innerHeight - 6
+    ? Math.max(6, r.top - p.offsetHeight - 4) : below) + "px";
+
+  const apply = () => {
+    playerFilters[kind] = [...p.querySelectorAll("input:checked")].map((i) => i.value);
+    buildPlayerHead();      // ボタンの表示（件数）を更新
+    refreshPlayerBody();
+  };
+  p.addEventListener("change", apply);
+  p.querySelector(".fsel-clear").addEventListener("click", () => {
+    p.querySelectorAll("input:checked").forEach((i) => { i.checked = false; });
+    apply();
+  });
+  p.querySelector(".fsel-close").addEventListener("click", closeFilterPanel);
+}
+
+// 一覧の外をタップ／Escape／スクロールで閉じる
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-fsel]");
+  if (btn) { e.preventDefault(); openFilterPanel(btn.dataset.fsel, btn); return; }
+  if (fselPanel && !e.target.closest(".fsel-panel")) closeFilterPanel();
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeFilterPanel(); });
+// ページを縦スクロールしたときだけ閉じる（表の再描画に伴う枠内スクロールでは閉じない＝続けて複数選べる）
+window.addEventListener("scroll", (e) => {
+  if (e.target === document || e.target === document.documentElement || e.target === window) closeFilterPanel();
+}, true);
 
 /* ---- 本体（中身）を絞り込み・並べ替えして描く ---- */
 function refreshPlayerBody() {
@@ -438,8 +523,8 @@ function refreshPlayerBody() {
       const hit = r.name.toLowerCase().includes(q) || (r.name_ja && r.name_ja.toLowerCase().includes(q));
       if (!hit) return false;
     }
-    if (posVisible && playerFilters.pos && r.position !== playerFilters.pos) return false;
-    if (teamVisible && playerFilters.team && r.team !== playerFilters.team) return false;
+    if (posVisible && playerFilters.pos.length && !playerFilters.pos.includes(r.position)) return false;
+    if (teamVisible && playerFilters.team.length && !playerFilters.team.includes(r.team)) return false;
     for (const k of numKeys) {
       const mn = playerFilters.min[k]; if (mn != null && Number(r[k]) < mn) return false;
       const mx = playerFilters.max[k]; if (mx != null && Number(r[k]) > mx) return false;
@@ -519,6 +604,7 @@ function refreshPlayerBody() {
   const colspan = getActiveColumns().all.length;
   document.getElementById("player-body").innerHTML =
     html || `<tr><td colspan="${colspan}" class="empty" style="box-shadow:none;">条件に合う選手がいません。</td></tr>`;
+  syncTableStickyRoom();   // 行数が変わると表の高さも変わるので、見出し固定の余地を取り直す
 }
 
 /* ---- 列の表示・並び替えパネル（動画用） ---- */
@@ -533,7 +619,8 @@ function renderColManager() {
   const dataItems = colState.dataOrder.map((k, i) => {
     const m = COL_META[k];
     const checked = !colState.hidden[k];
-    return `<div class="colitem">
+    return `<div class="colitem" data-cm-key="${k}">
+      <span class="cm-grip" aria-hidden="true">⠿</span>
       <label class="coltoggle"><input type="checkbox" data-cm-show="${k}" ${checked ? "checked" : ""}> ${m.label}</label>
       <span class="colmove">
         <button type="button" data-cm-up="${k}" ${i === 0 ? "disabled" : ""}>↑</button>
@@ -558,7 +645,7 @@ function renderColManager() {
         <select id="cm-freeze" class="cm-freeze">${freezeOptions}</select>
       </div>
       <div class="cm-section"><div class="cm-title">基本列の表示</div>${frozenToggles}</div>
-      <div class="cm-section"><div class="cm-title">データ列（チェックで表示 ／ ↑↓で並び替え）</div>
+      <div class="cm-section"><div class="cm-title">データ列（チェックで表示 ／ 長押しでつかんで並び替え・↑↓でも可）</div>
         <label class="coltoggle cm-all"><input type="checkbox" id="cm-all" ${allDataShown ? "checked" : ""}> 全て選択</label>
         ${dataItems}
       </div>
@@ -573,6 +660,7 @@ function renderColManager() {
 
 function setupColManagerEvents() {
   const wrap = document.getElementById("col-manager");
+  setupColDragEvents(wrap);
   wrap.addEventListener("change", (e) => {
     // 固定範囲の変更
     if (e.target.id === "cm-freeze") {
@@ -623,6 +711,66 @@ function setupColManagerEvents() {
     }
   });
 }
+/* ---- 列の並び替え：長押しでつかんで、ドロップした位置に入れ替え ----
+   ⠿（グリップ）は長押し不要ですぐつかめる。↑↓ボタンも今までどおり使える。 */
+function setupColDragEvents(wrap) {
+  let press = null;          // 長押し待ち
+  let drag = null;           // つかんでいる最中
+  let swallowClick = false;  // ドラッグ直後のクリック（チェック切替）を無効化
+
+  const clearPress = () => { if (press) { clearTimeout(press.timer); press = null; } };
+  const start = (item) => {
+    drag = { el: item, list: item.parentElement };
+    item.classList.add("is-drag");
+    drag.list.classList.add("cm-dragging");
+    if (navigator.vibrate) navigator.vibrate(15);   // つかんだ合図（対応端末のみ）
+  };
+  const finish = (commit) => {
+    if (!drag) return;
+    drag.el.classList.remove("is-drag");
+    drag.list.classList.remove("cm-dragging");
+    const list = drag.list;
+    drag = null;
+    swallowClick = true;
+    setTimeout(() => { swallowClick = false; }, 300);
+    if (commit) {
+      colState.dataOrder = [...list.querySelectorAll("[data-cm-key]")].map((e) => e.dataset.cmKey);
+      afterColLayoutChange();   // 保存＋表を作り直し
+    }
+  };
+
+  wrap.addEventListener("pointerdown", (e) => {
+    const item = e.target.closest(".colitem");
+    if (!item) return;
+    if (e.target.closest("input, button")) return;          // チェック・↑↓は通常操作のまま
+    if (e.target.closest(".cm-grip")) { e.preventDefault(); start(item); return; }
+    press = { y: e.clientY, x: e.clientX, timer: setTimeout(() => { press = null; start(item); }, 350) };
+  });
+
+  document.addEventListener("pointermove", (e) => {
+    // 長押し成立前に動かしたらキャンセル（＝ふつうのスクロール）
+    if (press && (Math.abs(e.clientY - press.y) > 8 || Math.abs(e.clientX - press.x) > 8)) clearPress();
+    if (!drag) return;
+    const items = [...drag.list.querySelectorAll(".colitem")];
+    for (const other of items) {
+      if (other === drag.el) continue;
+      const r = other.getBoundingClientRect();
+      if (e.clientY >= r.top && e.clientY <= r.bottom) {
+        const after = e.clientY > r.top + r.height / 2;
+        drag.list.insertBefore(drag.el, after ? other.nextSibling : other);
+        break;
+      }
+    }
+  });
+  // つかんでいる間はページを動かさない（touch-actionだけでは途中変更が効かないため）
+  document.addEventListener("touchmove", (e) => { if (drag) e.preventDefault(); }, { passive: false });
+  document.addEventListener("pointerup", () => { clearPress(); finish(true); });
+  document.addEventListener("pointercancel", () => { clearPress(); finish(false); });
+  document.addEventListener("click", (e) => {
+    if (swallowClick) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+}
+
 function moveDataCol(key, dir) {
   const arr = colState.dataOrder;
   const i = arr.indexOf(key);
@@ -757,6 +905,7 @@ function drawTeamRankTable(box, rows) {
   }).join("");
 
   box.innerHTML = wideTable(`<table class="rich teamtbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`);
+  syncTableStickyRoom();
   box.querySelector("thead").addEventListener("click", (e) => {
     const th = e.target.closest("th.sortable");
     if (!th) return;
@@ -798,6 +947,7 @@ function drawTeamByGw(box, byGw) {
     });
     html += `</tbody></table>`;
     document.getElementById("team-gw-table").innerHTML = wideTable(html);
+    syncTableStickyRoom();
   };
   picker.addEventListener("change", render);
   render();
