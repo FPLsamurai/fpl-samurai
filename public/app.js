@@ -445,12 +445,16 @@ const MULTI_FILTERS = {
 };
 
 // フィルタ行に出すボタン（タップでチェックボックス一覧を開く）
+// 「全部チェック」も「1つもチェックなし」も、結果は全選手が対象なので「全て」と表示する
 function multiFilterButton(kind) {
   const sel = playerFilters[kind];
-  let text = "ー";
-  if (sel.length === 1) text = kind === "pos" ? sel[0] : "1件";
-  else if (sel.length > 1) text = `${sel.length}件`;
-  return `<button type="button" class="colsel fsel${sel.length ? " is-on" : ""}" data-fsel="${kind}"
+  const total = MULTI_FILTERS[kind].options().length;
+  const isAll = sel.length === 0 || sel.length === total;
+  let text;
+  if (isAll) text = "全て";
+  else if (sel.length === 1) text = kind === "pos" ? sel[0] : "1件";
+  else text = `${sel.length}件`;
+  return `<button type="button" class="colsel fsel${isAll ? "" : " is-on"}" data-fsel="${kind}"
     title="${MULTI_FILTERS[kind].title}で絞り込み（複数選択できます）">${esc(text)}</button>`;
 }
 
@@ -470,7 +474,7 @@ function openFilterPanel(kind, btn) {
   p.className = "fsel-panel";
   p.innerHTML = `
     <div class="fsel-head"><b>${esc(conf.title)}</b>
-      <button type="button" class="fsel-clear">クリア</button>
+      <button type="button" class="fsel-toggle"></button>
       <button type="button" class="fsel-close" aria-label="閉じる">✕</button>
     </div>
     <div class="fsel-list">${items}</div>`;
@@ -484,16 +488,26 @@ function openFilterPanel(kind, btn) {
   p.style.top = Math.round(below + p.offsetHeight > window.innerHeight - 6
     ? Math.max(6, r.top - p.offsetHeight - 4) : below) + "px";
 
+  // 全部チェック済みなら「クリア」、そうでなければ「全選択」に切り替わるボタン
+  const toggleBtn = p.querySelector(".fsel-toggle");
+  const syncToggle = () => {
+    const isAll = p.querySelectorAll("input:checked").length === p.querySelectorAll("input").length;
+    toggleBtn.textContent = isAll ? "クリア" : "全選択";
+    toggleBtn.dataset.act = isAll ? "clear" : "all";
+  };
   const apply = () => {
     playerFilters[kind] = [...p.querySelectorAll("input:checked")].map((i) => i.value);
-    buildPlayerHead();      // ボタンの表示（件数）を更新
+    syncToggle();
+    buildPlayerHead();      // ボタンの表示（件数／全て）を更新
     refreshPlayerBody();
   };
   p.addEventListener("change", apply);
-  p.querySelector(".fsel-clear").addEventListener("click", () => {
-    p.querySelectorAll("input:checked").forEach((i) => { i.checked = false; });
+  toggleBtn.addEventListener("click", () => {
+    const toAll = toggleBtn.dataset.act === "all";
+    p.querySelectorAll("input").forEach((i) => { i.checked = toAll; });
     apply();
   });
+  syncToggle();
   p.querySelector(".fsel-close").addEventListener("click", closeFilterPanel);
 }
 
