@@ -1057,7 +1057,7 @@ function drawPredictions(box, pred) {
   box.innerHTML = html;
 }
 
-/* 選手別ゴール期待値ランキング TOP10（選手のxG/90 × 相手の被xG係数）。
+/* 選手別ゴール期待値ランキング TOP10（選手の直近5試合の1試合あたりxG × 相手の被xG係数）。
    データが無い期間（開幕前など）は丸ごと出さない */
 function playerGoalRankingHtml(pred) {
   const rows = pred.player_goals || [];
@@ -1067,6 +1067,8 @@ function playerGoalRankingHtml(pred) {
       ? `<img class="pgr-photo" loading="lazy" alt="" src="${PHOTO_BASE}${esc(r.photo)}.png" onerror="this.style.visibility='hidden'">`
       : "";
     const ja = r.name_ja ? `<span class="pgr-ja">${esc(r.name_ja)}</span>` : "";
+    // 開幕直後で5試合に満たないときは、何試合の平均かを添える
+    const n = (r.matches && r.matches < 5) ? `<span class="pgr-xg-n">${r.matches}試合</span>` : "";
     return `<div class="pgr-row">
       <span class="pgr-rank ${rankClass(r.rank)}">${r.rank}</span>
       <span class="pgr-who">${photo}<span class="pgr-names"><span class="pgr-name">${esc(r.name)}</span>${ja}</span></span>
@@ -1074,14 +1076,14 @@ function playerGoalRankingHtml(pred) {
         <span class="pgr-team">${teamBadgeByName(r.team)}</span>
         <span class="pgr-opp">vs ${esc(r.opponent_short)}(${r.home ? "H" : "A"})</span>
       </span>
-      <span class="pgr-xg">${r.xg90}</span>
+      <span class="pgr-xg">${r.xg_per_match}${n}</span>
       <span class="pgr-exp">${r.expected_goals.toFixed ? r.expected_goals.toFixed(2) : r.expected_goals}</span>
     </div>`;
   }).join("");
   return `<h3 class="pgr-title">ゴール期待値ランキング TOP10（選手別）</h3>
-    <p class="note">選手のxG/90 × 相手の直近5試合平均被xG÷リーグ平均xG。90分出場した前提の「その試合で決めそうな得点数」です。</p>
+    <p class="note">選手の直近5試合の1試合あたりxG × 相手の直近5試合平均被xG÷リーグ平均xG＝「その試合で決めそうな得点数」。まだ5試合消化していない時期は、消化した試合数（1〜4試合）の平均を使います。</p>
     <div class="pgr">
-      <div class="pgr-head"><span></span><span>選手</span><span>対戦</span><span>xG/90</span><span>期待値</span></div>
+      <div class="pgr-head"><span></span><span>選手</span><span>対戦</span><span>xG/試合</span><span>期待値</span></div>
       ${items}
     </div>`;
 }

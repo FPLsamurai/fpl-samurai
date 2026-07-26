@@ -51,8 +51,9 @@ PUBLIC_DIR = os.path.join(ROOT, "public")
 # 表に出す人数の上限（重くなりすぎないように）
 DISPLAY_LIMIT = 120
 
-# 次節ゴール期待値ランキングに載せる最低出場時間（分）。少ない出場のxG/90の跳ね上がり対策
-PLAYER_RANK_MIN_MINUTES = 270
+# 次節ゴール期待値ランキングに載せる、直近5試合での最低出場時間（分）。
+# 1試合分。ベンチ・欠場ばかりの選手を除きつつ、開幕1節目から出せる基準にする
+PLAYER_RANK_MIN_MINUTES = 90
 
 # 選手別データの取得間隔（秒）。礼儀正しくアクセスするための間隔
 FETCH_INTERVAL = 0.25
@@ -725,9 +726,10 @@ def compute_player_goal_ranking(bootstrap, fixtures, team_matches, team_map, mu,
                                 player_rows, limit=10):
     """
     次節の「ゴール期待値ランキング」（選手別TOP10）。
-    期待ゴール = 選手のxG/90 × (相手の直近5試合平均被xG ÷ リーグ平均xG(μ))
-                ＝ 90分出場した前提で、その試合に決めそうな得点数。
-    サンプルが少ない選手の跳ね上がりを避けるため、出場時間が PLAYER_RANK_MIN_MINUTES 以上の選手のみ。
+    期待ゴール = 選手の直近5試合の1試合あたりxG × (相手の直近5試合平均被xG ÷ リーグ平均xG(μ))
+    シーズン序盤で5試合に満たないときは、消化した試合数（1〜4試合）の平均をそのまま使う。
+    player_rows には players["last5"]（直近5試合ぶんの集計）を渡すこと。
+    ベンチ・欠場だけの選手を除くため、その期間の出場時間が PLAYER_RANK_MIN_MINUTES 以上の選手のみ。
     """
     next_event = find_next_event(bootstrap)
     if next_event is None or mu <= 0:
@@ -748,11 +750,13 @@ def compute_player_goal_ranking(bootstrap, fixtures, team_matches, team_map, mu,
     rows = []
     for r in player_rows:
         pair = opponents.get(r.get("team_id"))
-        if pair is None or r.get("minutes", 0) < PLAYER_RANK_MIN_MINUTES:
+        matches = r.get("matches", 0)
+        if pair is None or matches <= 0 or r.get("minutes", 0) < PLAYER_RANK_MIN_MINUTES:
             continue
         opp_id, home = pair
         factor = opp_factor(opp_id)
-        expected = r.get("xg90", 0) * factor
+        xg_per_match = r.get("xg", 0) / matches      # 直近5試合（未満なら消化ぶん）の1試合あたりxG
+        expected = xg_per_match * factor
         if expected <= 0:
             continue
         rows.append({
@@ -761,7 +765,8 @@ def compute_player_goal_ranking(bootstrap, fixtures, team_matches, team_map, mu,
             "opponent": team_map.get(opp_id, {}).get("name_ja", "?"),
             "opponent_short": team_map.get(opp_id, {}).get("short", "?"),
             "home": home,
-            "xg90": r.get("xg90", 0),
+            "matches": matches,                       # 平均に使った試合数（5未満＝開幕直後）
+            "xg_per_match": round(xg_per_match, 2),
             "opp_factor": round(factor, 2),
             "expected_goals": round(expected, 2),
         })
@@ -831,9 +836,9 @@ def main():
     mu = compute_league_avg_xg(team_matches)
     team_section = compute_team_section(team_matches, team_map, clean_sheets)
     predictions = compute_predictions(bootstrap, fixtures, team_matches, team_map, mu)
-    # 次節タブ＞予測に出す選手別ランキング（全試合の集計＝players["all"] を土台にする）
+    # 次節タブ＞予測に出す選手別ランキング（直近5試合の集計＝players["last5"] を土台にする）
     predictions["player_goals"] = compute_player_goal_ranking(
-        bootstrap, fixtures, team_matches, team_map, mu, player_tables["all"])
+        bootstrap, fixtures, team_matches, team_map, mu, player_tables["last5"])
 
     latest = find_latest_finished_event(bootstrap)
     latest_gw_label = f"第{latest['id']}節" if latest else "未開幕"

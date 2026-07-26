@@ -1265,6 +1265,13 @@ tbody tr:nth-child(even) {
   font-size: 0.9rem;
 }
 .pgr-xg { color: var(--muted); }
+/* 「3試合」など、平均に使った試合数（5試合未満のときだけ出る） */
+.pgr-xg-n {
+  display: block;
+  font-size: 0.62rem;
+  line-height: 1.1;
+  color: var(--muted);
+}
 .pgr-exp {
   font-weight: 700;
   background: #fbe7c4;
@@ -1273,7 +1280,8 @@ tbody tr:nth-child(even) {
 }
 @media (max-width: 480px) {
   .pgr-head,
-  .pgr-row { grid-template-columns: 20px minmax(0, 1fr) 74px 40px 50px; gap: 5px; }
+  .pgr-row { grid-template-columns: 20px minmax(0, 1fr) 74px 46px 50px; gap: 5px; }
+  .pgr-head span { font-size: 0.68rem; }
   .pgr { padding: 2px 6px; }
   .pgr-mid .team-badge { width: 18px; height: 18px; }
   .pgr-opp { font-size: 0.72rem; }
