@@ -726,8 +726,8 @@ def compute_player_goal_ranking(bootstrap, fixtures, team_matches, team_map, mu,
                                 player_rows, limit=10):
     """
     次節の「ゴール期待値ランキング」（選手別TOP10）。
-    期待ゴール = 選手の直近5試合の1試合あたりxG × (相手の直近5試合平均被xG ÷ リーグ平均xG(μ))
-    シーズン序盤で5試合に満たないときは、消化した試合数（1〜4試合）の平均をそのまま使う。
+    スコア = 選手の直近5試合の合計xG × (相手の直近5試合の合計被xG ÷ リーグ平均xG(μ))
+    シーズン序盤で5試合に満たないときは、消化した試合数（1〜4試合）の合計をそのまま使う。
     player_rows には players["last5"]（直近5試合ぶんの集計）を渡すこと。
     ベンチ・欠場だけの選手を除くため、その期間の出場時間が PLAYER_RANK_MIN_MINUTES 以上の選手のみ。
     """
@@ -744,8 +744,9 @@ def compute_player_goal_ranking(bootstrap, fixtures, team_matches, team_map, mu,
         opponents[fx["team_a"]] = (fx["team_h"], False)
 
     def opp_factor(opp_id):
+        # 相手の直近5試合（未満なら消化ぶん）の合計被xG ÷ リーグ平均xG
         vals = [r["xgc"] for r in team_matches.get(opp_id, [])[-5:]]
-        return (sum(vals) / len(vals)) / mu if vals else 0.0
+        return sum(vals) / mu if vals else 0.0
 
     rows = []
     for r in player_rows:
@@ -755,8 +756,8 @@ def compute_player_goal_ranking(bootstrap, fixtures, team_matches, team_map, mu,
             continue
         opp_id, home = pair
         factor = opp_factor(opp_id)
-        xg_per_match = r.get("xg", 0) / matches      # 直近5試合（未満なら消化ぶん）の1試合あたりxG
-        expected = xg_per_match * factor
+        xg_sum = r.get("xg", 0)                      # 直近5試合（未満なら消化ぶん）の合計xG
+        expected = xg_sum * factor
         if expected <= 0:
             continue
         rows.append({
@@ -765,8 +766,8 @@ def compute_player_goal_ranking(bootstrap, fixtures, team_matches, team_map, mu,
             "opponent": team_map.get(opp_id, {}).get("name_ja", "?"),
             "opponent_short": team_map.get(opp_id, {}).get("short", "?"),
             "home": home,
-            "matches": matches,                       # 平均に使った試合数（5未満＝開幕直後）
-            "xg_per_match": round(xg_per_match, 2),
+            "matches": matches,                       # 合計に使った試合数（5未満＝開幕直後）
+            "xg_sum": round(xg_sum, 2),
             "opp_factor": round(factor, 2),
             "expected_goals": round(expected, 2),
         })
