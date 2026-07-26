@@ -73,7 +73,7 @@ async function applyPreseasonFallback() {
     const fb = await res.json();
     DATA.players = fb.players;            // ランキング（選手）だけ昨季に差し替え
     DATA.teams = fb.teams;               // ランキング（チーム）だけ昨季に差し替え
-    DATA.team_next3 = {};                // 昨季の所属で今季日程は出せないので「次の3試合」は—にする
+    DATA.team_next3 = {};                // 昨季の所属で今季日程は出せないので 1GW/2GW/3GW 列は—にする
   } catch (e) { /* 失敗しても通常フロー（空表示）で続行 */ }
 }
 
@@ -238,14 +238,17 @@ const COL_META = {
   pk_saved:    { label: "PKストップ", type: "num" },
   yellow:      { label: "イエロー",  type: "num" },
   red:         { label: "レッド",    type: "num" },
-  next3:       { label: "次の3試合", type: "next3", noSort: true },
+  // 次の3試合は1節ずつ別の列。相手を3文字略称＋(H/A)で出し、対戦難易度で背景色を塗る
+  gw1:         { label: "1GW",      type: "fx", fx: 0, noSort: true },
+  gw2:         { label: "2GW",      type: "fx", fx: 1, noSort: true },
+  gw3:         { label: "3GW",      type: "fx", fx: 2, noSort: true },
 };
 const FROZEN_ORDER = ["rank", "photo", "name", "team", "position", "cost", "points"];  // ポイントまで左に固定
 const DATA_ORDER_DEFAULT = [
   "value", "ownership", "goals", "assists", "clean_sheets", "starts", "minutes",
   "xg", "xg90", "g_minus_xg", "xa", "xa90", "defcon", "defcon90",
   "bonus", "ppg", "saves", "saves90", "pk_saved", "yellow", "red",
-  "next3",
+  "gw1", "gw2", "gw3",
 ];
 const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
 // 選手写真。公式は季節ごとに別パス（premierleague25=25/26）で最新版を配信。
@@ -254,7 +257,7 @@ const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
 const PHOTO_BASE = "https://resources.premierleague.com/premierleague25/photos/players/110x140/";
 const BADGE_BASE = "https://resources.premierleague.com/premierleague/badges/70/t";
 // 設定の保存キー。標準の列構成を変えたら末尾のバージョンを上げる（全員に新標準を適用するため）
-const CONFIG_KEY = "fpl_player_cols_v4";
+const CONFIG_KEY = "fpl_player_cols_v5";
 
 let playerSort = { key: "points", dir: "desc" };
 // チーム・ポジションは複数選択（空配列＝絞り込みなし）
@@ -523,6 +526,22 @@ window.addEventListener("scroll", (e) => {
   if (e.target === document || e.target === document.documentElement || e.target === window) closeFilterPanel();
 }, true);
 
+/* ---- 対戦難易度（公式FDR 1〜5）の色分けと言い換え ---- */
+const FDR_WORDS = { 1: "とても弱い", 2: "弱い", 3: "普通", 4: "強い", 5: "とても強い" };
+function fdrLevel(d) {
+  const n = Math.round(Number(d));
+  return (n >= 1 && n <= 5) ? n : 3;   // 不明なら「普通」扱い
+}
+function fdrClass(d) { return "fdr-" + fdrLevel(d); }
+function fdrWord(d) { return FDR_WORDS[fdrLevel(d)]; }
+// 相手の3文字略称。古いdata.json（sが無い）でもチーム名から引けるようにする
+function fxShort(f) {
+  if (f.s) return f.s;
+  const meta = DATA.teams_meta || {};
+  const tm = Object.values(meta).find((m) => m.name === f.o);
+  return (tm && tm.short) || f.o;
+}
+
 /* ---- 本体（中身）を絞り込み・並べ替えして描く ---- */
 function refreshPlayerBody() {
   const rows = (DATA.players && DATA.players[currentRichKey]) || [];
@@ -596,17 +615,15 @@ function refreshPlayerBody() {
           ? `<img class="team-badge" loading="lazy" alt="${esc(r.team)}" title="${esc(r.team)}" src="${BADGE_BASE}${code}.png" onerror="this.replaceWith(document.createTextNode('${esc(r.team)}'))">`
           : esc(r.team);
         tds += `<td class="${frz}col-team" style="${st}">${badge}</td>`;
-      } else if (c.type === "next3") {
-        // 次の3試合：相手名＋その試合の得点期待値（選手のxG/90 × 相手の守備係数）
-        const fx3 = (DATA.team_next3 && DATA.team_next3[String(r.team_id)]) || [];
-        if (!fx3.length) {
-          tds += `<td class="${frz}next3-cell"><span class="sub">—</span></td>`;
+      } else if (c.type === "fx") {
+        // 1GW/2GW/3GW：相手を3文字略称＋(H/A)で1行に。背景は対戦難易度（とても強い〜弱い）
+        const f = ((DATA.team_next3 && DATA.team_next3[String(r.team_id)]) || [])[c.fx];
+        if (!f) {
+          tds += `<td class="${frz}fx-cell" style="${st}"><span class="sub">—</span></td>`;
         } else {
-          const lines = fx3.map((f) => {
-            const expG = (Number(r.xg90) * f.f).toFixed(2);
-            return `<div class="fx-line"><span class="fx-opp">${f.h ? "" : "@"}${esc(f.o)}</span><span class="fx-exp">${expG}</span></div>`;
-          }).join("");
-          tds += `<td class="${frz}next3-cell" style="${st}">${lines}</td>`;
+          const ha = f.h ? "H" : "A";
+          const tip = `${f.o}（${f.h ? "ホーム" : "アウェイ"}）／${fdrWord(f.d)}`;
+          tds += `<td class="${frz}fx-cell ${fdrClass(f.d)}" style="${st}" title="${esc(tip)}">${esc(fxShort(f))}(${ha})</td>`;
         }
       } else {
         const main = c.key === "points" ? "main-num" : "";
@@ -1036,7 +1053,37 @@ function drawPredictions(box, pred) {
 
   let html = `<p class="note" style="font-weight:600;color:#37003c;">${esc(pred.event_name || "次節")}</p>`;
   html += `<div class="pred-cols"><div class="pred-col">${col1}</div><div class="pred-col">${col2}</div></div>`;
+  html += playerGoalRankingHtml(pred);
   box.innerHTML = html;
+}
+
+/* 選手別ゴール期待値ランキング TOP10（選手のxG/90 × 相手の被xG係数）。
+   データが無い期間（開幕前など）は丸ごと出さない */
+function playerGoalRankingHtml(pred) {
+  const rows = pred.player_goals || [];
+  if (!rows.length) return "";
+  const items = rows.map((r) => {
+    const photo = r.photo
+      ? `<img class="pgr-photo" loading="lazy" alt="" src="${PHOTO_BASE}${esc(r.photo)}.png" onerror="this.style.visibility='hidden'">`
+      : "";
+    const ja = r.name_ja ? `<span class="pgr-ja">${esc(r.name_ja)}</span>` : "";
+    return `<div class="pgr-row">
+      <span class="pgr-rank ${rankClass(r.rank)}">${r.rank}</span>
+      <span class="pgr-who">${photo}<span class="pgr-names"><span class="pgr-name">${esc(r.name)}</span>${ja}</span></span>
+      <span class="pgr-mid">
+        <span class="pgr-team">${teamBadgeByName(r.team)}</span>
+        <span class="pgr-opp">vs ${esc(r.opponent_short)}(${r.home ? "H" : "A"})</span>
+      </span>
+      <span class="pgr-xg">${r.xg90}</span>
+      <span class="pgr-exp">${r.expected_goals.toFixed ? r.expected_goals.toFixed(2) : r.expected_goals}</span>
+    </div>`;
+  }).join("");
+  return `<h3 class="pgr-title">ゴール期待値ランキング TOP10（選手別）</h3>
+    <p class="note">選手のxG/90 × 相手の直近5試合平均被xG÷リーグ平均xG。90分出場した前提の「その試合で決めそうな得点数」です。</p>
+    <div class="pgr">
+      <div class="pgr-head"><span></span><span>選手</span><span>対戦</span><span>xG/90</span><span>期待値</span></div>
+      ${items}
+    </div>`;
 }
 
 function drawSchedule(box, fx) {

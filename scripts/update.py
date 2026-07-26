@@ -51,6 +51,9 @@ PUBLIC_DIR = os.path.join(ROOT, "public")
 # 表に出す人数の上限（重くなりすぎないように）
 DISPLAY_LIMIT = 120
 
+# 次節ゴール期待値ランキングに載せる最低出場時間（分）。少ない出場のxG/90の跳ね上がり対策
+PLAYER_RANK_MIN_MINUTES = 270
+
 # 選手別データの取得間隔（秒）。礼儀正しくアクセスするための間隔
 FETCH_INTERVAL = 0.25
 # 同じ選手データを再取得しない時間（時間）。同日内の再実行を速くする
@@ -685,7 +688,9 @@ def compute_predictions(bootstrap, fixtures, team_matches, team_map, mu):
 
 def compute_team_next3(fixtures, team_map, team_matches, mu):
     """
-    チームごとの「次の3試合」。
+    チームごとの「次の3試合」（選手データの 1GW/2GW/3GW 列で使う）。
+    o = 相手の日本語名 ／ s = 相手の3文字略称 ／ h = ホームか
+    d = そのチームから見た対戦難易度(1〜5。公式FDR。5=とても強い)
     f = 相手の直近10試合の平均被xG ÷ リーグ平均xG(μ)
     （選手の得点期待値 = 選手のxG/90 × f として画面側で計算する係数）
     オフシーズン（未消化試合なし）のときは空。
@@ -705,12 +710,64 @@ def compute_team_next3(fixtures, team_map, team_matches, mu):
         for me, opp, home in ((f["team_h"], f["team_a"], True), (f["team_a"], f["team_h"], False)):
             lst = out.setdefault(str(me), [])
             if len(lst) < 3:
+                # 難易度は「自分から見た」もの（ホームなら team_h_difficulty）
                 lst.append({
                     "o": team_map.get(opp, {}).get("name_ja", "?"),
+                    "s": team_map.get(opp, {}).get("short", "?"),
                     "h": home,
+                    "d": f.get("team_h_difficulty" if home else "team_a_difficulty") or 3,
                     "f": opp_factor(opp),
                 })
     return out
+
+
+def compute_player_goal_ranking(bootstrap, fixtures, team_matches, team_map, mu,
+                                player_rows, limit=10):
+    """
+    次節の「ゴール期待値ランキング」（選手別TOP10）。
+    期待ゴール = 選手のxG/90 × (相手の直近5試合平均被xG ÷ リーグ平均xG(μ))
+                ＝ 90分出場した前提で、その試合に決めそうな得点数。
+    サンプルが少ない選手の跳ね上がりを避けるため、出場時間が PLAYER_RANK_MIN_MINUTES 以上の選手のみ。
+    """
+    next_event = find_next_event(bootstrap)
+    if next_event is None or mu <= 0:
+        return []
+
+    # 次節に試合があるチーム → (相手ID, ホームか)
+    opponents = {}
+    for fx in fixtures:
+        if fx.get("event") != next_event["id"]:
+            continue
+        opponents[fx["team_h"]] = (fx["team_a"], True)
+        opponents[fx["team_a"]] = (fx["team_h"], False)
+
+    def opp_factor(opp_id):
+        vals = [r["xgc"] for r in team_matches.get(opp_id, [])[-5:]]
+        return (sum(vals) / len(vals)) / mu if vals else 0.0
+
+    rows = []
+    for r in player_rows:
+        pair = opponents.get(r.get("team_id"))
+        if pair is None or r.get("minutes", 0) < PLAYER_RANK_MIN_MINUTES:
+            continue
+        opp_id, home = pair
+        factor = opp_factor(opp_id)
+        expected = r.get("xg90", 0) * factor
+        if expected <= 0:
+            continue
+        rows.append({
+            "name": r["name"], "name_ja": r.get("name_ja", ""), "photo": r.get("photo", ""),
+            "team": r["team"], "team_code": r.get("team_code", 0), "position": r["position"],
+            "opponent": team_map.get(opp_id, {}).get("name_ja", "?"),
+            "opponent_short": team_map.get(opp_id, {}).get("short", "?"),
+            "home": home,
+            "xg90": r.get("xg90", 0),
+            "opp_factor": round(factor, 2),
+            "expected_goals": round(expected, 2),
+        })
+
+    rows.sort(key=lambda r: r["expected_goals"], reverse=True)
+    return _ranked(rows[:limit])
 
 
 def compute_set_pieces(bootstrap, team_map, jp_names):
@@ -774,6 +831,9 @@ def main():
     mu = compute_league_avg_xg(team_matches)
     team_section = compute_team_section(team_matches, team_map, clean_sheets)
     predictions = compute_predictions(bootstrap, fixtures, team_matches, team_map, mu)
+    # 次節タブ＞予測に出す選手別ランキング（全試合の集計＝players["all"] を土台にする）
+    predictions["player_goals"] = compute_player_goal_ranking(
+        bootstrap, fixtures, team_matches, team_map, mu, player_tables["all"])
 
     latest = find_latest_finished_event(bootstrap)
     latest_gw_label = f"第{latest['id']}節" if latest else "未開幕"
@@ -814,6 +874,7 @@ def main():
     print(f"  選手テーブル: 全試合{len(player_tables['all'])}人 / 直近10 {len(player_tables['last10'])}人")
     print(f"  チーム合計: {len(team_section['totals'])}チーム")
     print(f"  次節予測: {predictions['event_name'] or 'なし（オフシーズン）'}（{len(predictions['rows'])}行）")
+    print(f"  次節ゴール期待値ランキング: {len(predictions['player_goals'])}人")
     if not (ok1 and ok2):
         print("  ⚠ 一部APIに接続できず、前回データを使った箇所があります")
     print("\n公開するなら git でコミット＆プッシュしてください（README.md 参照）。")

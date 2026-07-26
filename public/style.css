@@ -990,23 +990,22 @@ table.rich.teamtbl th.rank, table.rich.teamtbl th.col-name { background: #efe9f1
 table.rich.teamtbl thead tr:first-child th.rank,
 table.rich.teamtbl thead tr:first-child th.col-name { z-index: 6; }
 
-/* 次の3試合セル */
-.next3-cell {
-  font-size: 0.72rem;
-  line-height: 1.35;
-}
-.fx-line {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  white-space: nowrap;
-}
-.fx-opp { color: var(--text); }
-.fx-exp {
-  color: var(--pl-purple);
+/* 次の3試合（1GW/2GW/3GW）：相手の3文字略称＋(H/A)。背景は対戦難易度で色分け */
+table.rich td.fx-cell {
+  font-size: 0.74rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.2px;
+  text-align: center;
+  padding: 8px 6px;
+  min-width: 60px;
 }
+table.rich th.col-gw1, table.rich th.col-gw2, table.rich th.col-gw3 { text-align: center; }
+/* 公式FDRの5段階（1=とても弱い … 5=とても強い） */
+table.rich td.fx-cell.fdr-1 { background: #12fc7a; color: #1b1b1f; }
+table.rich td.fx-cell.fdr-2 { background: #8ef5b7; color: #1b1b1f; }
+table.rich td.fx-cell.fdr-3 { background: #e7e7e7; color: #1b1b1f; }
+table.rich td.fx-cell.fdr-4 { background: #fe1752; color: #fff; }
+table.rich td.fx-cell.fdr-5 { background: #81072d; color: #fff; }
 
 /* セットプレー担当（チーム＝ロゴ、PK/直接FK/CK・間接FKの3列をスマホ幅に等幅で収める） */
 table.setpiece { table-layout: fixed; width: 100%; }
@@ -1173,6 +1172,114 @@ tbody tr:nth-child(even) {
 }
 .pred-cell.hi-goal { background: #fbe7c4; }   /* ゴール期待値が高い */
 .pred-cell.hi-cs { background: #d7eede; }      /* クリーンシート率が高い */
+
+/* ---------- 次節の予測：選手別ゴール期待値ランキング TOP10 ---------- */
+.pgr-title {
+  margin: 22px 0 4px;
+  font-size: 1rem;
+  color: var(--pl-purple);
+}
+.pgr {
+  background: var(--card);
+  border: 0.5px solid #ececf0;
+  border-radius: 10px;
+  padding: 2px 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.pgr-head,
+.pgr-row {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) 104px 54px 60px;
+  gap: 8px;
+  align-items: center;
+}
+.pgr-head { padding: 8px 0 6px; }
+.pgr-head span {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-align: center;
+}
+.pgr-head span:nth-child(2) { text-align: left; }
+.pgr-row { padding: 7px 0; }
+.pgr-row + .pgr-row { border-top: 0.5px solid #f0eef2; }
+.pgr-rank {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+.pgr-who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.pgr-photo {
+  width: 28px;
+  height: 35px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #e8e8ec;
+  flex: none;
+}
+.pgr-names { min-width: 0; }
+.pgr-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.88rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.pgr-ja {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.pgr-mid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+.pgr-mid .team-badge { width: 22px; height: 22px; flex: none; }
+/* チーム名しか出せないとき（エンブレム無し）に列からはみ出させない */
+.pgr-team {
+  min-width: 0;
+  font-size: 0.72rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pgr-opp {
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.pgr-xg,
+.pgr-exp {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+}
+.pgr-xg { color: var(--muted); }
+.pgr-exp {
+  font-weight: 700;
+  background: #fbe7c4;
+  border-radius: 8px;
+  padding: 7px 4px;
+}
+@media (max-width: 480px) {
+  .pgr-head,
+  .pgr-row { grid-template-columns: 20px minmax(0, 1fr) 74px 40px 50px; gap: 5px; }
+  .pgr { padding: 2px 6px; }
+  .pgr-mid .team-badge { width: 18px; height: 18px; }
+  .pgr-opp { font-size: 0.72rem; }
+  .pgr-xg { font-size: 0.8rem; }
+  .pgr-photo { width: 24px; height: 30px; }
+}
 
 /* ---------- 次節の日程（カード形式） ---------- */
 .match-card {
