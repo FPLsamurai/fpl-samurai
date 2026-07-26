@@ -1057,7 +1057,7 @@ function drawPredictions(box, pred) {
   box.innerHTML = html;
 }
 
-/* 選手別ゴール期待値ランキング TOP10（選手の直近5試合の合計xG × 相手の被xG係数）。
+/* 選手別ゴール期待値ランキング TOP10（選手の直近5試合の平均xG × 相手の被xG係数）。
    データが無い期間（開幕前など）は丸ごと出さない */
 // 期待値は合計xG同士の掛け算なので2桁になることがある。桁が増えたら小数を1桁に落として幅を保つ
 function fmtExpected(v) {
@@ -1074,7 +1074,7 @@ function playerGoalRankingHtml(pred) {
       ? `<img class="pgr-photo" loading="lazy" alt="" src="${PHOTO_BASE}${esc(r.photo)}.png" onerror="this.style.visibility='hidden'">`
       : "";
     const ja = r.name_ja ? `<span class="pgr-ja">${esc(r.name_ja)}</span>` : "";
-    // 開幕直後で5試合に満たないときは、何試合の合計かを添える
+    // 開幕直後で5試合に満たないときは、何試合の平均かを添える
     const n = (r.matches && r.matches < 5) ? `<span class="pgr-xg-n">${r.matches}試合</span>` : "";
     return `<div class="pgr-row">
       <span class="pgr-rank ${rankClass(r.rank)}">${r.rank}</span>
@@ -1083,14 +1083,14 @@ function playerGoalRankingHtml(pred) {
         <span class="pgr-team">${teamBadgeByName(r.team)}</span>
         <span class="pgr-opp">vs ${esc(r.opponent_short)}(${r.home ? "H" : "A"})</span>
       </span>
-      <span class="pgr-xg">${r.xg_sum}${n}</span>
+      <span class="pgr-xg">${r.xg_avg}${n}</span>
       <span class="pgr-exp">${fmtExpected(r.expected_goals)}</span>
     </div>`;
   }).join("");
   return `<h3 class="pgr-title">【選手別】ゴール期待値ランキング TOP10</h3>
-    <p class="note pgr-formula">選手の直近5試合合計xG ×<br>(相手の直近5試合合計被xG ÷ リーグ平均xG)</p>
+    <p class="note pgr-formula">＝選手の直近5試合平均xG ×<br>(相手の直近5試合平均被xG ÷ リーグ平均xG)</p>
     <div class="pgr">
-      <div class="pgr-head"><span></span><span>選手</span><span>対戦</span><span>xG合計</span><span>期待値</span></div>
+      <div class="pgr-head"><span></span><span>選手</span><span>対戦</span><span>xG平均</span><span>期待値</span></div>
       ${items}
     </div>`;
 }
