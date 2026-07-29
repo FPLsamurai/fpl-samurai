@@ -209,7 +209,7 @@ function renderSetPieces() {
 /* ===========================================================
    比較：選手レーダーチャート（X投稿・動画用の画像を書き出す）
 
-   ・選手を1人選ぶと、同ポジションの選手を最大4人まで足せる（合計5人）
+   ・選手を1人選ぶと、同ポジションの選手を足していける（合計4人まで）
    ・軸はポジションごとに固定（共通3＋ポジション別）
    ・目盛りは「同ポジション・900分以上」の中での偏差値
        T = 50 + 10 ×(値 − 平均)÷標準偏差 を T25〜T78 → 半径0〜1（最小0.06）
@@ -217,8 +217,8 @@ function renderSetPieces() {
    =========================================================== */
 
 // 選手の色。1人目パープル／2人目ピンクは固定（凡例・線・数値すべてこの色で統一）
-const CMP_COLORS = ["#37003c", "#ff2882", "#00857d", "#e07b00", "#1b6ac9"];
-const CMP_MAX = 5;                    // 1人目＋最大4人
+const CMP_COLORS = ["#37003c", "#ff2882", "#00857d", "#e07b00"];
+const CMP_MAX = 4;                    // 合計4人まで（1人目＋3人）
 const CMP_MIN_MINUTES = 900;          // 偏差値の母集団に入れる最低出場時間
 const CMP_T_LOW = 25, CMP_T_HIGH = 78;  // この偏差値の幅を半径0〜1に対応させる
 
@@ -265,7 +265,7 @@ function renderCompare() {
   box.innerHTML = `<div class="cmp">
       <div id="cmp-picked"></div>
       <div class="cmp-search">
-        <input type="text" id="cmp-q" placeholder="選手名で検索（例：Salah / サラー）" value="${esc(cmpQuery)}">
+        <input type="text" id="cmp-q" placeholder="選手名で検索（例：Haaland / ハーランド）" value="${esc(cmpQuery)}">
       </div>
       <div id="cmp-cands" class="cmp-cands"></div>
       <div id="cmp-out"></div>
@@ -283,7 +283,7 @@ function drawCmpPicked() {
   const box = document.getElementById("cmp-picked");
   if (!box) return;
   if (!cmpSelected.length) {
-    box.innerHTML = `<p class="cmp-hint">まず1人目を選んでください。2人目以降は同じポジションから最大4人まで足せます。</p>`;
+    box.innerHTML = `<p class="cmp-hint">まず1人目を選んでください。2人目以降は同じポジションから、合計${CMP_MAX}人まで選べます。</p>`;
     return;
   }
   const chips = cmpSelected.map((p, i) => `<span class="cmp-chip" style="background:${CMP_COLORS[i]}">
