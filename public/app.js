@@ -211,7 +211,7 @@ function renderSetPieces() {
 
    ・選手を1人選ぶと、同ポジションの選手を足していける（合計4人まで）
    ・軸はポジションごとに固定（共通3＋ポジション別）
-   ・目盛りは「同ポジション・900分以上」の中での偏差値
+   ・目盛りは「同ポジション」の中での偏差値（出場時間による絞り込みはしない）
        T = 50 + 10 ×(値 − 平均)÷標準偏差 を T25〜T78 → 半径0〜1（最小0.06）
    ・数字は実数値だけを軸ラベルの下に出す（偏差値は出さない）
    =========================================================== */
@@ -219,7 +219,6 @@ function renderSetPieces() {
 // 選手の色。1人目パープル／2人目ピンクは固定（凡例・線・数値すべてこの色で統一）
 const CMP_COLORS = ["#37003c", "#ff2882", "#00857d", "#e07b00"];
 const CMP_MAX = 4;                    // 合計4人まで（1人目＋3人）
-const CMP_MIN_MINUTES = 900;          // 偏差値の母集団に入れる最低出場時間
 const CMP_T_LOW = 25, CMP_T_HIGH = 78;  // この偏差値の幅を半径0〜1に対応させる
 
 // 軸の定義（共通3つ＋ポジション別）。fmt=実数値の書き方
@@ -256,7 +255,7 @@ function cmpKey(p) { return `${p.name}|${p.team}|${p.position}`; }
 function renderCompare() {
   const note = document.getElementById("players-note");
   const box = document.getElementById("players-content");
-  note.textContent = "選手を選ぶと、同じポジションの中での偏差値でレーダーチャートを描きます（画像として保存できます）。";
+  note.textContent = "選手を選ぶと、同じポジションの中での偏差値でレーダーチャートを描きます。";
 
   if (!cmpPool().length) {
     box.innerHTML = emptyMessage("まだ選手データがありません。<br>新シーズンが始まると比較できるようになります。");
@@ -363,9 +362,9 @@ function cmpClearQuery() {
   if (q) q.value = "";
 }
 
-/* ---- 偏差値（同ポジション・900分以上が母集団） ---- */
+/* ---- 偏差値（同ポジションの選手ぜんぶが母集団。出場時間では絞らない） ---- */
 function cmpStats(pos, keys) {
-  const pool = cmpPool().filter((p) => p.position === pos && Number(p.minutes) >= CMP_MIN_MINUTES);
+  const pool = cmpPool().filter((p) => p.position === pos);
   const out = {};
   keys.forEach((k) => {
     const vals = pool.map((p) => Number(p[k]) || 0);
@@ -391,21 +390,8 @@ function drawCmpChart() {
       ? `<p class="cmp-hint">あと1人選ぶとレーダーチャートが出ます。</p>` : "";
     return;
   }
-  out.innerHTML = `<canvas id="cmp-canvas" class="cmp-canvas"></canvas>
-    <div class="cmp-actions"><button type="button" class="cmp-save" id="cmp-save">画像を保存（PNG）</button></div>`;
-
-  const canvas = document.getElementById("cmp-canvas");
-  paintCmpChart(canvas, cmpSelected);
-  document.getElementById("cmp-save").addEventListener("click", () => {
-    const nm = cmpSelected.map((p) => p.name).join("-vs-").replace(/[^\w-]/g, "");
-    canvas.toBlob((blob) => {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `fpl-compare-${nm || "players"}.png`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    }, "image/png");
-  });
+  out.innerHTML = `<canvas id="cmp-canvas" class="cmp-canvas"></canvas>`;
+  paintCmpChart(document.getElementById("cmp-canvas"), cmpSelected);
 }
 
 function paintCmpChart(canvas, players) {
@@ -422,8 +408,7 @@ function paintCmpChart(canvas, players) {
   const blockH = 34 + players.length * valueLine; // 軸ラベル＋人数ぶんの実数値
   const R = 300;
   const radarH = 2 * (R + blockH + 26);
-  const footerH = 64;
-  const H = headerH + legendH + radarH + footerH;
+  const H = headerH + legendH + radarH + 24;
 
   canvas.width = W * SCALE;
   canvas.height = H * SCALE;
@@ -447,7 +432,7 @@ function paintCmpChart(canvas, players) {
   ctx.fillText(title, W / 2, 66);
   ctx.fillStyle = "#cbb8d2";
   ctx.font = F(600, 21);
-  ctx.fillText(`${cmpSeasonLabel()} ／ 同ポジション（${pos}・${CMP_MIN_MINUTES}分以上）内の偏差値で描画`, W / 2, 106);
+  ctx.fillText(`${cmpSeasonLabel()} ／ 同ポジション（${pos}）内の偏差値で描画`, W / 2, 106);
   ctx.font = F(700, 19);
   ctx.fillText("FPL侍", W / 2, 136);
 
@@ -526,12 +511,6 @@ function paintCmpChart(canvas, players) {
       ctx.fillText(CMP_AXIS_META[k].fmt(p[k]), lx, top + 24 + (pi + 1) * valueLine);
     });
   });
-
-  // 出典
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#9a9aa3";
-  ctx.font = F(600, 19);
-  ctx.fillText("データ出典：Fantasy Premier League 公式API ／ fplsamurai.github.io", W / 2, H - 24);
 }
 
 // 幅に収まらない文字列はフォントを縮めて対応（長い名前が2人並ぶヘッダー用）
