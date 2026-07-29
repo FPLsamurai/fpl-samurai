@@ -211,7 +211,7 @@ function renderSetPieces() {
 
    ・選手を1人選ぶと、同ポジションの選手を足していける（合計4人まで）
    ・軸はポジションごとに固定（共通3＋ポジション別）
-   ・目盛りは「同ポジション」の中での偏差値（出場時間による絞り込みはしない）
+   ・目盛りは「同ポジション・900分以上」の中での偏差値
        T = 50 + 10 ×(値 − 平均)÷標準偏差 を T25〜T78 → 半径0〜1（最小0.06）
    ・数字は実数値だけを軸ラベルの下に出す（偏差値は出さない）
    =========================================================== */
@@ -219,6 +219,7 @@ function renderSetPieces() {
 // 選手の色。1人目パープル／2人目ピンクは固定（凡例・線・数値すべてこの色で統一）
 const CMP_COLORS = ["#37003c", "#ff2882", "#00857d", "#e07b00"];
 const CMP_MAX = 4;                    // 合計4人まで（1人目＋3人）
+const CMP_MIN_MINUTES = 900;          // 偏差値の母集団に入れる最低出場時間
 const CMP_T_LOW = 25, CMP_T_HIGH = 78;  // この偏差値の幅を半径0〜1に対応させる
 
 // 軸の定義（共通3つ＋ポジション別）。fmt=実数値の書き方
@@ -362,9 +363,9 @@ function cmpClearQuery() {
   if (q) q.value = "";
 }
 
-/* ---- 偏差値（同ポジションの選手ぜんぶが母集団。出場時間では絞らない） ---- */
+/* ---- 偏差値（同ポジション・900分以上が母集団） ---- */
 function cmpStats(pos, keys) {
-  const pool = cmpPool().filter((p) => p.position === pos);
+  const pool = cmpPool().filter((p) => p.position === pos && Number(p.minutes) >= CMP_MIN_MINUTES);
   const out = {};
   keys.forEach((k) => {
     const vals = pool.map((p) => Number(p[k]) || 0);
@@ -432,7 +433,7 @@ function paintCmpChart(canvas, players) {
   ctx.fillText(title, W / 2, 66);
   ctx.fillStyle = "#cbb8d2";
   ctx.font = F(600, 21);
-  ctx.fillText(`${cmpSeasonLabel()} ／ 同ポジション（${pos}）内の偏差値で描画`, W / 2, 106);
+  ctx.fillText(`${cmpSeasonLabel()} ／ 同ポジション（${pos}・${CMP_MIN_MINUTES}分以上）内の偏差値で描画`, W / 2, 106);
   ctx.font = F(700, 19);
   ctx.fillText("FPL侍", W / 2, 136);
 
