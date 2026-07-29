@@ -1107,6 +1107,160 @@ tbody tr:nth-child(even) {
   font-weight: 500;
 }
 
+/* ---------- 選手の比較（レーダーチャート） ---------- */
+.cmp { margin-top: 4px; }
+.cmp-hint {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 10px 2px;
+  line-height: 1.5;
+}
+.cmp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.cmp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.86rem;
+  border-radius: 999px;
+  padding: 6px 6px 6px 12px;
+}
+.cmp-chip-sub {
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+.cmp-x {
+  border: 0;
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.cmp-clear {
+  border: 0.5px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.cmp-search input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: var(--card);
+}
+/* 候補は枠内スクロール（下のチャートが遠くならないように） */
+.cmp-cands {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.cmp-cands:empty { margin-top: 0; }
+@media (max-width: 480px) {
+  .cmp-cands { grid-template-columns: 1fr; }
+}
+.cmp-cand {
+  display: block;
+  text-align: left;
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  min-width: 0;
+}
+.cmp-cand-name {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.cmp-cand-ja {
+  font-weight: 500;
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin-left: 6px;
+}
+.cmp-cand-sub {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.cmp-diff {
+  display: inline-block;
+  margin-left: 6px;
+  background: #ffe0ea;
+  color: #b0003a;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-weight: 700;
+  font-size: 0.68rem;
+}
+.cmp-confirm {
+  background: #fff6f9;
+  border: 1px solid #ffc9dc;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+.cmp-confirm-btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.cmp-yes, .cmp-no {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cmp-yes { background: #ff2882; color: #fff; }
+.cmp-no { background: #ececf0; color: var(--text); }
+.cmp-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 14px;
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+}
+.cmp-actions { margin: 10px 0 4px; text-align: center; }
+.cmp-save {
+  border: 0;
+  background: var(--pl-purple);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-radius: 999px;
+  padding: 11px 22px;
+  cursor: pointer;
+}
+
 /* ---------- 次節の予測（対戦カード形式） ---------- */
 .pred-cols {
   display: grid;

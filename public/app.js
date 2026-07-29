@@ -134,7 +134,9 @@ function renderHeader() {
    =========================================================== */
 const RICH_KEYS = ["all", "last1", "last3", "last5", "last10", "home", "away"];
 function renderPlayers(key) {
-  if (key === "recent") {
+  if (key === "compare") {
+    renderCompare();
+  } else if (key === "recent") {
     renderPlayerRich(recentWindow);   // 「直近」タブ＝記憶している期間のリッチ表＋期間切替
   } else if (RICH_KEYS.includes(key)) {
     renderPlayerRich(key);
@@ -202,6 +204,349 @@ function renderSetPieces() {
   });
   html += `</tbody></table>`;
   box.innerHTML = html;
+}
+
+/* ===========================================================
+   比較：選手レーダーチャート（X投稿・動画用の画像を書き出す）
+
+   ・選手を1人選ぶと、同ポジションの選手を最大4人まで足せる（合計5人）
+   ・軸はポジションごとに固定（共通3＋ポジション別）
+   ・目盛りは「同ポジション・900分以上」の中での偏差値
+       T = 50 + 10 ×(値 − 平均)÷標準偏差 を T25〜T78 → 半径0〜1（最小0.06）
+   ・数字は実数値だけを軸ラベルの下に出す（偏差値は出さない）
+   =========================================================== */
+
+// 選手の色。1人目パープル／2人目ピンクは固定（凡例・線・数値すべてこの色で統一）
+const CMP_COLORS = ["#37003c", "#ff2882", "#00857d", "#e07b00", "#1b6ac9"];
+const CMP_MAX = 5;                    // 1人目＋最大4人
+const CMP_MIN_MINUTES = 900;          // 偏差値の母集団に入れる最低出場時間
+const CMP_T_LOW = 25, CMP_T_HIGH = 78;  // この偏差値の幅を半径0〜1に対応させる
+
+// 軸の定義（共通3つ＋ポジション別）。fmt=実数値の書き方
+const CMP_AXIS_META = {
+  starts:       { label: "スタメン",   fmt: (v) => String(v) },
+  cost:         { label: "コスト",     fmt: (v) => "£" + Number(v).toFixed(1) },
+  points:       { label: "ポイント",   fmt: (v) => String(v) },
+  clean_sheets: { label: "無失点",     fmt: (v) => String(v) },
+  saves:        { label: "セーブ",     fmt: (v) => String(v) },
+  pk_saved:     { label: "PKストップ", fmt: (v) => String(v) },
+  defcon:       { label: "DEFCON",     fmt: (v) => String(v) },
+  goals:        { label: "ゴール",     fmt: (v) => String(v) },
+  assists:      { label: "アシスト",   fmt: (v) => String(v) },
+  bonus:        { label: "ボーナス",   fmt: (v) => String(v) },
+  xg:           { label: "xG",         fmt: (v) => Number(v).toFixed(2) },
+  xg90:         { label: "xG/90",      fmt: (v) => Number(v).toFixed(2) },
+};
+const CMP_AXES = {
+  GK: ["starts", "cost", "points", "clean_sheets", "saves", "pk_saved"],
+  DF: ["starts", "cost", "points", "clean_sheets", "defcon", "goals", "assists"],
+  MF: ["starts", "cost", "points", "goals", "assists", "defcon", "bonus"],
+  FW: ["starts", "cost", "points", "goals", "assists", "xg", "xg90", "bonus"],
+};
+
+let cmpSelected = [];     // 選んだ選手（表示順＝色の順）
+let cmpQuery = "";        // 検索欄の文字
+let cmpPending = null;    // ポジション違いで確認待ちの選手
+
+function cmpPool() {
+  return (DATA.players && DATA.players.all) || [];
+}
+function cmpKey(p) { return `${p.name}|${p.team}|${p.position}`; }
+
+function renderCompare() {
+  const note = document.getElementById("players-note");
+  const box = document.getElementById("players-content");
+  note.textContent = "選手を選ぶと、同じポジションの中での偏差値でレーダーチャートを描きます（画像として保存できます）。";
+
+  if (!cmpPool().length) {
+    box.innerHTML = emptyMessage("まだ選手データがありません。<br>新シーズンが始まると比較できるようになります。");
+    return;
+  }
+  box.innerHTML = `<div class="cmp">
+      <div id="cmp-picked"></div>
+      <div class="cmp-search">
+        <input type="text" id="cmp-q" placeholder="選手名で検索（例：Salah / サラー）" value="${esc(cmpQuery)}">
+      </div>
+      <div id="cmp-cands" class="cmp-cands"></div>
+      <div id="cmp-out"></div>
+    </div>`;
+
+  const q = document.getElementById("cmp-q");
+  q.addEventListener("input", () => { cmpQuery = q.value.trim().toLowerCase(); cmpPending = null; drawCmpCands(); });
+  drawCmpPicked();
+  drawCmpCands();
+  drawCmpChart();
+}
+
+/* ---- 選んだ選手（色つきチップ） ---- */
+function drawCmpPicked() {
+  const box = document.getElementById("cmp-picked");
+  if (!box) return;
+  if (!cmpSelected.length) {
+    box.innerHTML = `<p class="cmp-hint">まず1人目を選んでください。2人目以降は同じポジションから最大4人まで足せます。</p>`;
+    return;
+  }
+  const chips = cmpSelected.map((p, i) => `<span class="cmp-chip" style="background:${CMP_COLORS[i]}">
+      ${esc(p.name)}<span class="cmp-chip-sub">${esc(p.position)}</span>
+      <button type="button" class="cmp-x" data-cmp-del="${i}" aria-label="外す">×</button></span>`).join("");
+  box.innerHTML = `<div class="cmp-chips">${chips}
+    <button type="button" class="cmp-clear" data-cmp-clear>すべて外す</button></div>`;
+  box.querySelectorAll("[data-cmp-del]").forEach((b) => b.addEventListener("click", () => {
+    cmpSelected.splice(Number(b.dataset.cmpDel), 1);
+    drawCmpPicked(); drawCmpCands(); drawCmpChart();
+  }));
+  const clear = box.querySelector("[data-cmp-clear]");
+  if (clear) clear.addEventListener("click", () => {
+    cmpSelected = []; cmpPending = null;
+    drawCmpPicked(); drawCmpCands(); drawCmpChart();
+  });
+}
+
+/* ---- 検索結果（ポジション違いはその場で確認してから追加） ---- */
+function drawCmpCands() {
+  const box = document.getElementById("cmp-cands");
+  if (!box) return;
+  const basePos = cmpSelected.length ? cmpSelected[0].position : null;
+
+  if (cmpPending) {
+    const p = cmpPending;
+    box.innerHTML = `<div class="cmp-confirm">
+      <p><b>${esc(p.name)}</b> は <b>${esc(p.position)}</b>、1人目の <b>${esc(cmpSelected[0].name)}</b> は <b>${esc(basePos)}</b> です。
+      ポジションが違うと軸の項目が合わず、偏差値も ${esc(basePos)} の中での位置になります。それでも追加しますか？</p>
+      <div class="cmp-confirm-btns">
+        <button type="button" class="cmp-yes" data-cmp-yes>このまま追加する</button>
+        <button type="button" class="cmp-no" data-cmp-no>やめる</button>
+      </div></div>`;
+    box.querySelector("[data-cmp-yes]").addEventListener("click", () => {
+      cmpSelected.push(cmpPending); cmpPending = null;
+      cmpClearQuery();
+      drawCmpPicked(); drawCmpCands(); drawCmpChart();
+    });
+    box.querySelector("[data-cmp-no]").addEventListener("click", () => { cmpPending = null; drawCmpCands(); });
+    return;
+  }
+
+  if (cmpSelected.length >= CMP_MAX) {
+    box.innerHTML = `<p class="cmp-hint">${CMP_MAX}人まで選べます。入れ替えるには誰かを外してください。</p>`;
+    return;
+  }
+  if (!cmpQuery) { box.innerHTML = ""; return; }
+
+  const picked = new Set(cmpSelected.map(cmpKey));
+  const hits = cmpPool().filter((p) => {
+    if (picked.has(cmpKey(p))) return false;
+    return p.name.toLowerCase().includes(cmpQuery) || (p.name_ja && p.name_ja.toLowerCase().includes(cmpQuery));
+  }).slice(0, 24);
+
+  if (!hits.length) { box.innerHTML = `<p class="cmp-hint">見つかりませんでした。</p>`; return; }
+  box.innerHTML = hits.map((p, i) => {
+    const diff = basePos && p.position !== basePos ? `<span class="cmp-diff">別POS</span>` : "";
+    const ja = p.name_ja ? `<span class="cmp-cand-ja">${esc(p.name_ja)}</span>` : "";
+    return `<button type="button" class="cmp-cand" data-cmp-add="${i}">
+      <span class="cmp-cand-name">${esc(p.name)}${ja}</span>
+      <span class="cmp-cand-sub">${esc(p.team)}・${esc(p.position)}・£${Number(p.cost).toFixed(1)}${diff}</span>
+    </button>`;
+  }).join("");
+  box.querySelectorAll("[data-cmp-add]").forEach((b) => b.addEventListener("click", () => {
+    const p = hits[Number(b.dataset.cmpAdd)];
+    if (basePos && p.position !== basePos) { cmpPending = p; drawCmpCands(); return; }
+    cmpSelected.push(p);
+    cmpClearQuery();
+    drawCmpPicked(); drawCmpCands(); drawCmpChart();
+  }));
+}
+
+// 選手を足したら検索欄は空に戻す（続けて次の選手を探せるように）
+function cmpClearQuery() {
+  cmpQuery = "";
+  const q = document.getElementById("cmp-q");
+  if (q) q.value = "";
+}
+
+/* ---- 偏差値（同ポジション・900分以上が母集団） ---- */
+function cmpStats(pos, keys) {
+  const pool = cmpPool().filter((p) => p.position === pos && Number(p.minutes) >= CMP_MIN_MINUTES);
+  const out = {};
+  keys.forEach((k) => {
+    const vals = pool.map((p) => Number(p[k]) || 0);
+    const n = vals.length;
+    const mean = n ? vals.reduce((a, b) => a + b, 0) / n : 0;
+    const sd = n ? Math.sqrt(vals.reduce((a, b) => a + (b - mean) ** 2, 0) / n) : 0;
+    out[k] = { mean, sd, n };
+  });
+  return out;
+}
+function cmpRadius(value, st) {
+  const t = st.sd > 0 ? 50 + 10 * ((Number(value) || 0) - st.mean) / st.sd : 50;
+  const r = (t - CMP_T_LOW) / (CMP_T_HIGH - CMP_T_LOW);
+  return Math.max(0.06, Math.min(1, r));
+}
+
+/* ---- チャート本体（1080px幅・2倍解像度で書き出す） ---- */
+function drawCmpChart() {
+  const out = document.getElementById("cmp-out");
+  if (!out) return;
+  if (cmpSelected.length < 2) {
+    out.innerHTML = cmpSelected.length === 1
+      ? `<p class="cmp-hint">あと1人選ぶとレーダーチャートが出ます。</p>` : "";
+    return;
+  }
+  out.innerHTML = `<canvas id="cmp-canvas" class="cmp-canvas"></canvas>
+    <div class="cmp-actions"><button type="button" class="cmp-save" id="cmp-save">画像を保存（PNG）</button></div>`;
+
+  const canvas = document.getElementById("cmp-canvas");
+  paintCmpChart(canvas, cmpSelected);
+  document.getElementById("cmp-save").addEventListener("click", () => {
+    const nm = cmpSelected.map((p) => p.name).join("-vs-").replace(/[^\w-]/g, "");
+    canvas.toBlob((blob) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `fpl-compare-${nm || "players"}.png`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }, "image/png");
+  });
+}
+
+function paintCmpChart(canvas, players) {
+  const W = 1080, SCALE = 2;
+  const pos = players[0].position;
+  const keys = CMP_AXES[pos] || CMP_AXES.MF;
+  const stats = cmpStats(pos, keys);
+
+  const F = (w, s) => `${w} ${s}px "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif`;
+  const legendRows = Math.ceil(players.length / 2);
+  const headerH = 152;
+  const legendH = 24 + legendRows * 104;
+  const valueLine = 27;                          // 実数値1行ぶんの高さ
+  const blockH = 34 + players.length * valueLine; // 軸ラベル＋人数ぶんの実数値
+  const R = 300;
+  const radarH = 2 * (R + blockH + 26);
+  const footerH = 64;
+  const H = headerH + legendH + radarH + footerH;
+
+  canvas.width = W * SCALE;
+  canvas.height = H * SCALE;
+  canvas.style.width = "100%";
+  const ctx = canvas.getContext("2d");
+  ctx.scale(SCALE, SCALE);
+  ctx.textBaseline = "alphabetic";
+
+  // 背景
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, W, H);
+
+  // ヘッダー帯
+  ctx.fillStyle = "#37003c";
+  ctx.fillRect(0, 0, W, headerH);
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = F(800, 40);
+  const title = players.map((p) => p.name).join(" vs ");
+  cmpFitText(ctx, title, W - 80, 40, 800);
+  ctx.fillText(title, W / 2, 66);
+  ctx.fillStyle = "#cbb8d2";
+  ctx.font = F(600, 21);
+  ctx.fillText(`${cmpSeasonLabel()} ／ 同ポジション（${pos}・${CMP_MIN_MINUTES}分以上）内の偏差値で描画`, W / 2, 106);
+  ctx.font = F(700, 19);
+  ctx.fillText("FPL侍", W / 2, 136);
+
+  // 凡例（縦バー・名前・クラブ/POS/価格を、すべて本人の色で）
+  ctx.textAlign = "left";
+  players.forEach((p, i) => {
+    const col = i % 2, row = Math.floor(i / 2);
+    const x = col === 0 ? 60 : W / 2 + 20;
+    const y = headerH + 24 + row * 104;
+    const color = CMP_COLORS[i];
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, 10, 76);                    // 縦バー（幅10px）
+    ctx.font = F(800, 32);
+    cmpFitText(ctx, p.name, W / 2 - 130, 32, 800);
+    ctx.fillText(p.name, x + 24, y + 34);
+    ctx.font = F(600, 21);
+    ctx.fillText(`${p.team}・${p.position}・£${Number(p.cost).toFixed(1)}`, x + 24, y + 66);
+  });
+
+  // レーダー
+  const cx = W / 2, cy = headerH + legendH + radarH / 2;
+  const n = keys.length;
+  const ang = (i) => -Math.PI / 2 + (i * 2 * Math.PI) / n;
+  const pt = (i, r) => [cx + Math.cos(ang(i)) * R * r, cy + Math.sin(ang(i)) * R * r];
+
+  ctx.strokeStyle = "#e3e3e8";
+  ctx.lineWidth = 2;
+  [0.25, 0.5, 0.75, 1].forEach((r) => {
+    ctx.beginPath();
+    keys.forEach((_, i) => { const [x, y] = pt(i, r); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.closePath();
+    ctx.stroke();
+  });
+  keys.forEach((_, i) => {
+    const [x, y] = pt(i, 1);
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke();
+  });
+
+  players.forEach((p, pi) => {
+    const color = CMP_COLORS[pi];
+    const pts = keys.map((k, i) => pt(i, cmpRadius(p[k], stats[k])));
+    ctx.beginPath();
+    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    ctx.closePath();
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 5;
+    ctx.stroke();
+    pts.forEach(([x, y]) => {
+      ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2);
+      ctx.fillStyle = color; ctx.fill();
+    });
+  });
+
+  // 軸ラベル＋実数値（上段が1人目＝パープル、その下がピンク…）
+  keys.forEach((k, i) => {
+    const a = ang(i);
+    const lx = cx + Math.cos(a) * (R + 34);
+    const ly = cy + Math.sin(a) * (R + 34);
+    const cos = Math.cos(a), sin = Math.sin(a);
+    ctx.textAlign = Math.abs(cos) < 0.3 ? "center" : (cos > 0 ? "left" : "right");
+    // ブロックが図に重ならないよう、上半分は上へ・下半分は下へ伸ばす
+    let top = ly - blockH / 2;
+    if (sin < -0.3) top = ly - blockH + 12;
+    else if (sin > 0.3) top = ly - 12;
+
+    ctx.fillStyle = "#6b6b74";
+    ctx.font = F(700, 23);
+    ctx.fillText(CMP_AXIS_META[k].label, lx, top + 24);
+    players.forEach((p, pi) => {
+      ctx.fillStyle = CMP_COLORS[pi];
+      ctx.font = F(800, 23);
+      ctx.fillText(CMP_AXIS_META[k].fmt(p[k]), lx, top + 24 + (pi + 1) * valueLine);
+    });
+  });
+
+  // 出典
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#9a9aa3";
+  ctx.font = F(600, 19);
+  ctx.fillText("データ出典：Fantasy Premier League 公式API ／ fplsamurai.github.io", W / 2, H - 24);
+}
+
+// 幅に収まらない文字列はフォントを縮めて対応（長い名前が2人並ぶヘッダー用）
+function cmpFitText(ctx, text, maxW, size, weight) {
+  let s = size;
+  while (s > 16 && ctx.measureText(text).width > maxW) {
+    s -= 2;
+    ctx.font = `${weight} ${s}px "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif`;
+  }
+}
+
+// 開幕前は昨季データを表示しているので、その期間をヘッダーに出す
+function cmpSeasonLabel() {
+  const gw = (DATA.meta && DATA.meta.latest_gameweek) || "";
+  return (!gw || gw === "未開幕") ? "25/26 全38節" : `26/27 ${gw}まで`;
 }
 
 /* ===========================================================
