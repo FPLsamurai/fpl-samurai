@@ -210,7 +210,8 @@ function renderSetPieces() {
    比較：選手レーダーチャート（X投稿・動画用の画像を書き出す）
 
    ・選手を1人選ぶと、同ポジションの選手を足していける（合計4人まで）
-   ・軸はポジションごとに固定（共通3＋ポジション別）
+   ・軸は初期＝ポジション標準（共通3＋ポジション別）。
+     「スタッツを選ぶ」を選んだときだけチェックリストが開き、3〜8個で自由に組める
    ・目盛りは「同ポジション・900分以上」の中での偏差値
        T = 50 + 10 ×(値 − 平均)÷標準偏差 を T25〜T78 → 半径0〜1（最小0.06）
    ・数字は実数値だけを軸ラベルの下に出す（偏差値は出さない）
@@ -236,17 +237,65 @@ const CMP_AXIS_META = {
   bonus:        { label: "ボーナス",   fmt: (v) => String(v) },
   xg:           { label: "xG",         fmt: (v) => Number(v).toFixed(2) },
   xg90:         { label: "xG/90",      fmt: (v) => Number(v).toFixed(2) },
+  // ここから下は「スタッツを選ぶ」で足せる項目（標準の軸には入らない）
+  xa:           { label: "xA",         fmt: (v) => Number(v).toFixed(2) },
+  xa90:         { label: "xA/90",      fmt: (v) => Number(v).toFixed(2) },
+  g_minus_xg:   { label: "G-xG",       fmt: (v) => Number(v).toFixed(2) },
+  defcon90:     { label: "DEFCON/90",  fmt: (v) => Number(v).toFixed(2) },
+  saves90:      { label: "セーブ/90",  fmt: (v) => Number(v).toFixed(2) },
+  minutes:      { label: "出場時間",   fmt: (v) => String(v) },
+  ownership:    { label: "所持率",     fmt: (v) => Number(v).toFixed(1) + "%" },
+  value:        { label: "コスパ",     fmt: (v) => Number(v).toFixed(2) },
+  ppg:          { label: "Pts/試合",   fmt: (v) => Number(v).toFixed(1) },
 };
+// ポジション標準の軸（初期表示）
 const CMP_AXES = {
   GK: ["starts", "cost", "points", "clean_sheets", "saves", "pk_saved"],
   DF: ["starts", "cost", "points", "clean_sheets", "defcon", "goals", "assists"],
   MF: ["starts", "cost", "points", "goals", "assists", "defcon", "bonus"],
   FW: ["starts", "cost", "points", "goals", "assists", "xg", "xg90", "bonus"],
 };
+// 「スタッツを選ぶ」で選べる候補（ポジションごとに意味のあるものだけ）
+const CMP_AXIS_CHOICES = {
+  GK: ["starts", "cost", "points", "minutes", "ownership", "value", "ppg", "bonus",
+       "clean_sheets", "saves", "saves90", "pk_saved"],
+  DF: ["starts", "cost", "points", "minutes", "ownership", "value", "ppg", "bonus",
+       "clean_sheets", "defcon", "defcon90", "goals", "assists", "xg", "xa"],
+  MF: ["starts", "cost", "points", "minutes", "ownership", "value", "ppg", "bonus",
+       "clean_sheets", "defcon", "defcon90", "goals", "assists", "xg", "xg90", "xa", "xa90"],
+  FW: ["starts", "cost", "points", "minutes", "ownership", "value", "ppg", "bonus",
+       "goals", "assists", "xg", "xg90", "xa", "xa90", "g_minus_xg"],
+};
+const CMP_AXIS_MIN = 3;   // レーダーとして成立する最小
+const CMP_AXIS_MAX = 8;   // これより多いとラベルがぶつかる
+const CMP_AXIS_KEY = "fpl_cmp_axes_v1";   // 自分で選んだ軸の保存先
 
 let cmpSelected = [];     // 選んだ選手（表示順＝色の順）
 let cmpQuery = "";        // 検索欄の文字
 let cmpPending = null;    // ポジション違いで確認待ちの選手
+// 自分で選んだ軸（ポジション別に記憶）。空＝そのポジションは標準のまま
+let cmpCustomAxes = (() => {
+  try {
+    const s = JSON.parse(localStorage.getItem(CMP_AXIS_KEY));
+    if (s && typeof s === "object") return s;
+  } catch (e) {}
+  return {};
+})();
+function saveCmpAxes() {
+  try { localStorage.setItem(CMP_AXIS_KEY, JSON.stringify(cmpCustomAxes)); } catch (e) {}
+}
+
+/* いま使う軸。自分で選んだ軸があればそれ、無ければポジション標準。
+   ポジションを変えて使えない項目が混ざったら取り除き、3個未満になったら標準に戻す */
+function cmpAxisKeys(pos) {
+  const std = CMP_AXES[pos] || CMP_AXES.MF;
+  const allowed = CMP_AXIS_CHOICES[pos] || CMP_AXIS_CHOICES.MF;
+  const custom = (cmpCustomAxes[pos] || []).filter((k) => allowed.includes(k));
+  return custom.length >= CMP_AXIS_MIN ? custom : std;
+}
+function cmpIsCustom(pos) {
+  return cmpAxisKeys(pos) !== (CMP_AXES[pos] || CMP_AXES.MF);
+}
 
 function cmpPool() {
   return (DATA.players && DATA.players.all) || [];
@@ -268,6 +317,7 @@ function renderCompare() {
         <input type="text" id="cmp-q" placeholder="選手名で検索（例：Haaland / ハーランド）" value="${esc(cmpQuery)}">
       </div>
       <div id="cmp-cands" class="cmp-cands"></div>
+      <div id="cmp-axes"></div>
       <div id="cmp-out"></div>
     </div>`;
 
@@ -275,7 +325,65 @@ function renderCompare() {
   q.addEventListener("input", () => { cmpQuery = q.value.trim().toLowerCase(); cmpPending = null; drawCmpCands(); });
   drawCmpPicked();
   drawCmpCands();
+  drawCmpAxes();
   drawCmpChart();
+}
+
+/* ---- 軸の切り替え（初期＝ポジション標準。「スタッツを選ぶ」でチェックリスト） ---- */
+function drawCmpAxes() {
+  const box = document.getElementById("cmp-axes");
+  if (!box) return;
+  if (!cmpSelected.length) { box.innerHTML = ""; return; }
+
+  const pos = cmpSelected[0].position;
+  const std = CMP_AXES[pos] || CMP_AXES.MF;
+  const custom = cmpIsCustom(pos);
+  const now = cmpAxisKeys(pos);
+
+  let html = `<div class="cmp-axis-row">
+    <label class="cmp-axis-label">軸</label>
+    <select id="cmp-axis-mode" class="cmp-axis-mode">
+      <option value="std" ${custom ? "" : "selected"}>標準（${esc(pos)}・${std.length}軸）</option>
+      <option value="custom" ${custom ? "selected" : ""}>スタッツを選ぶ…（${now.length}軸）</option>
+    </select>
+  </div>`;
+
+  if (custom) {
+    const choices = CMP_AXIS_CHOICES[pos] || CMP_AXIS_CHOICES.MF;
+    const on = new Set(now);
+    const items = choices.map((k) => {
+      const checked = on.has(k);
+      // 上限に達したら未チェックを、下限に達したらチェック済みを押せなくする
+      const dis = (!checked && on.size >= CMP_AXIS_MAX) || (checked && on.size <= CMP_AXIS_MIN);
+      return `<label class="cmp-axis-item${checked ? " on" : ""}${dis ? " off" : ""}">
+        <input type="checkbox" data-cmp-axis="${k}" ${checked ? "checked" : ""} ${dis ? "disabled" : ""}>
+        ${esc(CMP_AXIS_META[k].label)}</label>`;
+    }).join("");
+    html += `<div class="cmp-axis-list">
+      <div class="cmp-axis-count">${on.size}/${CMP_AXIS_MAX} 選択中（${CMP_AXIS_MIN}〜${CMP_AXIS_MAX}個）</div>
+      <div class="cmp-axis-items">${items}</div>
+    </div>`;
+  }
+  box.innerHTML = html;
+
+  document.getElementById("cmp-axis-mode").addEventListener("change", (e) => {
+    // 「スタッツを選ぶ」は標準を土台にして編集を始める（＝ここで初めてチェックリストが出る）
+    if (e.target.value === "custom") cmpCustomAxes[pos] = [...std];
+    else delete cmpCustomAxes[pos];
+    saveCmpAxes();
+    drawCmpAxes(); drawCmpChart();
+  });
+
+  box.querySelectorAll("[data-cmp-axis]").forEach((cb) => cb.addEventListener("change", () => {
+    const k = cb.dataset.cmpAxis;
+    const choices = CMP_AXIS_CHOICES[pos] || CMP_AXIS_CHOICES.MF;
+    const set = new Set(cmpAxisKeys(pos));
+    cb.checked ? set.add(k) : set.delete(k);
+    // 並び順は選んだ順ではなく決まった順（図の形が安定する）
+    cmpCustomAxes[pos] = choices.filter((c) => set.has(c));
+    saveCmpAxes();
+    drawCmpAxes(); drawCmpChart();
+  }));
 }
 
 /* ---- 選んだ選手（色つきチップ） ---- */
@@ -293,12 +401,12 @@ function drawCmpPicked() {
     <button type="button" class="cmp-clear" data-cmp-clear>すべて外す</button></div>`;
   box.querySelectorAll("[data-cmp-del]").forEach((b) => b.addEventListener("click", () => {
     cmpSelected.splice(Number(b.dataset.cmpDel), 1);
-    drawCmpPicked(); drawCmpCands(); drawCmpChart();
+    drawCmpPicked(); drawCmpCands(); drawCmpAxes(); drawCmpChart();
   }));
   const clear = box.querySelector("[data-cmp-clear]");
   if (clear) clear.addEventListener("click", () => {
     cmpSelected = []; cmpPending = null;
-    drawCmpPicked(); drawCmpCands(); drawCmpChart();
+    drawCmpPicked(); drawCmpCands(); drawCmpAxes(); drawCmpChart();
   });
 }
 
@@ -320,7 +428,7 @@ function drawCmpCands() {
     box.querySelector("[data-cmp-yes]").addEventListener("click", () => {
       cmpSelected.push(cmpPending); cmpPending = null;
       cmpClearQuery();
-      drawCmpPicked(); drawCmpCands(); drawCmpChart();
+      drawCmpPicked(); drawCmpCands(); drawCmpAxes(); drawCmpChart();
     });
     box.querySelector("[data-cmp-no]").addEventListener("click", () => { cmpPending = null; drawCmpCands(); });
     return;
@@ -352,7 +460,7 @@ function drawCmpCands() {
     if (basePos && p.position !== basePos) { cmpPending = p; drawCmpCands(); return; }
     cmpSelected.push(p);
     cmpClearQuery();
-    drawCmpPicked(); drawCmpCands(); drawCmpChart();
+    drawCmpPicked(); drawCmpCands(); drawCmpAxes(); drawCmpChart();
   }));
 }
 
@@ -411,7 +519,7 @@ function drawCmpChart() {
 function paintCmpChart(canvas, players) {
   const W = 1080, SCALE = 2;
   const pos = players[0].position;
-  const keys = CMP_AXES[pos] || CMP_AXES.MF;
+  const keys = cmpAxisKeys(pos);
   const stats = cmpStats(pos, keys);
 
   const F = (w, s) => `${w} ${s}px "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif`;
