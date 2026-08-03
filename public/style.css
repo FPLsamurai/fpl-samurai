@@ -1240,6 +1240,17 @@ tbody tr:nth-child(even) {
 }
 .cmp-yes { background: #ff2882; color: #fff; }
 .cmp-no { background: #ececf0; color: var(--text); }
+.cmp-actions { margin: 10px 0 4px; text-align: center; }
+.cmp-save {
+  border: 0;
+  background: var(--pl-purple);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-radius: 999px;
+  padding: 11px 22px;
+  cursor: pointer;
+}
 .cmp-canvas {
   display: block;
   width: 100%;

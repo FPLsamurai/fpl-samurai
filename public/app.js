@@ -225,7 +225,7 @@ const CMP_T_LOW = 25, CMP_T_HIGH = 78;  // この偏差値の幅を半径0〜1�
 // 軸の定義（共通3つ＋ポジション別）。fmt=実数値の書き方
 const CMP_AXIS_META = {
   starts:       { label: "スタメン",   fmt: (v) => String(v) },
-  cost:         { label: "コスト",     fmt: (v) => "£" + Number(v).toFixed(1) },
+  cost:         { label: "価格",       fmt: (v) => "£" + Number(v).toFixed(1) },
   points:       { label: "ポイント",   fmt: (v) => String(v) },
   clean_sheets: { label: "無失点",     fmt: (v) => String(v) },
   saves:        { label: "セーブ",     fmt: (v) => String(v) },
@@ -256,7 +256,7 @@ function cmpKey(p) { return `${p.name}|${p.team}|${p.position}`; }
 function renderCompare() {
   const note = document.getElementById("players-note");
   const box = document.getElementById("players-content");
-  note.textContent = "選手を選ぶと、同じポジションの中での偏差値でレーダーチャートを描きます。";
+  note.textContent = "選手を選ぶと、同じポジションの中での偏差値でレーダーチャートを描きます（画像として保存できます）。";
 
   if (!cmpPool().length) {
     box.innerHTML = emptyMessage("まだ選手データがありません。<br>新シーズンが始まると比較できるようになります。");
@@ -391,8 +391,21 @@ function drawCmpChart() {
       ? `<p class="cmp-hint">あと1人選ぶとレーダーチャートが出ます。</p>` : "";
     return;
   }
-  out.innerHTML = `<canvas id="cmp-canvas" class="cmp-canvas"></canvas>`;
-  paintCmpChart(document.getElementById("cmp-canvas"), cmpSelected);
+  out.innerHTML = `<canvas id="cmp-canvas" class="cmp-canvas"></canvas>
+    <div class="cmp-actions"><button type="button" class="cmp-save" id="cmp-save">画像を保存（PNG）</button></div>`;
+
+  const canvas = document.getElementById("cmp-canvas");
+  paintCmpChart(canvas, cmpSelected);
+  document.getElementById("cmp-save").addEventListener("click", () => {
+    const nm = cmpSelected.map((p) => p.name).join("-vs-").replace(/[^\w-]/g, "");
+    canvas.toBlob((blob) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `fpl-compare-${nm || "players"}.png`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }, "image/png");
+  });
 }
 
 function paintCmpChart(canvas, players) {
@@ -540,7 +553,7 @@ const COL_META = {
   team:        { label: "チーム",    type: "team",  frozen: true, width: 46, noSort: true },
   name:        { label: "選手名",    type: "name",  frozen: true, width: 130, lock: true },
   position:    { label: "POS",      type: "pos",   frozen: true, width: 46 },
-  cost:        { label: "コスト",    type: "num",   frozen: true, width: 56 },
+  cost:        { label: "価格",      type: "num",   frozen: true, width: 56 },
   points:      { label: "ポイント",  type: "num",   frozen: true, width: 62 },
   value:       { label: "コスパ",    type: "num" },
   ownership:   { label: "所持率",    type: "num" },
@@ -1719,7 +1732,7 @@ function initSquadEditor(entry, picksData, gw, livePoints) {
     mode: "recent",       // recent=直近節の結果表示 ／ plan=次節以降のプラン編集
     pickTeam: "",         // 移籍候補のチーム絞り込み（空文字＝すべて）
     pickMax: null,        // 移籍候補のコスト絞り込み（£m以下）
-    pickStat: "cost",     // 移籍候補のスタッツ絞り込みの初期値＝コスト（コスト降順＋£表示。「なし」も選べる）
+    pickStat: "cost",     // 移籍候補のスタッツ絞り込みの初期値＝価格（価格の降順＋£表示。「なし」も選べる）
     pickOpen: null,       // 詳細を開いている候補の element_id（プルダウン展開）
   };
   restorePlans();
@@ -2385,7 +2398,7 @@ function renderMtPicker(query) {
       <label class="mt-fstat">スタッツ
         <select id="mt-picker-stat"><option value="">なし</option>${statOptHtml}</select>
       </label>
-      <label class="mt-maxwrap">コスト£<input id="mt-picker-max" type="number" inputmode="decimal" step="0.5" min="3.5" max="15.5" value="${MT.pickMax != null ? MT.pickMax : ""}" placeholder="なし">m以下</label>
+      <label class="mt-maxwrap">価格£<input id="mt-picker-max" type="number" inputmode="decimal" step="0.5" min="3.5" max="15.5" value="${MT.pickMax != null ? MT.pickMax : ""}" placeholder="なし">m以下</label>
     </div>
     <div class="mt-picker-list">${rowHtml}</div>`;
   const newList = box.querySelector(".mt-picker-list");
@@ -2420,9 +2433,9 @@ function renderMtPicker(query) {
   }));
 }
 
-// 移籍候補のスタッツ絞り込みの選択肢（cost は elements のコスト、他は players.all）
+// 移籍候補のスタッツ絞り込みの選択肢（cost は elements の価格、他は players.all）
 const STAT_FILTER_OPTS = [
-  ["points", "ポイント"], ["cost", "コスト"], ["goals", "ゴール"], ["assists", "アシスト"],
+  ["points", "ポイント"], ["cost", "価格"], ["goals", "ゴール"], ["assists", "アシスト"],
   ["clean_sheets", "無失点"], ["defcon90", "DEFCON/90"], ["saves", "セーブ"],
   ["pk_saved", "PKストップ"], ["xg90", "xG/90"], ["xa90", "xA/90"], ["bonus", "ボーナス"],
 ];
