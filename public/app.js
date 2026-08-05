@@ -703,7 +703,7 @@ const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
 const PHOTO_BASE = "https://resources.premierleague.com/premierleague25/photos/players/110x140/";
 const BADGE_BASE = "https://resources.premierleague.com/premierleague/badges/70/t";
 // 設定の保存キー。標準の列構成を変えたら末尾のバージョンを上げる（全員に新標準を適用するため）
-const CONFIG_KEY = "fpl_player_cols_v5";
+const CONFIG_KEY = "fpl_player_cols_v6";
 
 let playerSort = { key: "points", dir: "desc" };
 // チーム・ポジションは複数選択（空配列＝絞り込みなし）
@@ -721,7 +721,8 @@ let recentWindow = (() => {
 
 /* ---- 列の表示設定の保存・読み込み（ブラウザに記憶） ---- */
 function defaultColState() {
-  return { dataOrder: [...DATA_ORDER_DEFAULT], hidden: {}, freezeUntil: "name" };
+  // 写真は初期は非表示（⚙列の表示・並び替えでオンにできる）
+  return { dataOrder: [...DATA_ORDER_DEFAULT], hidden: { photo: true }, freezeUntil: "name" };
 }
 function loadColState() {
   try {
