@@ -800,7 +800,6 @@ function renderPlayerRich(key) {
   box.innerHTML = `
     <div id="col-manager"></div>
     ${segHtml}
-    <p class="note" style="margin:6px 0;">該当：<span id="player-count"></span>人</p>
     <div class="fullbleed">
       <div class="data-table-wrap">
         <table class="rich">
@@ -1032,8 +1031,6 @@ function refreshPlayerBody() {
       arr.className = "arr";
     }
   });
-  document.getElementById("player-count").textContent = filtered.length;
-
   let html = "";
   filtered.forEach((r, i) => {
     let tds = "";
@@ -1281,26 +1278,23 @@ function renderTeams(key) {
   const box = document.getElementById("teams-content");
   const teams = DATA.teams || {};
 
+  note.textContent = "";   // 選手タブと同じく説明文は出さず、表を上に詰める
+
   if (key === "totals") {
-    note.textContent = "シーズン合計。失点＝実際に取られた得点、無失点率＝無失点で終えた割合。xG=攻撃の期待値、被xG=守備で許した期待値。見出しをタップで並べ替え。";
     drawTeamRankTable(box, teams.totals || []);
   } else if (key === "recent") {
-    renderTeamRecent(box, note);
+    renderTeamRecent(box);
   } else if (key === "home") {
-    note.textContent = "ホーム試合のみの合計。見出しをタップで並べ替え。";
     drawTeamRankTable(box, teams.home || []);
   } else if (key === "away") {
-    note.textContent = "アウェイ試合のみの合計。見出しをタップで並べ替え。";
     drawTeamRankTable(box, teams.away || []);
   } else if (key === "by_gw") {
-    note.textContent = "チームを選ぶと、節ごとの各データが見られます。";
     drawTeamByGw(box, teams.by_gw || []);
   }
 }
 
 // 「直近」タブ：期間セグメント（1/3/5/10試合）＋ランキング表
-function renderTeamRecent(box, note) {
-  note.textContent = "直近N試合の合計（期間は下のボタンで切替）。見出しをタップで並べ替え。";
+function renderTeamRecent(box) {
   const win = teamRecentWindow;
   const rows = (DATA.teams && DATA.teams[win]) || [];
   const seg = `<div class="recent-seg" id="team-recent-seg">
@@ -1313,7 +1307,7 @@ function renderTeamRecent(box, note) {
   box.querySelectorAll("#team-recent-seg button[data-win]").forEach((b) => b.addEventListener("click", () => {
     teamRecentWindow = b.dataset.win;
     try { localStorage.setItem("fpl_team_recent_window", teamRecentWindow); } catch (e) {}
-    renderTeamRecent(box, note);
+    renderTeamRecent(box);
   }));
 }
 

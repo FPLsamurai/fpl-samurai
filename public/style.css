@@ -580,6 +580,8 @@ main {
   color: var(--muted);
   margin: 0 0 12px;
 }
+/* 説明文が空のときは余白ごと消す（表を上に詰める） */
+.note:empty { display: none; }
 
 /* ---------- サブタブ（選手ランキングの中の切り替え） ---------- */
 .subtabs {
