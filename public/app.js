@@ -2650,7 +2650,7 @@ async function loadLeagueStandings(leagueId, leagueName, myEntryId) {
    （APIキー不要。取得に失敗しても固定の「ルール解説」だけは表示されます）
    =========================================================== */
 const YT_CHANNEL_ID = "UCyn1RapHcZDrtnXDKLF93SQ";  // FPL侍チャンネル
-const YT_RULE_ID = "D8Grf9fL_Wc";                  // 固定表示しているルール解説（最新枠から除外）
+const YT_RULE_ID = "g9Mkt1CIMZc";                  // 固定表示しているルール解説（最新枠から除外）
 
 async function loadYouTube() {
   const grid = document.getElementById("yt-grid");
