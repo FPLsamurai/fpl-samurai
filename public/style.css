@@ -82,32 +82,19 @@ body {
 .rules-doc ul { margin: 6px 0; padding-left: 1.3em; }
 .rules-doc ol { margin: 6px 0; padding-left: 1.5em; }
 .rules-doc li { font-size: 0.9rem; margin: 3px 0; }
-/* 開幕前の締切告知（GW1が終わったらHTMLごと削除する） */
-.rules-deadline {
-  margin: 0 0 12px;
-  padding: 10px 12px;
-  background: #fff4e0;
-  border: 1px solid #f2d09a;
-  border-radius: 10px;
-  font-size: 0.88rem;
-  line-height: 1.6;
-}
-/* 今季の変更点まとめ */
-.rules-new {
+/* ミニリーグの招待コード */
+.rules-code {
   background: #f3ecf5;
   border: 1px solid #ddc9e2;
   border-radius: 10px;
-  padding: 12px 16px 14px;
-  margin: 14px 0;
-}
-.rules-new-title {
-  margin: 0 0 8px;
-  font-size: 0.9rem;
-  font-weight: 800;
+  padding: 10px 14px;
+  margin: 10px 0 4px;
+  font-size: 0.95rem;
+  font-weight: 700;
   color: var(--pl-purple);
+  line-height: 1.6;
 }
-.rules-new ul { margin: 0; padding-left: 18px; }
-.rules-new li { font-size: 0.86rem; line-height: 1.6; margin: 5px 0; }
+.rules-code .rules-sub { display: block; font-weight: 500; margin-top: 2px; }
 
 /* 目次（ルール解説の冒頭。タップで各セクションへ） */
 .rules-toc {
