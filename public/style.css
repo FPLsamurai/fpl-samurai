@@ -1692,13 +1692,6 @@ tr.me-row td { background: #eafff3 !important; }
   padding: 8px 10px;
   margin-bottom: 8px;
   text-align: center;
-  opacity: 1;
-  transition: opacity 0.4s ease;
-}
-/* 3秒表示した後、うっすらフェードして消える（消える直前にタップできてしまわないように） */
-.mt-msg.is-fading {
-  opacity: 0;
-  pointer-events: none;
 }
 /* スカッド上の情報スロット（計画＝操作説明/選手バー/通知、直近節＝合計と平均）。
    高さを固定して、内容が切り替わってもスカッドが上下に動かないようにする */
@@ -2082,7 +2075,7 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   border: 1.5px solid #1b1b1f;
   border-top: none;
 }
-.mt-pts.p01 { background: #fe1752; color: #1b1b1f; }
+.mt-pts.pneg { background: #fe1752; color: #1b1b1f; }
 .mt-pts.p23 { background: #e7e7e7; color: #1b1b1f; }
 .mt-pts.p49 { background: #12fc7a; color: #1b1b1f; }
 .mt-pts.p10 { background: #49b605; color: #1b1b1f; }

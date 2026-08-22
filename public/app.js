@@ -133,6 +133,12 @@ function setupParentTabs() {
   applyHash();   // 直リンク・リロード時に初期タブを決める
 }
 
+// 操作を始めたらメッセージを消す（各ハンドラの先頭で呼ぶ）。
+// 消したあとで新しいメッセージを立てる操作もあるので、必ず処理より前に呼ぶこと
+function clearMtMsg() {
+  if (MT) MT.msg = null;
+}
+
 function setupSubtabs() {
   document.querySelectorAll(".subtabs").forEach((group) => {
     const name = group.dataset.group;
@@ -2017,7 +2023,6 @@ function initSquadEditor(entry, picksData, gw, livePoints) {
     outs: [],             // 移籍OUT対象の position 一覧（✕タップ＝半透明。複数可・押した順）
     pickQ: "",            // 移籍候補の検索文字列（再描画時に保持）
     msg: null,
-    msgToken: 0,          // ポップアップの世代番号（フェード中に次のメッセージへ差し替わっても誤って消さないため）
     mode: "recent",       // recent=直近節の結果表示 ／ plan=次節以降のプラン編集
     pickTeam: "",         // 移籍候補のチーム絞り込み（空文字＝すべて）
     pickMax: null,        // 移籍候補のコスト絞り込み（£m以下）
@@ -2049,6 +2054,7 @@ function bindMtOutsideClear() {
     MT.swapFrom = null;
     MT.outs = [];
     MT.pickQ = "";
+    MT.msg = null;
     renderSquadPitch();
   }, true);
 }
@@ -2189,12 +2195,7 @@ function mtCard(p) {
     if (pts == null) {
       foot = `<span class="mt-pts">-</span>`;
     } else {
-      let cls;
-      if (pts <= 1) cls = " p01";        // 0〜1pt
-      else if (pts <= 3) cls = " p23";   // 2,3pt
-      else if (pts <= 9) cls = " p49";   // 4〜9pt
-      else cls = " p10";                 // 10pt〜
-      foot = `<span class="mt-pts${cls}">${pts}pt</span>`;
+      foot = `<span class="mt-pts ${ptsClass(pts)}">${pts}pt</span>`;
     }
   }
   const nm = el.j || el.n;
@@ -2244,17 +2245,8 @@ function renderSquadPitch() {
     // 操作説明は固定表示。選手の詳細・C/V選択・移籍はカードのタップ／✕から行う
     let bar = "";
     if (MT.msg) {
+      // メッセージは時間では消さない。次に何か操作した時点で消える（clearMtMsg）
       bar = `<div class="mt-msg">${esc(MT.msg)}</div>`;
-      // 3秒後にうっすらフェードして消え、通常の説明文に戻る（同じ世代のメッセージが表示中の時だけ）
-      const token = ++MT.msgToken;
-      setTimeout(() => {
-        if (MT.msgToken !== token) return;
-        const el = document.querySelector("#mt-squad .mt-msg");
-        if (el) el.classList.add("is-fading");
-        setTimeout(() => {
-          if (MT.msgToken === token) { MT.msg = null; renderSquadPitch(); }
-        }, 400);
-      }, 2600);
     } else {
       // 何も選択していないときは操作の説明を常時表示（⇅✕はスカッドのアイコンと同じ見た目）
       bar = `<div class="mt-hint"><span class="mt-hint-ic ic-swap">⇅</span>でスタメンとベンチを入れ替え<span class="mt-hint-ic ic-x">✕</span>で移籍</div>`;
@@ -2319,6 +2311,7 @@ function renderSquadPitch() {
     // 左上⇅＝入れ替えフロー（詳細バーは出さない）。半透明で入れ替え元を示し、次のタップで実行
     wrap.querySelectorAll(".mt-ctrl-swap").forEach((s) => s.addEventListener("click", (e) => {
       e.stopPropagation();
+      clearMtMsg();
       const pos = +s.dataset.pos;
       if (MT.swapFrom === pos) { MT.swapFrom = null; renderSquadPitch(); return; }  // もう一度⇅で解除
       if (MT.swapFrom != null) {
@@ -2333,6 +2326,7 @@ function renderSquadPitch() {
     // 右上✕＝移籍フロー（詳細バーは出さない）。複数選手を同時にOUT対象にできる（もう一度✕で解除）
     wrap.querySelectorAll(".mt-ctrl-x").forEach((s) => s.addEventListener("click", (e) => {
       e.stopPropagation();
+      clearMtMsg();
       const pos = +s.dataset.pos;
       MT.sel = null;
       MT.swapFrom = null;
@@ -2341,6 +2335,7 @@ function renderSquadPitch() {
       renderSquadPitch();  // OUT対象があれば候補リストも自動で開く
     }));
     wrap.querySelectorAll(".mt-gw-btn").forEach((b) => b.addEventListener("click", () => {
+      clearMtMsg();
       if (b.dataset.gw === "prev" && MT.planGw > MT.basePlanGw) MT.planGw--;
       else if (b.dataset.gw === "next" && MT.planGw < 38) MT.planGw++;
       MT.sel = null; MT.swapFrom = null; MT.outs = [];
@@ -2349,6 +2344,7 @@ function renderSquadPitch() {
     }));
     // チップの選択（節ごとに1つ）。以降の節は前提が変わるので作り直す
     wrap.querySelector("#mt-chip").addEventListener("change", (e) => {
+      clearMtMsg();
       P.chip = e.target.value || null;
       invalidateAfter(MT.planGw);
       savePlans();
@@ -2356,6 +2352,7 @@ function renderSquadPitch() {
     });
     // 移籍/FTステータスのタップで無料移籍数を1〜5で切り替え（公開APIから取れないため手動設定）
     wrap.querySelector("#mt-ft-toggle").addEventListener("click", () => {
+      clearMtMsg();
       P.ft = (P.ft % 5) + 1;
       savePlans();
       renderSquadPitch();
@@ -2418,9 +2415,9 @@ function renderSquadPitch() {
   }
 }
 
-// ポイントバッジの色分け（0〜1=赤 / 2,3=灰 / 4〜9=薄緑 / 10〜=濃緑）
+// ポイントバッジの色分け（マイナス=赤 / 0〜3=灰 / 4〜9=薄緑 / 10pt〜=濃緑）
 function ptsClass(pts) {
-  if (pts <= 1) return "p01";
+  if (pts < 0) return "pneg";
   if (pts <= 3) return "p23";
   if (pts <= 9) return "p49";
   return "p10";
@@ -2600,6 +2597,7 @@ function openMtPlanStats(pos) {
 // カード本体タップ：入れ替え待ちなら緑枠の相手のみ実行、そうでなければ
 // 黄色枠＋シーズンスタッツ＋C/V選択のポップアップを開く
 function onMtCardClick(e) {
+  clearMtMsg();
   const pos = +e.currentTarget.dataset.pos;
   if (MT.swapFrom != null) {
     if (MT.swapFrom === pos) { MT.swapFrom = null; renderSquadPitch(); return; }
@@ -2800,6 +2798,7 @@ function pickDetailHtml(e) {
 }
 
 function doMtTransfer(inId) {
+  clearMtMsg();
   const P = MT.plans[MT.planGw];
   const inc = DATA.elements[String(inId)];
   if (!inc) return;
