@@ -78,26 +78,59 @@ async function applyPreseasonFallback() {
 }
 
 /* ---------- タブの仕組み ---------- */
-// 指定タブへ切り替え（タブボタン・ロゴ・カードから共通で使う）
+/* URLのハッシュ（#players など）が「今どのタブか」を持つ。
+   クリック・直リンク・ブラウザの戻るボタンは、すべて hashchange 経由で
+   applyHash() → activateTab() の1本に集約する（切替経路を増やさないため）。
+   パネルのidを panel-* にしているのは、#players がブラウザ標準の
+   アンカージャンプを起こしてスクロール位置が飛ぶのを避けるため。 */
+const TABS = ["home", "myteam", "players", "teams", "next", "rules"];
+
+// 指定タブへ切り替え（画面を実際に書き換えるのはここだけ）
 function activateTab(target) {
   document.querySelectorAll(".tab").forEach((t) =>
     t.classList.toggle("is-active", t.dataset.target === target));
   document.querySelectorAll(".panel").forEach((p) =>
-    p.classList.toggle("is-active", p.id === target));
+    p.classList.toggle("is-active", p.id === "panel-" + target));
   window.scrollTo({ top: 0 });
+}
+
+// 現在のハッシュを読んで反映
+function applyHash() {
+  const name = decodeURIComponent(location.hash.slice(1));
+  if (!name || TABS.includes(name)) { activateTab(name || "home"); return; }
+  // ルールタブの目次など、タブ名ではないページ内リンク（#rule-faq 等）。
+  // その見出しを含むタブを開いてから位置へ送る（直リンク・リロードでも効く）
+  const el = document.getElementById(name);
+  const panel = el && el.closest(".panel");
+  if (panel) {
+    if (!panel.classList.contains("is-active")) activateTab(panel.id.replace(/^panel-/, ""));
+    el.scrollIntoView();
+    // 画像の読み込みでレイアウトが伸び縮みして位置がずれるので、確定後にもう一度合わせる
+    if (document.readyState !== "complete") {
+      window.addEventListener("load", () => el.scrollIntoView(), { once: true });
+    }
+    return;
+  }
+  activateTab("home");   // 知らないハッシュはホームへ
+}
+
+// タブへ移動＝ハッシュを書き換えるだけ（履歴に積むので戻るボタンが効く）
+function goTab(target) {
+  if (location.hash.slice(1) === target) return;   // 同じタブの連打では履歴を増やさない
+  location.hash = target;
 }
 
 function setupParentTabs() {
   document.querySelectorAll(".tab").forEach((tab) => {
-    tab.addEventListener("click", () => activateTab(tab.dataset.target));
+    tab.addEventListener("click", () => goTab(tab.dataset.target));
   });
-  // ロゴ／タイトルのクリックでホームへ
-  const brand = document.getElementById("brand-home");
-  if (brand) brand.addEventListener("click", (e) => { e.preventDefault(); activateTab("home"); });
+  // ロゴ／タイトルのクリックでホームへ（href="#home" がそのまま効く）
   // ホームのカードからデータ各ページへ
   document.querySelectorAll(".nav-card[data-go]").forEach((c) => {
-    c.addEventListener("click", () => activateTab(c.dataset.go));
+    c.addEventListener("click", () => goTab(c.dataset.go));
   });
+  window.addEventListener("hashchange", applyHash);
+  applyHash();   // 直リンク・リロード時に初期タブを決める
 }
 
 function setupSubtabs() {
