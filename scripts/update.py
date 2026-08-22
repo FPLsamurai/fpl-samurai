@@ -722,6 +722,28 @@ def compute_team_next3(fixtures, team_map, team_matches, mu):
     return out
 
 
+def compute_team_fixtures(fixtures, team_map):
+    """
+    チームごとの「節→対戦相手」。スカッド計画タブで、カード下段に
+    その節の相手（3文字略称＋H/A）を出すために使う。
+    {team_id: {gw: [{"s": 相手の3文字略称, "h": ホームか, "d": 対戦難易度}, ...]}}
+    d は自分から見た公式FDR(1〜5。5=とても強い)。カードの背景色に使う。
+    ダブルGWは複数入り、ブランクGWはそのキー自体が無い。
+    """
+    out = {}
+    for f in fixtures:
+        gw = f.get("event")
+        if not gw:
+            continue  # 日程未定の試合は節が決まってから
+        for me, opp, home in ((f["team_h"], f["team_a"], True), (f["team_a"], f["team_h"], False)):
+            out.setdefault(str(me), {}).setdefault(str(gw), []).append({
+                "s": team_map.get(opp, {}).get("short", "?"),
+                "h": home,
+                "d": f.get("team_h_difficulty" if home else "team_a_difficulty") or 3,
+            })
+    return out
+
+
 def compute_player_goal_ranking(bootstrap, fixtures, team_matches, team_map, mu,
                                 player_rows, limit=10):
     """
@@ -860,6 +882,7 @@ def main():
         "players": player_tables,
         "elements": build_element_map(bootstrap, team_map, pos_map, jp_names),
         "team_next3": compute_team_next3(fixtures, team_map, team_matches, mu),
+        "team_fixtures": compute_team_fixtures(fixtures, team_map),
         "teams_meta": {str(tid): {"name": m["name_ja"], "short": m["short"], "code": m["code"]}
                        for tid, m in team_map.items()},
         "set_pieces": compute_set_pieces(bootstrap, team_map, jp_names),

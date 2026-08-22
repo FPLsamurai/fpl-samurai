@@ -1020,6 +1020,22 @@ table.rich td.fx-cell {
   min-width: 60px;
 }
 table.rich th.col-gw1, table.rich th.col-gw2, table.rich th.col-gw3 { text-align: center; }
+/* FDRの並び替え矢印は他の表と逆の意味づけ（小さい＝日程が楽なので昇順が緑） */
+.arr-easy { color: var(--easy); }
+.arr-hard { color: var(--hard); }
+
+/* FDRタブ：節の見出しは中央・狭め。ダブルGWは2行になるので行間を詰める */
+table.rich.tbl-fdr th.col-fdr { text-align: center; min-width: 56px; }
+table.rich.tbl-fdr td.fx-cell { line-height: 1.25; }
+table.rich.tbl-fdr td.fdr-none { background: var(--card); }
+/* 難易度列は選択節ぶんの合計。1〜5の色分けは当てはまらないのでグレー固定 */
+table.rich.tbl-fdr td.fdr-total {
+  background: #e7e7e7;
+  color: #1b1b1f;
+  font-size: 0.85rem;
+}
+table.rich.tbl-fdr tbody tr:nth-child(even) td.fdr-total { background: #e7e7e7; }
+
 /* 公式FDRの5段階（1=とても弱い … 5=とても強い） */
 table.rich td.fx-cell.fdr-1 { background: #12fc7a; color: #1b1b1f; }
 table.rich td.fx-cell.fdr-2 { background: #8ef5b7; color: #1b1b1f; }
@@ -1823,6 +1839,26 @@ button.mt-stat-btn {
 button.mt-stat-btn .mt-stat-v {
   border-bottom: 1.5px dashed var(--pl-purple);
 }
+/* WC・FHの節はFTが∞になるので、手動変更のボタンは無効化する */
+button.mt-stat-btn:disabled { opacity: 0.45; cursor: default; }
+button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
+/* チップ選択（節ごとに1つ）。見た目は他のステータスと揃え、破線で「選べる」ことを示す */
+.mt-stat-chip { cursor: pointer; }
+.mt-stat-chip select {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--pl-purple);
+  border: none;
+  border-bottom: 1.5px dashed var(--pl-purple);
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  max-width: 100%;
+  text-align: center;
+  text-align-last: center;
+  cursor: pointer;
+}
 
 /* この節の移籍プラン（OUT→IN一覧）＋リセット */
 .mt-transfers {
@@ -1961,7 +1997,13 @@ button.mt-stat-btn .mt-stat-v {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 2%;
+  /* BBのグラデーション枠（線幅3px）の内側にカードが収まるよう下げる。
+     元々カードが線の上端より約1px上にあったので、線幅+1pxぶん下げている */
+  bottom: calc(2% - 4px);
+  /* 背景のベンチ（薄緑）は左右非対称（左12.87%／右11.77%）なので、ピッチ幅で中央寄せすると
+     左端カードだけ枠線に深くかかる。枠の中心(50.55%)に合わせるぶんだけ右へずらす
+     （padding-left の半分だけ中央がずれるので 0.55%×2＝1.1%） */
+  padding-left: 1.1%;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -2044,6 +2086,47 @@ button.mt-stat-btn .mt-stat-v {
 .mt-pts.p23 { background: #e7e7e7; color: #1b1b1f; }
 .mt-pts.p49 { background: #12fc7a; color: #1b1b1f; }
 .mt-pts.p10 { background: #49b605; color: #1b1b1f; }
+/* 計画タブのカード下段＝その節の対戦相手（例 COV(H)）。ダブルGWでも1行に収める */
+.mt-fx {
+  font-size: 0.55rem;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 背景色は次節タブの「相手の強さ」バッジ（.strength.st-*）と同じ配色に揃える */
+.mt-fx.st-vhard { background: #81072d; color: #fff; }
+.mt-fx.st-hard  { background: #fe1752; color: #fff; }
+.mt-fx.st-mid   { background: #e7e7e7; color: #1b1b1f; }
+.mt-fx.st-weak  { background: #12fc7a; color: #1b1b1f; }
+/* TC（トリプルキャプテン）：C/Vバッジの枠線と中身の色を反転 */
+.mt-pitch-wrap.chip-3xc .mt-cv,
+.mt-pitch-wrap.chip-3xc .mt-cv.v {
+  background: #fff;
+  color: #000;
+  box-shadow: 0 0 0 2px #000;
+}
+/* BB（ベンチブースト）：背景画像のベンチ枠（薄緑の箱）をグラデーションの線で囲う。
+   位置は pitch.png のベンチ（薄緑の箱）の実測値（画像1274x1110 中 x164-1123 / y919）。
+   下辺は引かない（コの字）。
+   ::before なのでカードより奥に描かれ、選手の上に線が乗らない。 */
+.mt-pitch-wrap.chip-bboost::before {
+  content: "";
+  position: absolute;
+  left: 12.87%;
+  right: 11.77%;
+  top: 82.79%;
+  bottom: 0;
+  border-radius: 10px 10px 0 0;
+  padding: 3px 3px 0;               /* = 線の太さ。下だけ0にして下辺の線を消す */
+  background: linear-gradient(90deg, #5de0e6, #004aad);
+  /* 中身をくり抜いて「枠線だけ」にする（グラデーションはborderに直接指定できないため） */
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}
 
 /* 直近節タブ：カードタップで出る得点内訳ポップアップ（ピッチ枠の中に収め、下端をフィールド下端に合わせる） */
 .mt-bd-overlay {
@@ -2246,7 +2329,14 @@ button.mt-stat-btn .mt-stat-v {
 }
 .mt-pick-kit { flex: 0 0 26px; height: 30px; display: flex; align-items: center; }
 .mt-pick-kit img { height: 30px; width: auto; }
-.mt-pick-name { flex: 1; font-size: 0.9rem; font-weight: 600; }
+.mt-pick-name { flex: 1; min-width: 0; font-size: 0.9rem; font-weight: 600; }
+/* 英語名の右にそえる日本語名（補助情報なので薄く小さく） */
+.mt-pick-ja {
+  margin-left: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+}
 /* スタッツ絞り込み時に＋の左へ出る値 */
 .mt-pick-stat {
   flex: 0 0 auto;

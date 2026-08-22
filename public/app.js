@@ -1323,6 +1323,8 @@ function renderTeams(key) {
     drawTeamRankTable(box, teams.away || []);
   } else if (key === "by_gw") {
     drawTeamByGw(box, teams.by_gw || []);
+  } else if (key === "fdr") {
+    drawFdrTable(box);
   }
 }
 
@@ -1456,6 +1458,117 @@ function drawTeamByGw(box, byGw) {
   };
   picker.addEventListener("change", render);
   render();
+}
+
+/* ---- FDRタブ：チーム × 次のN節の対戦難易度表（いわゆるFDRティッカー） ---- */
+const FDR_WINDOWS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+let fdrWindow = (() => {
+  try { const s = +localStorage.getItem("fpl_fdr_window"); if (FDR_WINDOWS.includes(s)) return s; } catch (e) {}
+  return 6;
+})();
+let fdrSort = { key: "total", dir: "asc" };   // 既定＝合計が小さい順＝日程が楽な順
+
+// 表の開始節＝次の未消化節。next_fixtures の節名（例「第2節」）から取る
+function fdrStartGw() {
+  const m = String((DATA.next_fixtures && DATA.next_fixtures.event_name) || "").match(/(\d+)/);
+  if (m) return +m[1];
+  const g = metaGw();
+  return g ? Math.min(g + 1, 38) : 1;
+}
+
+function drawFdrTable(box) {
+  const tf = DATA.team_fixtures || {};
+  const meta = DATA.teams_meta || {};
+  if (!Object.keys(tf).length || !Object.keys(meta).length) {
+    return (box.innerHTML = emptyMessage("まだ日程データがありません。"));
+  }
+  const start = fdrStartGw();
+  const gws = [];
+  for (let g = start; g < start + fdrWindow && g <= 38; g++) gws.push(g);
+
+  // チームごとに、対象節の対戦相手と平均難易度をまとめる
+  const rows = Object.entries(meta).map(([id, m]) => {
+    const cells = gws.map((g) => (tf[id] || {})[String(g)] || []);
+    const ds = cells.flat().map((f) => fdrLevel(f.d));
+    return {
+      team: m.name,
+      cells,
+      // 難易度＝選択した節ぶんの合計（ダブルGWは2試合ぶん足される）
+      total: ds.length ? ds.reduce((a, b) => a + b, 0) : null,
+      games: ds.length,
+    };
+  });
+
+  const { key, dir } = fdrSort;
+  const gwVal = (r, i) => {
+    const list = r.cells[i];
+    if (!list.length) return dir === "asc" ? 999 : -1;   // ブランクGWは常に端へ
+    return list.reduce((n, f) => n + fdrLevel(f.d), 0);
+  };
+  rows.sort((a, b) => {
+    if (key === "team") return dir === "asc" ? a.team.localeCompare(b.team, "ja") : b.team.localeCompare(a.team, "ja");
+    let av, bv;
+    if (key.startsWith("gw:")) { const i = +key.slice(3); av = gwVal(a, i); bv = gwVal(b, i); }
+    else { av = a.total == null ? 999 : a.total; bv = b.total == null ? 999 : b.total; }
+    return dir === "asc" ? av - bv : bv - av;
+  });
+
+  // 矢印の色は他の表と逆（FDRは小さいほど良いので、昇順＝緑・降順＝赤）
+  const arrow = (k) => (fdrSort.key === k
+    ? `<span class="arr ${dir === "asc" ? "arr-easy" : "arr-hard"}">${dir === "asc" ? "↑" : "↓"}</span>`
+    : `<span class="arr"></span>`);
+  const head = `<th class="rank">順位</th>
+    <th class="col-name sortable" data-sort="team">チーム${arrow("team")}</th>
+    <th class="num sortable" data-sort="total">難易度${arrow("total")}</th>
+    ${gws.map((g, i) => `<th class="col-fdr sortable" data-sort="gw:${i}">GW${g}${arrow("gw:" + i)}</th>`).join("")}`;
+
+  const cellHtml = (list) => {
+    if (!list.length) return `<td class="fx-cell fdr-none"><span class="sub">—</span></td>`;
+    // ダブルGWは相手を2行に重ね、色は難しい方に合わせる（スカッドのカードと同じ扱い）
+    const lv = Math.max(...list.map((f) => fdrLevel(f.d)));
+    const txt = list.map((f) => `${esc(fxShort(f))}(${f.h ? "H" : "A"})`).join("<br>");
+    const tip = list.map((f) => `${fxShort(f)}（${f.h ? "ホーム" : "アウェイ"}・${fdrWord(f.d)}）`).join(" / ");
+    return `<td class="fx-cell ${fdrClass(lv)}" title="${esc(tip)}">${txt}</td>`;
+  };
+
+  const body = rows.map((r, i) => {
+    const rankNum = dir === "asc" ? i + 1 : rows.length - i;
+    // 難易度は合計値なのでFDRの1〜5の色は当てはまらない。背景はグレー固定にする
+    const totalCell = `<td class="main-num fdr-total">${r.total == null ? "—" : r.total}</td>`;
+    return `<tr>
+      <td class="rank">${rankNum}</td>
+      <td class="col-name"><div class="name">${teamBadgeByName(r.team)}</div></td>
+      ${totalCell}
+      ${r.cells.map(cellHtml).join("")}
+    </tr>`;
+  }).join("");
+
+  // 表示する節数は「チーム別」タブと同じプルダウンで選ぶ
+  const seg = `<select id="fdr-picker" class="picker">${
+    FDR_WINDOWS.map((n) => `<option value="${n}"${n === fdrWindow ? " selected" : ""}>${n}節</option>`).join("")
+  }</select>`;
+
+  box.innerHTML = seg + wideTable(
+    `<table class="rich teamtbl tbl-fdr"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`);
+  syncTableStickyRoom();
+
+  box.querySelector("#fdr-picker").addEventListener("change", (e) => {
+    fdrWindow = +e.target.value;
+    try { localStorage.setItem("fpl_fdr_window", String(fdrWindow)); } catch (e) {}
+    drawFdrTable(box);
+  });
+  box.querySelector("thead").addEventListener("click", (e) => {
+    const th = e.target.closest("th.sortable");
+    if (!th) return;
+    const k = th.dataset.sort;
+    if (fdrSort.key === k) fdrSort.dir = fdrSort.dir === "asc" ? "desc" : "asc";
+    else fdrSort = { key: k, dir: "asc" };   // 難易度も名前も、まずは小さい順＝楽な順/五十音順
+    const wrap = box.querySelector(".data-table-wrap");
+    const sl = wrap ? wrap.scrollLeft : 0;
+    drawFdrTable(box);
+    const nw = box.querySelector(".data-table-wrap");
+    if (nw) nw.scrollLeft = sl;
+  });
 }
 
 /* ===========================================================
@@ -1837,6 +1950,46 @@ function elOf(pick) {
   return DATA.elements[String(pick.element)] || { n: "ID " + pick.element, j: "", t: "", p: "?", c: 0 };
 }
 
+// チーム名 → チームID（節ごとの対戦相手を引くために使う）
+let _teamIdByName = null;
+function teamIdByName(name) {
+  if (!_teamIdByName) {
+    _teamIdByName = {};
+    Object.entries(DATA.teams_meta || {}).forEach(([id, t]) => { _teamIdByName[t.name] = id; });
+  }
+  return _teamIdByName[name];
+}
+
+// 対戦難易度(公式FDR 1〜5) → 次節タブの「相手の強さ」と同じ4段階の色クラス
+function fdrPillClass(d) {
+  if (d >= 5) return "st-vhard";
+  if (d === 4) return "st-hard";
+  if (d === 3) return "st-mid";
+  return "st-weak";   // FDR 1・2＝弱い（次節タブも1と2は同じ色にまとめている）
+}
+
+// その節の対戦相手（例：COV(H)）。ダブルGWは「＋」で連結、ブランクGWは「-」
+// 背景は次節タブの強さバッジと同じ配色。ダブルGWは難しい方の色に合わせる
+function fixtureLabel(teamName, gw) {
+  const byGw = (DATA.team_fixtures || {})[teamIdByName(teamName)];
+  const list = byGw ? byGw[String(gw)] : null;
+  if (!list || !list.length) return { text: "-", cls: "" };
+  return {
+    text: list.map((f) => `${f.s}(${f.h ? "H" : "A"})`).join("＋"),
+    cls: fdrPillClass(Math.max(...list.map((f) => f.d || 3))),
+  };
+}
+
+/* ---- チップ（計画タブで節ごとに1つ選ぶ） ---- */
+const MT_CHIPS = [
+  ["3xc", "TC", "トリプルキャプテン"],
+  ["bboost", "BB", "ベンチブースト"],
+  ["wildcard", "WC", "ワイルドカード"],
+  ["freehit", "FH", "フリーヒット"],
+];
+// WC・FHの節は移籍がFTを消費せず、追加コストも出ない
+function chipUnlimited(chip) { return chip === "wildcard" || chip === "freehit"; }
+
 function initSquadEditor(entry, picksData, gw, livePoints) {
   const eh = picksData.entry_history || {};
   const baseSquad = picksData.picks.map((p) => ({
@@ -1891,7 +2044,7 @@ function bindMtOutsideClear() {
     if (MT.sel == null && MT.swapFrom == null && !MT.outs.length) return;
     const t = e.target;
     // カード（⇅✕含む）・候補リスト・操作バー・詳細ポップアップの中は、それぞれの処理に任せる
-    if (t.closest && (t.closest(".mt-card") || t.closest(".mt-picker") || t.closest(".mt-info-slot") || t.closest(".mt-bd-overlay"))) return;
+    if (t.closest && (t.closest(".mt-card") || t.closest(".mt-picker") || t.closest(".mt-info-slot") || t.closest(".mt-bd-overlay") || t.closest(".mt-head"))) return;
     MT.sel = null;
     MT.swapFrom = null;
     MT.outs = [];
@@ -1923,16 +2076,26 @@ function ensurePlan(gw) {
   const src = planSrc(gw);
   let squad, bank, ft;
   if (src) {
-    squad = src.plan.squad.map((p) => ({ ...p }));
-    bank = src.plan.bank;
-    // FTは「前節のFT − 使った数 ＋ 経過節数」を1〜5に丸める（FPLの繰り越しルール）
-    ft = Math.min(5, Math.max(1, src.plan.ft - planMade(src.plan) + (gw - src.gw)));
+    const S = src.plan;
+    // フリーヒットはその節だけ有効。翌節はFHを使う前のスカッド・資金に戻す
+    const revert = S.chip === "freehit" && S.inh;
+    squad = (revert ? S.inh.squad : S.squad).map((p) => ({ ...p }));
+    bank = revert ? S.inh.bank : S.bank;
+    // FTは「前節のFT − 使った数 ＋ 経過節数」を1〜5に丸める（FPLの繰り越しルール）。
+    // WC・FHの節は何件移籍してもFTの消費は1つ分として次節へ繰り越す
+    const used = chipUnlimited(S.chip) ? 1 : planMade(S);
+    ft = Math.min(5, Math.max(1, S.ft - used + (gw - src.gw)));
   } else {
     squad = MT.base.squad.map((p) => ({ ...p }));
     bank = MT.base.bank;
     ft = 1;  // 公開APIでは実FT数が取れないため既定1（ステータスのタップで変更可）
   }
-  MT.plans[gw] = { squad, bank, ft, inhElems: squad.map((p) => p.element) };
+  MT.plans[gw] = {
+    squad, bank, ft,
+    chip: null,
+    inhElems: squad.map((p) => p.element),
+    inh: { squad: squad.map((p) => ({ ...p })), bank },   // FHで戻すための引き継ぎ状態
+  };
   return MT.plans[gw];
 }
 
@@ -2017,8 +2180,9 @@ function mtCard(p) {
     : "";
   let foot;
   if (MT.mode === "plan") {
-    // 計画タブ：移籍・予算検討のためコストを表示
-    foot = `<span class="mt-pts mt-cost">£${el.c}m</span>`;
+    // 計画タブ：その節の対戦相手（3文字略称＋ホーム/アウェイ）。背景＝相手の強さ
+    const fx = fixtureLabel(el.t, MT.planGw);
+    foot = `<span class="mt-pts mt-fx ${fx.cls}">${esc(fx.text)}</span>`;
   } else {
     // 直近節タブ：その節のポイント結果（色分け）
     const pts = mtPoints(p);
@@ -2097,8 +2261,10 @@ function renderSquadPitch() {
     }
 
     const made = planMade(P);
-    const free = P.ft;
-    const cost = Math.max(0, made - free) * 4;
+    // WC・FHの節は移籍無制限＝FTは∞表示、コストは常に0
+    const unlimited = chipUnlimited(P.chip);
+    const free = unlimited ? "∞" : P.ft;
+    const cost = unlimited ? 0 : Math.max(0, made - P.ft) * 4;
 
     // この節の移籍プラン（OUT→IN の一覧）
     const pairs = planDiffPairs(P);
@@ -2120,17 +2286,22 @@ function renderSquadPitch() {
           <button type="button" class="mt-gw-btn" data-gw="next" ${MT.planGw >= 38 ? "disabled" : ""}>次 ›</button>
         </div>
         <div class="mt-stats">
-          <div class="mt-stat"><span class="mt-stat-l">チップ</span><span class="mt-stat-v">${MT.chip ? esc(MT.chip) : "なし"}</span></div>
-          <button type="button" class="mt-stat mt-stat-btn" id="mt-ft-toggle" title="タップで無料移籍数を変更（1〜5）">
+          <label class="mt-stat mt-stat-chip"><span class="mt-stat-l">チップ</span>
+            <select class="mt-stat-v" id="mt-chip" title="この節に使うチップ">
+              <option value="">なし</option>
+              ${MT_CHIPS.map(([v, s]) => `<option value="${v}"${P.chip === v ? " selected" : ""}>${s}</option>`).join("")}
+            </select>
+          </label>
+          <button type="button" class="mt-stat mt-stat-btn" id="mt-ft-toggle" title="タップで無料移籍数を変更（1〜5）"${unlimited ? " disabled" : ""}>
             <span class="mt-stat-l">移籍/FT ✎</span><span class="mt-stat-v">${made}/${free}</span>
           </button>
-          <div class="mt-stat"><span class="mt-stat-l">資金</span><span class="mt-stat-v">£${P.bank.toFixed(1)}m</span></div>
+          <div class="mt-stat"><span class="mt-stat-l">資金</span><span class="mt-stat-v${P.bank < 0 ? " neg" : ""}">£${P.bank.toFixed(1)}m</span></div>
           <div class="mt-stat"><span class="mt-stat-l">コスト</span><span class="mt-stat-v${cost > 0 ? " neg" : ""}">${cost > 0 ? "-" + cost : "0"}</span></div>
         </div>
       </div>
       <div class="mt-info-slot">${bar}</div>
       <div class="mt-pitch-outer">
-        <div class="mt-pitch-wrap">
+        <div class="mt-pitch-wrap${P.chip ? " chip-" + P.chip : ""}">
           <div class="mt-pitch">${rows}</div>
           <div class="mt-bench">${bench.map(mtCard).join("")}</div>
         </div>
@@ -2176,6 +2347,13 @@ function renderSquadPitch() {
       savePlans();
       renderSquadPitch();
     }));
+    // チップの選択（節ごとに1つ）。以降の節は前提が変わるので作り直す
+    wrap.querySelector("#mt-chip").addEventListener("change", (e) => {
+      P.chip = e.target.value || null;
+      invalidateAfter(MT.planGw);
+      savePlans();
+      renderSquadPitch();
+    });
     // 移籍/FTステータスのタップで無料移籍数を1〜5で切り替え（公開APIから取れないため手動設定）
     wrap.querySelector("#mt-ft-toggle").addEventListener("click", () => {
       P.ft = (P.ft % 5) + 1;
@@ -2504,7 +2682,7 @@ function renderMtPicker(query) {
       <div class="mt-pick-row${after < 0 ? " over" : ""}">
         <button type="button" class="mt-pick-main" data-open="${e.id}">
           <span class="mt-pick-kit">${kit ? `<img src="${kit}" loading="lazy" onerror="this.style.visibility='hidden'">` : ""}</span>
-          <span class="mt-pick-name">${esc(e.n)}</span>
+          <span class="mt-pick-name">${esc(e.n)}${e.j ? `<span class="mt-pick-ja">${esc(e.j)}</span>` : ""}</span>
           ${statCell}
         </button>
         <button type="button" class="mt-pick-add" data-add="${e.id}" aria-label="この選手を入れる">＋</button>
