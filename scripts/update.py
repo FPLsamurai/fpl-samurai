@@ -241,9 +241,31 @@ def find_next_event(bootstrap):
     return None
 
 
-def find_latest_finished_event(bootstrap):
-    finished = [ev for ev in bootstrap["events"] if ev.get("finished")]
-    return max(finished, key=lambda ev: ev["id"]) if finished else None
+def fixture_done(fx):
+    """
+    その試合が終わっているか。
+    26/27からGWのポイント確定が「最終試合の翌日17時JST」に変わり、試合が終わっても
+    fixture の finished は確定までtrueにならない（finished_provisional だけ立つ）。
+    集計は試合終了の時点で反映したいので、両方を見る。
+    """
+    return bool(fx.get("finished") or fx.get("finished_provisional"))
+
+
+def find_latest_finished_event(bootstrap, fixtures):
+    """
+    最後まで消化した節。event の finished も確定まで立たないため、
+    「その節の全試合が終わっているか」で判定する。
+    """
+    by_gw = {}
+    for fx in fixtures:
+        gw = fx.get("event")
+        if gw:
+            by_gw.setdefault(gw, []).append(fx)
+    done = [gw for gw, fl in by_gw.items() if fl and all(fixture_done(f) for f in fl)]
+    if not done:
+        return None
+    gid = max(done)
+    return next((ev for ev in bootstrap["events"] if ev["id"] == gid), None)
 
 
 # ----------------------------------------------------------------------
@@ -253,7 +275,7 @@ def find_latest_finished_event(bootstrap):
 def compute_clean_sheet_ranking(fixtures, team_map):
     stats = {tid: {"played": 0, "clean": 0} for tid in team_map}
     for fx in fixtures:
-        if not fx.get("finished"):
+        if not fixture_done(fx):
             continue
         h, a = fx.get("team_h"), fx.get("team_a")
         hs, as_ = fx.get("team_h_score"), fx.get("team_a_score")
@@ -696,7 +718,7 @@ def compute_team_next3(fixtures, team_map, team_matches, mu):
     （選手の得点期待値 = 選手のxG/90 × f として画面側で計算する係数）
     オフシーズン（未消化試合なし）のときは空。
     """
-    upcoming = [f for f in fixtures if not f.get("finished") and f.get("kickoff_time")]
+    upcoming = [f for f in fixtures if not fixture_done(f) and f.get("kickoff_time")]
     upcoming.sort(key=lambda f: f["kickoff_time"])
 
     def opp_factor(opp_id):
@@ -863,7 +885,7 @@ def main():
     predictions["player_goals"] = compute_player_goal_ranking(
         bootstrap, fixtures, team_matches, team_map, mu, player_tables["last5"])
 
-    latest = find_latest_finished_event(bootstrap)
+    latest = find_latest_finished_event(bootstrap, fixtures)
     latest_gw_label = f"第{latest['id']}節" if latest else "未開幕"
     now_jst = datetime.now(timezone(timedelta(hours=9)))
 
