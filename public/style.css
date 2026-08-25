@@ -2012,19 +2012,20 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
 }
 .mt-pitch-wrap .mt-card { pointer-events: auto; }
 /* 直近節タブだけ、ピッチの左上に「GW◯」右上に「◯pt」を白い角丸で重ねる
-   （計画タブには出さない）。寸法は em にして font-size 1つで大きさを変えられる */
+   （計画タブには出さない）。角丸と余白は em で font-size 1つに追従させ、
+   枠線だけは選手カード（.mt-photo-wrap / .mt-name）と同じ 1.5px #1b1b1f に固定する */
 .mt-badge {
   position: absolute;
   top: 16.5%;
   background: #fff;
-  border: 0.14em solid #14121a;
+  border: 1.5px solid #1b1b1f;
   border-radius: 0.45em;
   padding: 0.1em 0.5em;
   font-weight: 800;
   font-size: clamp(0.85rem, 3.9vw, 1.3rem);
   line-height: 1.25;
   letter-spacing: 0.01em;
-  color: #14121a;
+  color: #1b1b1f;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   z-index: 3;
 }
