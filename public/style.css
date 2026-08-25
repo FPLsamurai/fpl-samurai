@@ -1998,12 +1998,12 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
    情報スロットの上下の余白が見た目でそろうようにする。
    負マージンの%は「親の幅」基準なので、親(.mt-pitch-outer)を枠と同じ最大幅にして計算を合わせる。 */
 .mt-pitch-outer {
-  max-width: 440px;
+  max-width: 100%;         /* 上限は本文コンテナの内寸（main 720px − padding 24px ＝ 696px） */
   margin: 0 auto;
 }
 .mt-pitch-wrap {
   position: relative;
-  max-width: 440px;
+  max-width: 100%;
   margin: -5.78% auto 0;   /* 透明帯 = 幅の5.78%（67/1110 × 1220/1274） */
   aspect-ratio: 1274 / 1220;
   background: url("pitch.png") center / 100% 100% no-repeat;
@@ -2013,6 +2013,20 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   container-type: inline-size;
 }
 .mt-pitch-wrap .mt-card { pointer-events: auto; }
+
+/* ピッチ幅に合わせて選手カードを比率そのままで拡縮するための単位。
+   1単位 = 従来の1px（ピッチ幅440pxのとき）。440pxを超えるとピッチ幅に比例して伸び、
+   440px未満では 1px 止まり＝従来どおりの大きさを保つ（下限は現状と同じ）。
+   cqw は自分自身のコンテナを参照できないので .mt-pitch-wrap ではなくその子で定義する。
+   cqw 非対応の端末は --u:1px のまま＝従来の固定サイズで表示される。 */
+.mt-pitch,
+.mt-bench,
+.mt-badge { --u: 1px; }
+@supports (width: 1cqw) {
+  .mt-pitch,
+  .mt-bench,
+  .mt-badge { --u: max(1px, 0.227273cqw); }   /* 0.227273% = 1/440 */
+}
 /* 直近節タブだけ、ピッチの左上に「GW◯」右上に「◯pt」を白い角丸で重ねる
    （計画タブには出さない）。角丸と余白は em で font-size 1つに追従させ、
    枠線だけは選手カード（.mt-photo-wrap / .mt-name）と同じ 1.5px #1b1b1f に固定する。
@@ -2027,7 +2041,7 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   position: absolute;
   top: 16.5%;
   background: #fff;
-  border: 1.5px solid #1b1b1f;
+  border: calc(1.5 * var(--u)) solid #1b1b1f;
   border-radius: 0.45em;
   padding: 0.1em 0.5em;
   font-weight: 800;
@@ -2062,7 +2076,7 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   display: flex;
   justify-content: space-evenly;
   align-items: flex-start;
-  gap: 2px;
+  gap: calc(2 * var(--u));
 }
 /* ベンチは下部の薄緑枠に配置 */
 .mt-bench {
@@ -2071,7 +2085,7 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   right: 0;
   /* BBのグラデーション枠（線幅3px）の内側にカードが収まるよう下げる。
      元々カードが線の上端より約1px上にあったので、線幅+1pxぶん下げている */
-  bottom: calc(2% - 4px);
+  bottom: calc(2% - 4 * var(--u));
   /* 背景のベンチ（薄緑）は左右非対称（左12.87%／右11.77%）なので、ピッチ幅で中央寄せすると
      左端カードだけ枠線に深くかかる。枠の中心(50.55%)に合わせるぶんだけ右へずらす
      （padding-left の半分だけ中央がずれるので 0.55%×2＝1.1%） */
@@ -2079,10 +2093,10 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 18px;   /* カード左右の⇅✕アイコンが隣と重ならない間隔 */
+  gap: calc(18 * var(--u));   /* カード左右の⇅✕アイコンが隣と重ならない間隔 */
 }
 .mt-card {
-  width: 52px;
+  width: calc(52 * var(--u));
   border: none;
   background: none;
   padding: 0;
@@ -2093,39 +2107,39 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
 }
 .mt-photo-wrap {
   position: relative;
-  height: 24px;
+  height: calc(24 * var(--u));
   width: 100%;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   background: #e7e7ec;
-  border: 1.5px solid #1b1b1f;
+  border: calc(1.5 * var(--u)) solid #1b1b1f;
   border-bottom: none;
-  border-radius: 5px 5px 0 0;
+  border-radius: calc(5 * var(--u)) calc(5 * var(--u)) 0 0;
   overflow: visible;          /* 頭が箱の上にはみ出す */
 }
 .mt-photo {
-  height: 33px;               /* 箱より高く＝頭がはみ出し、肩から下は名前バーで隠れる */
+  height: calc(33 * var(--u)); /* 箱より高く＝頭がはみ出し、肩から下は名前バーで隠れる */
   width: auto;
   object-fit: contain;
   position: relative;
   z-index: 1;
 }
-.mt-photo.is-kit { height: 22px; }
+.mt-photo.is-kit { height: calc(22 * var(--u)); }
 .mt-cv {
   position: absolute;
-  top: -7px;
-  left: -7px;
-  width: 17px;
-  height: 17px;
-  line-height: 17px;
+  top: calc(-7 * var(--u));
+  left: calc(-7 * var(--u));
+  width: calc(17 * var(--u));
+  height: calc(17 * var(--u));
+  line-height: calc(17 * var(--u));
   border-radius: 50%;
-  font-size: 0.6rem;
+  font-size: calc(9.6 * var(--u));
   font-weight: 800;
   text-align: center;
   background: #000;
   color: #fff;
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: 0 0 0 calc(2 * var(--u)) #fff;
   z-index: 2;
 }
 .mt-cv.v { background: #000; color: #fff; }
@@ -2133,25 +2147,25 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   width: 100%;
   background: #fff;
   color: #1b1b1f;
-  font-size: 0.5rem;
+  font-size: calc(8 * var(--u));
   font-weight: 700;
-  padding: 1px 1px;
+  padding: calc(1 * var(--u));
   letter-spacing: -0.02em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border-left: 1.5px solid #1b1b1f;
-  border-right: 1.5px solid #1b1b1f;
+  border-left: calc(1.5 * var(--u)) solid #1b1b1f;
+  border-right: calc(1.5 * var(--u)) solid #1b1b1f;
 }
 .mt-pts {
   width: 100%;
   background: #f1f1f3;
   color: #1b1b1f;
-  font-size: 0.62rem;
+  font-size: calc(9.92 * var(--u));
   font-weight: 700;
-  border-radius: 0 0 5px 5px;
-  padding: 1px 2px;
-  border: 1.5px solid #1b1b1f;
+  border-radius: 0 0 calc(5 * var(--u)) calc(5 * var(--u));
+  padding: calc(1 * var(--u)) calc(2 * var(--u));
+  border: calc(1.5 * var(--u)) solid #1b1b1f;
   border-top: none;
 }
 .mt-pts.pneg { background: #fe1752; color: #1b1b1f; }
@@ -2160,7 +2174,7 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
 .mt-pts.p10 { background: #49b605; color: #1b1b1f; }
 /* 計画タブのカード下段＝その節の対戦相手（例 COV(H)）。ダブルGWでも1行に収める */
 .mt-fx {
-  font-size: 0.55rem;
+  font-size: calc(8.8 * var(--u));
   letter-spacing: -0.03em;
   white-space: nowrap;
   overflow: hidden;
@@ -2176,7 +2190,7 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
 .mt-pitch-wrap.chip-3xc .mt-cv.v {
   background: #fff;
   color: #000;
-  box-shadow: 0 0 0 2px #000;
+  box-shadow: 0 0 0 calc(2 * var(--u)) #000;
 }
 /* BB（ベンチブースト）：背景画像のベンチ枠（薄緑の箱）をグラデーションの線で囲う。
    位置は pitch.png のベンチ（薄緑の箱）の実測値（画像1274x1110 中 x164-1123 / y919）。
@@ -2190,7 +2204,7 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   top: 82.79%;
   bottom: 0;
   border-radius: 10px 10px 0 0;
-  padding: 3px 3px 0;               /* = 線の太さ。下だけ0にして下辺の線を消す */
+  padding: calc(3 * var(--u)) calc(3 * var(--u)) 0;   /* = 線の太さ。下だけ0にして下辺の線を消す */
   background: linear-gradient(90deg, #5de0e6, #004aad);
   /* 中身をくり抜いて「枠線だけ」にする（グラデーションはborderに直接指定できないため） */
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -2329,22 +2343,22 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
 /* 計画タブ：カード左上の⇅（入れ替え）・右上の✕（移籍）アイコン（LiveFPL風） */
 .mt-ctrl {
   position: absolute;
-  width: 18px;
-  height: 18px;
-  line-height: 18px;
+  width: calc(18 * var(--u));
+  height: calc(18 * var(--u));
+  line-height: calc(18 * var(--u));
   border-radius: 50%;
-  font-size: 0.7rem;
+  font-size: calc(11.2 * var(--u));
   font-weight: 800;
   text-align: center;
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: 0 0 0 calc(2 * var(--u)) #fff;
   cursor: pointer;
   z-index: 3;
 }
-.mt-ctrl-swap { top: -8px; left: -8px; background: var(--pl-purple); color: #fff; }
-.mt-ctrl-x { top: -8px; right: -8px; background: var(--hard); color: #fff; }
+.mt-ctrl-swap { top: calc(-8 * var(--u)); left: calc(-8 * var(--u)); background: var(--pl-purple); color: #fff; }
+.mt-ctrl-x { top: calc(-8 * var(--u)); right: calc(-8 * var(--u)); background: var(--hard); color: #fff; }
 .mt-ctrl:active { opacity: 0.8; }
 /* 計画タブではC/Vバッジを⇅アイコンの下に配置 */
-.mt-card.is-plan .mt-cv { top: 12px; left: -8px; }
+.mt-card.is-plan .mt-cv { top: calc(12 * var(--u)); left: calc(-8 * var(--u)); }
 /* 移籍ピッカー */
 .mt-picker {
   border: 1px solid var(--border);
