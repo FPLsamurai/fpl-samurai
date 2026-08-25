@@ -2425,6 +2425,8 @@ function renderSquadPitch() {
       <div class="mt-info-slot"><div class="mt-hint"><b>合計：</b>${total}ポイント　<b>プレイヤー平均：</b>${avg}ポイント</div></div>
       <div class="mt-pitch-outer">
         <div class="mt-pitch-wrap mt-readonly">
+          <div class="mt-badge gw">GW${MT.gw}</div>
+          ${MT.livePoints ? `<div class="mt-badge pts">${total}pt</div>` : ""}
           <div class="mt-pitch">${rows}</div>
           <div class="mt-bench">${bench.map(mtCard).join("")}</div>
         </div>

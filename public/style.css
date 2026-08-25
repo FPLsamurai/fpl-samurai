@@ -2012,20 +2012,25 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   pointer-events: none;
 }
 .mt-pitch-wrap .mt-card { pointer-events: auto; }
+/* 直近節タブだけ、ピッチの左上に「GW◯」右上に「◯pt」を白い角丸で重ねる
+   （計画タブには出さない）。寸法は em にして font-size 1つで大きさを変えられる */
 .mt-badge {
   position: absolute;
-  top: 14%;
+  top: 15%;
   background: #fff;
-  border-radius: 10px;
-  padding: 3px 9px;
+  border: 0.14em solid #14121a;
+  border-radius: 0.45em;
+  padding: 0.1em 0.5em;
   font-weight: 800;
-  font-size: 0.85rem;
-  color: #1b1b1f;
+  font-size: clamp(0.85rem, 3.9vw, 1.3rem);
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  color: #14121a;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   z-index: 3;
 }
-.mt-badge.gw { left: 10%; }
-.mt-badge.pts { right: 10%; }
+.mt-badge.gw { left: 4%; }
+.mt-badge.pts { right: 4%; }
 /* スタメン（GK/DF/MF/FW）をピッチ部分に縦等間隔で配置 */
 .mt-pitch {
   position: absolute;
