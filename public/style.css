@@ -1376,30 +1376,26 @@ tbody tr:nth-child(even) {
   white-space: nowrap;
 }
 
-/* ---------- 10試合を2列×5試合（左上→左下→右上→右下） ---------- */
-.two-cols {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 10px;
-}
+/* ---------- 10試合の並べ方 ---------- */
+/* スマホは1列（日程順にそのまま縦）。721px以上で2列×5試合にして
+   左上→左下→右上→右下の順（＝前半5試合が左列、後半5試合が右列）にする */
+.two-cols { display: grid; }
 .two-col { min-width: 0; }
-@media (min-width: 721px) {
-  .two-cols { gap: 0 24px; }
-}
+.two-col:nth-child(2) .pred-head { display: none; }   /* 1列のときの見出し重複を防ぐ */
 
 /* ---------- 次節の予測（対戦カード形式） ---------- */
 .pred-head,
 .pred-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 32px 32px;
-  gap: 3px;
+  grid-template-columns: minmax(0, 1fr) 56px 56px;
+  gap: 6px;
   align-items: center;
 }
 .pred-head {
-  padding: 0 2px 5px;
+  padding: 0 4px 6px;
 }
 .pred-head span {
-  font-size: 0.6rem;
+  font-size: 0.72rem;
   color: var(--muted);
   text-align: center;
   line-height: 1.25;
@@ -1410,28 +1406,26 @@ tbody tr:nth-child(even) {
   background: var(--card);
   border: 0.5px solid #ececf0;
   border-radius: 10px;
-  padding: 2px 6px;
-  margin-bottom: 10px;
+  padding: 2px 8px;
+  margin-bottom: 12px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
-.pred-row { padding: 7px 0; }
+.pred-row { padding: 8px 0; }
 .pred-row + .pred-row { border-top: 0.5px solid #f0eef2; }
 .pred-team {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   min-width: 0;
 }
-/* 2列にすると1チームぶんの幅が狭い。日本語チーム名(最長8文字＝クリスタルパレス／
-   ブレントフォード／マンユナイテッド)が1行に収まるギリギリまで小さくし、折り返しは禁止。
-   名前欄の実測幅は 画面幅×0.509 − 102.9px（320px幅で60px／375px幅で88px）。
-   最長は「マンユナイテッド」で文字送りは約7.97em ぶんなので、8.15で割って約2%の余裕を
-   持たせた 6.245vw − 12.62px を上限にしている（8.0で割ると375px幅で0.1px足りず切れる）。 */
+/* チーム名は折り返さず1行。日本語チーム名は最長8文字（クリスタルパレス／
+   ブレントフォード／マンユナイテッド）で、文字送りは約7.97em ぶん。
+   1列表示なら320px幅でも名前欄が117px取れるので 0.85rem(13.6px＝約108px)で収まる */
 .pred-tname {
   flex: 1 1 auto;      /* 親の幅をすべて使う（既定の flex:0 1 auto だと文字ぶんしか取らない） */
   min-width: 0;
   font-weight: 600;
-  font-size: clamp(0.42rem, 6.245vw - 12.62px, 0.8rem);
+  font-size: 0.85rem;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -1440,27 +1434,23 @@ tbody tr:nth-child(even) {
 .pred-cell {
   text-align: center;
   font-weight: 600;
-  font-size: 0.7rem;
+  font-size: 0.95rem;
   color: var(--text);
   background: #f1f1f3;
-  border-radius: 6px;
-  padding: 7px 2px;
+  border-radius: 8px;
+  padding: 9px 4px;
   font-variant-numeric: tabular-nums;
 }
-/* 2列だと15pxのエンブレムでもチーム名の1行ぶんの幅を奪うので、狭い画面では出さない */
-.pred-team .team-badge { display: none; }
 @media (min-width: 721px) {
+  .two-cols { grid-template-columns: 1fr 1fr; gap: 0 24px; }
+  .two-col:nth-child(2) .pred-head { display: grid; }
+  /* 2列でも本文コンテナが696px固定なので幅は足りる。見出しは正式名称に戻し、
+     数値セルもその文字数に合わせる。名前欄は常に96.7pxで、最長「マンユナイテッド」の
+     約7.97em が収まる上限は12.13pxなので余裕をみて0.72rem */
   .pred-head, .pred-row { grid-template-columns: minmax(0, 1fr) 84px 92px; gap: 8px; }
-  .pred-head span { font-size: 0.72rem; }
   .pred-h-long { display: inline; }
   .pred-h-short { display: none; }
-  .pred-match { padding: 2px 8px; margin-bottom: 12px; }
-  .pred-team { gap: 8px; }
-  .pred-team .team-badge { display: inline-block; width: 26px; height: 26px; }
-  /* 721px以上は本文コンテナが696px固定＝名前欄は常に96.7px。
-     最長「マンユナイテッド」の約7.97em が収まる上限は12.13pxなので、余裕をみて0.72rem */
   .pred-tname { font-size: 0.72rem; }
-  .pred-cell { font-size: 0.95rem; border-radius: 8px; padding: 9px 4px; }
 }
 .pred-cell.hi-goal { background: #fbe7c4; }   /* ゴール期待値が高い */
 .pred-cell.hi-cs { background: #d7eede; }      /* クリーンシート率が高い */
@@ -1590,55 +1580,48 @@ tbody tr:nth-child(even) {
 .match-card {
   background: var(--card);
   border-radius: 10px;
-  padding: 9px 10px;
+  padding: 12px 14px;
   margin-bottom: 10px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 .match-time {
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   color: var(--muted);
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
-/* 2列にすると1試合ぶんの幅が狭く、ホーム vs アウェイを横並びにできないので縦積み */
+/* ホーム／vs／アウェイの3段。チーム名と強さのラベルは同じ行に並べる
+   （日時 ／ クリスタルパレス 普通 ／ vs ／ マンシティ 強い） */
 .match-teams {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 2px;
 }
-.match-team { min-width: 0; }
-.match-team.home { text-align: left; }
-.match-team.away { text-align: right; }
+.match-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
 .match-team .tname {
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .match-vs {
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   text-align: center;
-}
-@media (min-width: 721px) {
-  .match-card { padding: 12px 14px; }
-  .match-time { font-size: 0.78rem; margin-bottom: 6px; }
-  .match-teams { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
-  .match-team { flex: 1; }
-  .match-team .tname { font-size: 0.95rem; }
-  .match-vs { font-size: 0.8rem; padding: 0 4px; }
 }
 .strength {
   display: inline-block;
-  margin-top: 2px;
-  font-size: 0.62rem;
-  padding: 1px 7px;
+  flex: none;
+  font-size: 0.72rem;
+  padding: 2px 8px;
   border-radius: 999px;
   color: #fff;
-}
-@media (min-width: 721px) {
-  .strength { margin-top: 4px; font-size: 0.72rem; padding: 2px 8px; }
 }
 .strength.easy { background: var(--easy); }
 .strength.normal { background: var(--normal); }
