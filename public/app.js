@@ -1090,14 +1090,10 @@ function refreshPlayerBody() {
       } else if (c.type === "pos") {
         tds += `<td class="col-position ${frz}" style="${st}">${esc(r.position)}</td>`;
       } else if (c.type === "team") {
-        // エンブレムは選手行が持つ team_code（クラブ固有・季節不変）を優先。
-        // これで開幕前フォールバック（昨季所属）でも正しいエンブレムが出る。
+        // エンブレムは列幅(46px)に収まらず左右が切れるため使わない。3文字略称で表示する。
         const tm = (DATA.teams_meta && DATA.teams_meta[String(r.team_id)]) || null;
-        const code = r.team_code || (tm && tm.code);
-        const badge = code
-          ? `<img class="team-badge" loading="lazy" alt="${esc(r.team)}" title="${esc(r.team)}" src="${BADGE_BASE}${code}.png" onerror="this.replaceWith(document.createTextNode('${esc(r.team)}'))">`
-          : esc(r.team);
-        tds += `<td class="${frz}col-team" style="${st}">${badge}</td>`;
+        const label = (tm && tm.short) || r.team;
+        tds += `<td class="${frz}col-team" style="${st}" title="${esc(r.team)}">${esc(label)}</td>`;
       } else if (c.type === "fx") {
         // 1GW/2GW/3GW：相手を3文字略称＋(H/A)で1行に。背景は対戦難易度（とても強い〜弱い）
         const f = ((DATA.team_next3 && DATA.team_next3[String(r.team_id)]) || [])[c.fx];
@@ -1630,12 +1626,15 @@ function drawPredictions(box, pred) {
   });
 
   const teamRow = (r) => {
-    const gHi = Number(r.goal_expect) >= 1.1 ? " hi-goal" : "";
-    const csHi = Number(r.clean_sheet_pct) >= 44 ? " hi-cs" : "";
+    // 材料になる試合が無いチームは null で来る（未消化・開幕前）。数値を出さず「—」
+    const noCs = r.clean_sheet_pct === null || r.clean_sheet_pct === undefined;
+    const noG = r.goal_expect === null || r.goal_expect === undefined;
+    const gHi = !noG && Number(r.goal_expect) >= 1.1 ? " hi-goal" : "";
+    const csHi = !noCs && Number(r.clean_sheet_pct) >= 44 ? " hi-cs" : "";
     return `<div class="pred-row">
       <span class="pred-team">${teamBadgeByName(r.team)}<span class="pred-tname">${esc(r.team)}</span></span>
-      <span class="pred-cell${gHi}">${r.goal_expect}</span>
-      <span class="pred-cell${csHi}">${Math.round(r.clean_sheet_pct)}%</span>
+      <span class="pred-cell${gHi}">${noG ? "—" : r.goal_expect}</span>
+      <span class="pred-cell${csHi}">${noCs ? "—" : Math.round(r.clean_sheet_pct) + "%"}</span>
     </div>`;
   };
   const head = `<div class="pred-head"><span></span><span>ゴール期待値</span><span>クリーンシート％</span></div>`;
