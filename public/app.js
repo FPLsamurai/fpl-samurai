@@ -1090,10 +1090,14 @@ function refreshPlayerBody() {
       } else if (c.type === "pos") {
         tds += `<td class="col-position ${frz}" style="${st}">${esc(r.position)}</td>`;
       } else if (c.type === "team") {
-        // エンブレムは列幅(46px)に収まらず左右が切れるため使わない。3文字略称で表示する。
+        // エンブレムは選手行が持つ team_code（クラブ固有・季節不変）を優先。
+        // これで開幕前フォールバック（昨季所属）でも正しいエンブレムが出る。
         const tm = (DATA.teams_meta && DATA.teams_meta[String(r.team_id)]) || null;
-        const label = (tm && tm.short) || r.team;
-        tds += `<td class="${frz}col-team" style="${st}" title="${esc(r.team)}">${esc(label)}</td>`;
+        const code = r.team_code || (tm && tm.code);
+        const badge = code
+          ? `<img class="team-badge" loading="lazy" alt="${esc(r.team)}" title="${esc(r.team)}" src="${BADGE_BASE}${code}.png" onerror="this.replaceWith(document.createTextNode('${esc(r.team)}'))">`
+          : esc(r.team);
+        tds += `<td class="${frz}col-team" style="${st}">${badge}</td>`;
       } else if (c.type === "fx") {
         // 1GW/2GW/3GW：相手を3文字略称＋(H/A)で1行に。背景は対戦難易度（とても強い〜弱い）
         const f = ((DATA.team_next3 && DATA.team_next3[String(r.team_id)]) || [])[c.fx];
@@ -1351,6 +1355,12 @@ function renderTeamRecent(box) {
 // 横長テーブルを全幅スクロールで囲む
 function wideTable(inner) {
   return `<div class="fullbleed"><div class="data-table-wrap">${inner}</div></div>`;
+}
+
+// チーム名（文字列）から3文字略称を引く（見つからなければ文字のまま）
+function teamShortByName(teamName) {
+  const tm = Object.values(DATA.teams_meta || {}).find((m) => m.name === teamName);
+  return (tm && tm.short) || teamName;
 }
 
 // チーム名（文字列）からエンブレム画像HTMLを作る（見つからなければ文字のまま）
@@ -1672,7 +1682,7 @@ function playerGoalRankingHtml(pred) {
       <span class="pgr-rank ${rankClass(r.rank)}">${r.rank}</span>
       <span class="pgr-who">${photo}<span class="pgr-names"><span class="pgr-name">${esc(r.name)}</span>${ja}</span></span>
       <span class="pgr-mid">
-        <span class="pgr-team">${teamBadgeByName(r.team)}</span>
+        <span class="pgr-team" title="${esc(r.team)}">${esc(teamShortByName(r.team))}</span>
         <span class="pgr-opp">vs ${esc(r.opponent_short)}(${r.home ? "H" : "A"})</span>
       </span>
       <span class="pgr-xg">${r.xg_avg}${n}</span>

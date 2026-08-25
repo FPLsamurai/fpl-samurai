@@ -1487,19 +1487,22 @@ tbody tr:nth-child(even) {
   color: var(--muted);
   overflow-wrap: anywhere;
 }
+/* 所属チームと対戦相手は2段。1行に並べると対戦列(スマホ72px)に収まらない */
 .pgr-mid {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 1px;
   min-width: 0;
   overflow: hidden;
 }
-.pgr-mid .team-badge { width: 22px; height: 22px; flex: none; }
-/* チーム名しか出せないとき（エンブレム無し）に列からはみ出させない */
+/* 所属チームは3文字略称（エンブレムは18pxでも列に収まらず左右が切れるため使わない） */
 .pgr-team {
-  min-width: 0;
-  font-size: 0.72rem;
+  max-width: 100%;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1534,7 +1537,7 @@ tbody tr:nth-child(even) {
   .pgr-row { grid-template-columns: 20px minmax(0, 1fr) 72px 44px 56px; gap: 5px; }
   .pgr-head span { font-size: 0.68rem; }
   .pgr { padding: 2px 6px; }
-  .pgr-mid .team-badge { width: 18px; height: 18px; }
+  .pgr-team { font-size: 0.72rem; }
   .pgr-opp { font-size: 0.72rem; }
   .pgr-xg { font-size: 0.8rem; }
   .pgr-photo { width: 24px; height: 30px; }
