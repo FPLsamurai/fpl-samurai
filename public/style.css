@@ -2016,7 +2016,7 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
    （計画タブには出さない）。寸法は em にして font-size 1つで大きさを変えられる */
 .mt-badge {
   position: absolute;
-  top: 15%;
+  top: 16.5%;
   background: #fff;
   border: 0.14em solid #14121a;
   border-radius: 0.45em;
@@ -2029,8 +2029,13 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   z-index: 3;
 }
-.mt-badge.gw { left: 4%; }
-.mt-badge.pts { right: 4%; }
+/* フィールドのタッチライン(白線)の内側に収める。pitch.png は上端に67pxの透明帯があり、
+   その下がヘッダー帯(y68-143)、フィールド上端の白線が y170-175。画像は 1110px高を
+   1220px高の枠に伸ばして敷いているので、白線の下端 y176 は枠の15.9%。バッジの上を
+   16.5%に置くと白線のすぐ下に入る。左右のタッチラインはその高さで x130／x1134
+   （＝10.2%／89.0%）なので、少し内側の 11.5%／12% にしている。 */
+.mt-badge.gw { left: 11.5%; }
+.mt-badge.pts { right: 12%; }
 /* スタメン（GK/DF/MF/FW）をピッチ部分に縦等間隔で配置 */
 .mt-pitch {
   position: absolute;
