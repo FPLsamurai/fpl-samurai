@@ -321,7 +321,9 @@ def compute_next_fixtures(bootstrap, fixtures, team_map):
             "away_opponent_strength": h_word, "away_opponent_strength_class": h_cls,
         })
     matches.sort(key=lambda m: (m["kickoff_raw"] or "9999"))
-    return {"event_name": f"第{event_id}節", "matches": matches}
+    # 移籍締切＝公式の deadline_time（その節の第1戦の1時間半前）
+    return {"event_name": f"第{event_id}節", "matches": matches,
+            "deadline": format_kickoff(next_event.get("deadline_time"))}
 
 
 # ----------------------------------------------------------------------
@@ -718,6 +720,7 @@ def compute_predictions(bootstrap, fixtures, team_matches, team_map, mu):
                     "clean_sheet_pct": cs_pct,
                     "goal_expect": goal_expect,
                     "kickoff": format_kickoff(fx.get("kickoff_time")),
+                    "kickoff_raw": fx.get("kickoff_time"),   # 画面側で日程順に並べる用
                 })
         # データ無し(None)は末尾へ
         rows.sort(key=lambda r: (r["clean_sheet_pct"] is not None,
@@ -725,6 +728,7 @@ def compute_predictions(bootstrap, fixtures, team_matches, team_map, mu):
 
     return {
         "event_name": f"第{next_event['id']}節" if next_event else None,
+        "deadline": format_kickoff(next_event.get("deadline_time")) if next_event else None,
         "league_avg_xg": mu,
         "rows": rows,
     }

@@ -1601,6 +1601,21 @@ function renderNext(key) {
   }
 }
 
+/* 節の見出し。第◯節は左、移籍締切は行の中央（公式の deadline_time＝第1戦の1時間半前） */
+function gwHeadHtml(name, deadline) {
+  const dl = deadline ? `<span class="gw-deadline">移籍締切：${esc(deadline)}</span>` : "";
+  return `<div class="gw-head"><span class="gw-name">${esc(name || "次節")}</span>${dl}<span></span></div>`;
+}
+
+/* 10試合を2列×5試合に分ける。左上→左下→右上→右下の順（＝前半を左列、後半を右列） */
+function twoColumns(cards, headHtml) {
+  const mid = Math.ceil(cards.length / 2);
+  const head = headHtml || "";
+  const col1 = head + cards.slice(0, mid).join("");
+  const col2 = cards.length > mid ? head + cards.slice(mid).join("") : "";
+  return `<div class="two-cols"><div class="two-col">${col1}</div><div class="two-col">${col2}</div></div>`;
+}
+
 /* 相手の強さ：4段階のラベル＋色分け（とても強い/強い/普通/弱い）。とても弱いは弱いに寄せる */
 function strengthPill(word) {
   const M = {
@@ -1634,6 +1649,8 @@ function drawPredictions(box, pred) {
     if (pair.length === 2) return pair[0].home_away === "ホーム" ? pair : [pair[1], pair[0]];
     return pair;
   });
+  // 並びは日程タブと同じキックオフ順にそろえる（予測はCS率順で来るため並べ替える）
+  matches.sort((a, b) => String(a[0].kickoff_raw || "").localeCompare(String(b[0].kickoff_raw || "")));
 
   const teamRow = (r) => {
     // 材料になる試合が無いチームは null で来る（未消化・開幕前）。数値を出さず「—」
@@ -1647,14 +1664,12 @@ function drawPredictions(box, pred) {
       <span class="pred-cell${csHi}">${noCs ? "—" : Math.round(r.clean_sheet_pct) + "%"}</span>
     </div>`;
   };
-  const head = `<div class="pred-head"><span></span><span>ゴール期待値</span><span>クリーンシート％</span></div>`;
+  const head = `<div class="pred-head"><span></span><span>ゴール期待値</span>`
+    + `<span><span class="pred-h-long">クリーンシート</span><span class="pred-h-short">CS</span>％</span></div>`;
   const cards = matches.map((m) => `<div class="pred-match">${m.map(teamRow).join("")}</div>`);
-  const mid = Math.ceil(cards.length / 2);
-  const col1 = head + cards.slice(0, mid).join("");
-  const col2 = cards.length > mid ? head + cards.slice(mid).join("") : "";
 
-  let html = `<p class="note" style="font-weight:600;color:#37003c;">${esc(pred.event_name || "次節")}</p>`;
-  html += `<div class="pred-cols"><div class="pred-col">${col1}</div><div class="pred-col">${col2}</div></div>`;
+  let html = gwHeadHtml(pred.event_name, pred.deadline);
+  html += twoColumns(cards, head);
   html += playerGoalRankingHtml(pred);
   box.innerHTML = html;
 }
@@ -1705,9 +1720,7 @@ function drawSchedule(box, fx) {
     );
     return;
   }
-  let html = `<p class="note" style="font-weight:600;color:#37003c;">${esc(fx.event_name || "次節")}</p>`;
-  matches.forEach((m) => {
-    html += `<div class="match-card">
+  const cards = matches.map((m) => `<div class="match-card">
       <div class="match-time">${esc(m.kickoff)}</div>
       <div class="match-teams">
         <div class="match-team home">
@@ -1720,9 +1733,8 @@ function drawSchedule(box, fx) {
           ${strengthPill(m.away_opponent_strength)}
         </div>
       </div>
-    </div>`;
-  });
-  box.innerHTML = html;
+    </div>`);
+  box.innerHTML = gwHeadHtml(fx.event_name, fx.deadline) + twoColumns(cards);
 }
 
 /* ---------- 補助 ---------- */
