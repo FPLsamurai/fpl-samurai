@@ -1752,14 +1752,13 @@ tr.me-row td { background: #eafff3 !important; }
   margin-bottom: 8px;
   text-align: center;
 }
-/* スカッド上の情報スロット（計画＝操作説明/選手バー/通知、直近節＝合計と平均）。
-   高さを固定して、内容が切り替わってもスカッドが上下に動かないようにする */
+/* 計画タブの操作説明／通知。スカッドの下・移籍プランの上に置く。
+   スカッドより下なので高さ固定は不要（説明文と通知はどちらも1行）。 */
 .mt-info-slot {
-  min-height: 54px;   /* 計画タブの説明文（2行）が収まる高さ。両タブでスカッド位置を揃えるため */
   display: flex;
   flex-direction: column;
   justify-content: center;
-  margin-bottom: 8px;
+  margin: 10px 0 8px;
 }
 .mt-info-slot .mt-actions,
 .mt-info-slot .mt-msg,

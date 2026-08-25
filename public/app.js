@@ -2319,13 +2319,13 @@ function renderSquadPitch() {
           <div class="mt-stat"><span class="mt-stat-l">コスト</span><span class="mt-stat-v${cost > 0 ? " neg" : ""}">${cost > 0 ? "-" + cost : "0"}</span></div>
         </div>
       </div>
-      <div class="mt-info-slot">${bar}</div>
       <div class="mt-pitch-outer">
         <div class="mt-pitch-wrap${P.chip ? " chip-" + P.chip : ""}">
           <div class="mt-pitch">${rows}</div>
           <div class="mt-bench">${bench.map(mtCard).join("")}</div>
         </div>
       </div>
+      <div class="mt-info-slot">${bar}</div>
       <div id="mt-picker" class="mt-picker" hidden></div>
       <div class="mt-transfers">
         <div class="mt-tr-head">
@@ -2412,17 +2412,14 @@ function renderSquadPitch() {
     } else {
       header = `<div class="mt-loading-msg">ポイント反映まで時間がかかっています...</div>`;
     }
-    // スカッド上の情報行：自分のスタメン合計と、FPLプレイヤー全体のその節の平均ポイント（公式のAverage）
+    // スタメン11人の合計ポイント（ピッチ左上・右上のバッジで使う）
     let total = "−";
     if (MT.livePoints) {
       const st = MT.base.squad.filter((p) => p.position <= 11);
       total = st.reduce((n, p) => n + (mtPoints(p) || 0), 0);
     }
-    const avgMap = (DATA.meta && DATA.meta.event_averages) || {};
-    const avg = avgMap[String(MT.gw)] != null ? avgMap[String(MT.gw)] : "−";
     wrap.innerHTML = `
       <div class="mt-head${MT.livePoints ? "" : " mt-head-center"}">${header}</div>
-      <div class="mt-info-slot"><div class="mt-hint"><b>合計：</b>${total}ポイント　<b>プレイヤー平均：</b>${avg}ポイント</div></div>
       <div class="mt-pitch-outer">
         <div class="mt-pitch-wrap mt-readonly">
           <div class="mt-badge gw">GW${MT.gw}</div>
