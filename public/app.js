@@ -1741,7 +1741,7 @@ function drawSchedule(box, fx) {
       </div>
     </div>`);
   box.innerHTML = gwHeadHtml(fx.event_name, fx.deadline) + twoColumns(cards)
-    + `<p class="note table-note">次節の試合と「相手の強さ」（とても強い／強い／普通／弱い）</p>`;
+    + `<p class="note table-note">「相手の強さ」（とても強い／強い／普通／弱い）</p>`;
 }
 
 /* ---------- 補助 ---------- */
