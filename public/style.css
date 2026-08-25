@@ -2217,7 +2217,13 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
 /* 直近節タブ：カードタップで出る得点内訳ポップアップ（ピッチ枠の中に収め、下端をフィールド下端に合わせる） */
 .mt-bd-overlay {
   position: absolute;
-  inset: 0;
+  /* pitch.png の上端67pxは透明帯で、枠はその分だけ上にはみ出している（負マージンで持ち上げ済み）。
+     inset:0 だとその透明部分まで暗くなり、上のチップ／移籍／資金の行にかぶるので、
+     画像が実際に始まる 67/1110＝6.036% から下だけを覆う（下端は画像下端＝枠の下端）。 */
+  top: 6.036%;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 20;
   pointer-events: auto;
   background: rgba(10, 20, 15, 0.5);
