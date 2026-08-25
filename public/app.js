@@ -1715,7 +1715,7 @@ function playerGoalRankingHtml(pred) {
       <div class="pgr-head"><span></span><span>選手</span><span>対戦</span><span>xG平均</span><span>期待値</span></div>
       ${items}
     </div>
-    <p class="note table-note">期待値＝選手の直近5試合平均xG ×（相手の直近5試合平均被xG ÷ リーグ平均xG）</p>`;
+    <p class="note table-note">ゴール期待値＝選手の直近5試合平均xG ×（相手の直近5試合平均被xG ÷ リーグ平均xG）</p>`;
 }
 
 function drawSchedule(box, fx) {
@@ -1741,7 +1741,7 @@ function drawSchedule(box, fx) {
       </div>
     </div>`);
   box.innerHTML = gwHeadHtml(fx.event_name, fx.deadline) + twoColumns(cards)
-    + `<p class="note table-note">次節の試合と「相手の強さ」（とても強い／強い／普通／弱い）。</p>`;
+    + `<p class="note table-note">次節の試合と「相手の強さ」（とても強い／強い／普通／弱い）</p>`;
 }
 
 /* ---------- 補助 ---------- */
