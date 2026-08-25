@@ -1595,6 +1595,7 @@ tbody tr:nth-child(even) {
   font-size: 0.78rem;
   color: var(--muted);
   margin-bottom: 6px;
+  text-align: center;
 }
 /* 「クリスタルパレス 普通 vs マンシティ 強い」を1行に収める。
    中身の寸法はすべて em にしてあるので、この font-size を変えれば行ごと拡縮できる。
@@ -1604,6 +1605,7 @@ tbody tr:nth-child(even) {
 .match-teams {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4em;
   white-space: nowrap;
   font-size: clamp(0.5rem, 3.39vw - 1.9px, 0.85rem);
