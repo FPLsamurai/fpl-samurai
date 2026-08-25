@@ -2009,11 +2009,20 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   background: url("pitch.png") center / 100% 100% no-repeat;
   /* 透明帯が情報スロットに重なるので、枠自体はタップを受けない（カードだけ受ける） */
   pointer-events: none;
+  /* GW◯／◯ptバッジの大きさをピッチ幅に追従させる（cqwの基準） */
+  container-type: inline-size;
 }
 .mt-pitch-wrap .mt-card { pointer-events: auto; }
 /* 直近節タブだけ、ピッチの左上に「GW◯」右上に「◯pt」を白い角丸で重ねる
    （計画タブには出さない）。角丸と余白は em で font-size 1つに追従させ、
-   枠線だけは選手カード（.mt-photo-wrap / .mt-name）と同じ 1.5px #1b1b1f に固定する */
+   枠線だけは選手カード（.mt-photo-wrap / .mt-name）と同じ 1.5px #1b1b1f に固定する。
+   大きさは「箱の角がペナルティエリアの縦線にちょうど触れる」ところに合わせてある。
+   pitch.png 実測で左のPA縦線は x=-0.2877y+376.2、右は x=0.30y+887（画像1274×1110座標）。
+   左上バッジは 左辺11.5%・上辺16.5% 固定なので、font-size を 3.55cqw にすると
+   右下の角が (304.0, 250.7) となり左のPA縦線 x=304.1 に一致する。右上バッジも同寸で、
+   左下の角が右のPA縦線から6.7pxだけ内に入る（＝ピッチ幅の0.5%。文字数が違うため）。
+   cqw は .mt-pitch-wrap のコンテナ幅基準なので、画面幅やピッチの440px上限に関係なく
+   この関係が保たれる。cqw 非対応の古い端末向けに vw のフォールバックを先に置く。 */
 .mt-badge {
   position: absolute;
   top: 16.5%;
@@ -2022,7 +2031,8 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   border-radius: 0.45em;
   padding: 0.1em 0.5em;
   font-weight: 800;
-  font-size: clamp(0.85rem, 3.9vw, 1.3rem);
+  font-size: clamp(0.85rem, 3.9vw, 1.3rem);   /* cqw 非対応時のフォールバック */
+  font-size: 3.55cqw;
   line-height: 1.25;
   letter-spacing: 0.01em;
   color: #1b1b1f;
