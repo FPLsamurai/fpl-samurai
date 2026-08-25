@@ -1590,13 +1590,13 @@ function renderNext(key) {
   const note = document.getElementById("next-note");
   const box = document.getElementById("next-content");
 
+  // 説明文はそれぞれの表の下に置くので、表の上の note は空にしておく
   if (key === "predict") {
     const pred = DATA.predictions || {};
-    note.textContent =
-      `予測の前提：リーグ平均xG（μ）＝${pred.league_avg_xg}。クリーンシート率＝相手が無失点に抑えられる確率。ゴール期待値＝そのチームが決めそうな得点数。`;
+    note.textContent = "";
     drawPredictions(box, pred);
   } else if (key === "schedule") {
-    note.textContent = "次節の試合と「相手の強さ」（とても強い／強い／普通／弱い）。";
+    note.textContent = "";
     drawSchedule(box, DATA.next_fixtures || {});
   }
 }
@@ -1664,12 +1664,18 @@ function drawPredictions(box, pred) {
       <span class="pred-cell${csHi}">${noCs ? "—" : Math.round(r.clean_sheet_pct) + "%"}</span>
     </div>`;
   };
-  const head = `<div class="pred-head"><span></span><span>ゴール期待値</span>`
+  const head = `<div class="pred-head"><span></span>`
+    + `<span><span class="pred-h-long">ゴール</span><span class="pred-h-short">G</span>期待値</span>`
     + `<span><span class="pred-h-long">クリーンシート</span><span class="pred-h-short">CS</span>％</span></div>`;
   const cards = matches.map((m) => `<div class="pred-match">${m.map(teamRow).join("")}</div>`);
 
   let html = gwHeadHtml(pred.event_name, pred.deadline);
   html += twoColumns(cards, head);
+  html += `<p class="note table-note">`
+    + `ゴール期待値＝自チームの直近5試合平均xG ×（相手の直近5試合平均被xG ÷ リーグ平均xG）<br>`
+    + `クリーンシート%＝e^(−λ)　λ＝相手の直近10試合平均xG ×（自チームの直近10試合平均被xG ÷ リーグ平均xG）<br>`
+    + `リーグ平均xG（μ）＝${esc(pred.league_avg_xg)}`
+    + `</p>`;
   html += playerGoalRankingHtml(pred);
   box.innerHTML = html;
 }
@@ -1705,11 +1711,11 @@ function playerGoalRankingHtml(pred) {
     </div>`;
   }).join("");
   return `<h3 class="pgr-title">【選手別】ゴール期待値ランキング TOP10</h3>
-    <p class="note pgr-formula">＝選手の直近5試合平均xG ×<br>(相手の直近5試合平均被xG ÷ リーグ平均xG)</p>
     <div class="pgr">
       <div class="pgr-head"><span></span><span>選手</span><span>対戦</span><span>xG平均</span><span>期待値</span></div>
       ${items}
-    </div>`;
+    </div>
+    <p class="note table-note">期待値＝選手の直近5試合平均xG ×（相手の直近5試合平均被xG ÷ リーグ平均xG）</p>`;
 }
 
 function drawSchedule(box, fx) {
@@ -1723,18 +1729,19 @@ function drawSchedule(box, fx) {
   const cards = matches.map((m) => `<div class="match-card">
       <div class="match-time">${esc(m.kickoff)}</div>
       <div class="match-teams">
-        <div class="match-team home">
-          <div class="tname">${esc(m.home)}</div>
+        <span class="match-team home">
+          <span class="tname">${esc(m.home)}</span>
           ${strengthPill(m.home_opponent_strength)}
-        </div>
-        <div class="match-vs">vs</div>
-        <div class="match-team away">
-          <div class="tname">${esc(m.away)}</div>
+        </span>
+        <span class="match-vs">vs</span>
+        <span class="match-team away">
+          <span class="tname">${esc(m.away)}</span>
           ${strengthPill(m.away_opponent_strength)}
-        </div>
+        </span>
       </div>
     </div>`);
-  box.innerHTML = gwHeadHtml(fx.event_name, fx.deadline) + twoColumns(cards);
+  box.innerHTML = gwHeadHtml(fx.event_name, fx.deadline) + twoColumns(cards)
+    + `<p class="note table-note">次節の試合と「相手の強さ」（とても強い／強い／普通／弱い）。</p>`;
 }
 
 /* ---------- 補助 ---------- */

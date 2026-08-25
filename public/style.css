@@ -1356,6 +1356,15 @@ tbody tr:nth-child(even) {
   background: #fff;
 }
 
+/* 説明文を表の下に移したので、表の上の note は空になる。余白だけ残らないよう畳む */
+.note:empty { display: none; }
+
+/* 表の下に置く説明文・計算式。表とひとかたまりに見えるよう上を詰めて下に余白を取る */
+.table-note {
+  margin: 2px 0 18px;
+  line-height: 1.7;
+}
+
 /* ---------- 節の見出し（日程・予測の共通） ---------- */
 /* 第◯節は左、移籍締切は行の中央。右の空セルで中央を画面中央に保つ */
 .gw-head {
@@ -1461,8 +1470,6 @@ tbody tr:nth-child(even) {
   font-size: 1rem;
   color: var(--pl-purple);
 }
-/* 式は改行位置をそのまま見せたいので中央寄せの2行で */
-.pgr-formula { line-height: 1.5; }
 .pgr {
   background: var(--card);
   border: 0.5px solid #ececf0;
@@ -1589,37 +1596,45 @@ tbody tr:nth-child(even) {
   color: var(--muted);
   margin-bottom: 6px;
 }
-/* ホーム／vs／アウェイの3段。チーム名と強さのラベルは同じ行に並べる
-   （日時 ／ クリスタルパレス 普通 ／ vs ／ マンシティ 強い） */
+/* 「クリスタルパレス 普通 vs マンシティ 強い」を1行に収める。
+   中身の寸法はすべて em にしてあるので、この font-size を変えれば行ごと拡縮できる。
+   最悪ケース（両チーム名8文字＋「とても強い」2つ）で必要な幅は実測で28.4em ぴったり。
+   ちょうどだと文字幅のわずかな差で切れるので、29.5em ぶんあるものとして
+   カード内寸(画面幅−56px)の 1/29.5＝3.39vw−1.90px を上限にする（約4%の余裕）。 */
 .match-teams {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 2px;
+  align-items: center;
+  gap: 0.4em;
+  white-space: nowrap;
+  font-size: clamp(0.5rem, 3.39vw - 1.9px, 0.85rem);
 }
 .match-team {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.35em;
   min-width: 0;
 }
 .match-team .tname {
   font-weight: 700;
-  font-size: 0.95rem;
-  white-space: nowrap;
+  font-size: 1em;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .match-vs {
   color: var(--muted);
-  font-size: 0.8rem;
-  text-align: center;
+  font-size: 0.8em;
+  flex: none;
 }
+@media (min-width: 721px) {
+  /* 2列だとカード内寸は308px固定。308/29.5≒10.4px */
+  .match-teams { font-size: 0.65rem; }
+}
+/* 親(.match-teams)の font-size に追従させるため em で指定する */
 .strength {
   display: inline-block;
   flex: none;
-  font-size: 0.72rem;
-  padding: 2px 8px;
+  font-size: 0.72em;
+  padding: 0.15em 0.5em;
   border-radius: 999px;
   color: #fff;
 }
