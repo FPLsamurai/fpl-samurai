@@ -2321,6 +2321,7 @@ function renderSquadPitch() {
       </div>
       <div class="mt-pitch-outer">
         <div class="mt-pitch-wrap${P.chip ? " chip-" + P.chip : ""}">
+          <div class="mt-badge gw">GW${MT.planGw}</div>
           <div class="mt-pitch">${rows}</div>
           <div class="mt-bench">${bench.map(mtCard).join("")}</div>
         </div>

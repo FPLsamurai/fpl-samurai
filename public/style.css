@@ -2204,7 +2204,11 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   top: 82.79%;
   bottom: 0;
   border-radius: 10px 10px 0 0;
-  padding: calc(3 * var(--u)) calc(3 * var(--u)) 0;   /* = 線の太さ。下だけ0にして下辺の線を消す */
+  /* = 線の太さ。下だけ0にして下辺の線を消す。
+     ::before は .mt-pitch-wrap の疑似要素で、--u（子で定義）を受け取れないため
+     パーセントで書く。padding の % は包含ブロック＝ピッチ幅基準なので
+     0.682% がピッチ幅440pxのとき3pxになり、以降は幅に比例する（下限は3px）。 */
+  padding: max(3px, 0.682%) max(3px, 0.682%) 0;
   background: linear-gradient(90deg, #5de0e6, #004aad);
   /* 中身をくり抜いて「枠線だけ」にする（グラデーションはborderに直接指定できないため） */
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
