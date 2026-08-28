@@ -1,5 +1,5 @@
 # GitHubにプッシュすると、自動で public/ フォルダを GitHub Pages に公開します。
-# さらに毎日10:00(JST)に FPL公式APIから最新データを取得して更新→公開します。
+# さらに1日3回、FPL公式APIから最新データを取得して更新→公開します。
 # （初回だけ GitHub の設定で Pages の Source を「GitHub Actions」にしてください。手順は README.md）
 
 name: Deploy to GitHub Pages
@@ -8,7 +8,12 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: '0 1 * * *'   # 毎日 10:00(JST) = 01:00(UTC) に自動更新
+    # GitHubのスケジュール実行はベストエフォートで、負荷が高いと遅延・破棄される。
+    # 負荷が集中する毎時00分を避け、1枠落とされても次で拾えるよう1日3回にしている。
+    # （00分指定だったときの実績：最短でも+1.2時間、最長+3.7時間の遅れ。破棄された日もあり）
+    # 重い element-summary は update.py 側で12時間キャッシュされるため、2回目以降は
+    # 数十秒で終わる。ポイント・価格・保有率(bootstrap-static)は毎回取り直す。
+    - cron: '37 1,7,13 * * *'   # 01:37 / 07:37 / 13:37(UTC) = 10:37 / 16:37 / 22:37(JST) 目安
   workflow_dispatch: {}   # GitHubの画面から手動でも実行できるように
 
 permissions:

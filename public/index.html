@@ -10,7 +10,9 @@
   <meta name="keywords" content="FPL,ファンタジープレミアリーグ,Fantasy Premier League,プレミアリーグ,データ,攻略,xG,移籍,キャプテン,日本語">
   <meta name="theme-color" content="#37003c">
   <link rel="canonical" href="https://fplsamurai.github.io/fpl-samurai/">
-  <link rel="icon" href="logo.png" type="image/png">
+  <!-- ファビコンは全ページ読み込みで取得されるので小さいものを別に置く。
+       logo.png（256px）はOGPとホーム画面追加アイコン専用 -->
+  <link rel="icon" href="favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="logo.png">
 
   <!-- 画像CDNへ事前接続（選手写真・エンブレム・YouTubeサムネの初回表示を少し速く） -->
@@ -57,7 +59,7 @@
   <!-- トップバー：ロゴ＋タイトル＋メニュー（PC=1段／スマホ=2段） -->
   <header class="topbar">
     <a class="brand" href="#home" id="brand-home" aria-label="ホームへ">
-      <img class="brand-logo" src="logo.png" alt="FPL侍" onerror="this.style.display='none'">
+      <picture><source srcset="logo.webp" type="image/webp"><img class="brand-logo" src="logo.png" alt="FPL侍" onerror="this.style.display='none'"></picture>
       <span class="brand-title">FPL日本語攻略サイト</span>
     </a>
     <nav class="tabs" id="tabs">
@@ -75,7 +77,7 @@
     <!-- ============ ホーム（プロフィール） ============ -->
     <section id="panel-home" class="panel is-active">
       <div class="profile">
-        <img class="profile-logo" src="logo.png" alt="FPL侍" onerror="this.style.display='none'">
+        <picture><source srcset="logo.webp" type="image/webp"><img class="profile-logo" src="logo.png" alt="FPL侍" onerror="this.style.display='none'"></picture>
         <h1 class="profile-name">FPL侍</h1>
         <p class="profile-tag">FPL 日本語攻略サイト ／ プレミアリーグデータ</p>
         <p class="profile-bio">

@@ -9,24 +9,47 @@ GitHub Pages で公開（https://fplsamurai.github.io/fpl-samurai/）。動画�
 FPL公式API ──(scripts/update.py)──▶ data/raw/（生データ・gitignore）
                                   ──▶ data/site/data.json ──コピー──▶ public/data.json
 public/ ──(git push main)──▶ GitHub Actions（.github/workflows/deploy.yml）──▶ GitHub Pages
+                              ▲
+                   1日3回のスケジュール実行でも update.py を回して自動コミット＋公開
 ```
 
 - **public/ がサイト本体**（index.html / app.js / style.css / data.json / icons/）。ビルド工程なし。
 - `public/data.json` は **update.py の生成物。手で編集しない**。
 - ブラウザからFPL APIを直接呼べない（CORS）ため、マイチーム検索とYouTube RSSは
-  **無料中継プロキシ**（app.js の `PROXIES`: allorigins → corsproxy の順）経由。遅い・たまに失敗する前提で書く。
+  **無料中継プロキシ**（app.js の `PROXIES`）経由。遅い・たまに失敗する前提で書く。
+  - **2026-08-28時点で2本とも不調**：`corsproxy.io` は有料化されて `HTTP 401`（要APIキー）、
+    `allorigins.win` は生存しているが 8〜20秒かかる。`proxyFetchText` の中断は12秒なので、
+    250KBある `event/{gw}/live/`（＝スカッドの直近節ポイント）は**事実上いつも失敗する**。
+    差し替えるか、終了済みの節のポイントを update.py で data.json に焼き込むのが本筋。
 
 ## コマンド
 
 | やること | コマンド |
 |---|---|
-| データ更新＋コミット＋プッシュ（週次運用） | `./update.sh` |
+| データ更新＋コミット＋プッシュ（自動更新を待たず今すぐ反映したいとき） | `./update.sh` |
 | データ更新のみ | `python3 scripts/update.py` |
 | ローカル確認 | `python3 scripts/serve.py` → http://localhost:8000 |
 
 - update.py は選手ごとに element-summary を取得するため**数分かかる**（12時間キャッシュあり、再実行は速い）。
 - Claude のプレビュー（launch.json の `fpl-site`）はサンドボックスの制約で `~/Downloads` を直接配信できない。
   **`cp -R public/. /tmp/fplpreview/` で同期してから** preview_start すること（編集のたびに再同期が必要）。
+
+## 自動更新（deploy.yml のスケジュール実行）
+
+- cron は `37 1,7,13 * * *`（＝10:37 / 16:37 / 22:37 JST 目安）。**1日3回**。
+- **GitHubのスケジュール実行はベストエフォートで、指定時刻には走らない。**
+  00分指定（`0 1 * * *`）だった頃の実績は最短でも +1.2時間、最長 +3.7時間の遅れ。
+  2026-08-28 には**実行そのものが破棄された**。負荷が集中する毎時00分を避け、
+  1枠落とされても次で拾えるよう3枠にしてある。それでも遅延・欠落する前提で考える。
+- 2回目以降の実行は重い element-summary が12時間キャッシュに当たるので数十秒で終わる。
+  ポイント・価格・保有率（bootstrap-static）はキャッシュ対象外なので毎回更新される。
+- `meta.data_fresh` は**生成時点のAPI取得成否**でしかなく、更新が丸ごと飛んだ場合は
+  前回の `true` が残る。「データが古い」判定は app.js 側で `meta.generated_at` と
+  現在時刻を比べて別に行う（`dataAgeHours()` / `STALE_HOURS`）。
+- **鮮度の警告を画面に出してはいけない。** このサイトは画面をそのまま動画・X投稿の素材に
+  するため、帯やバッジが写り込むと使えなくなる。異常は `console.warn` に留め、
+  訪問者向けの手がかりは既存の「最終更新」の行だけにする。
+- **60日間 push が無いとスケジュールが自動停止する**（GitHubの仕様）。長期放置に注意。
 
 ## シーズン依存の定数（毎年7〜8月に更新が必要）
 

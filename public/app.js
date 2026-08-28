@@ -156,15 +156,38 @@ function setupSubtabs() {
 }
 
 /* ---------- ヘッダー ---------- */
+
+/* meta.generated_at（例 "2026年08月27日 20:05"）から、いま何時間前のデータかを返す。
+   update.py は日本時間で書き出すので、UTCに直してから比べる（閲覧者のタイムゾーンに
+   左右されないようにするため）。読めない書式なら null を返し、古さの判定自体をしない。 */
+function dataAgeHours(generatedAt) {
+  const m = String(generatedAt || "").match(/(\d+)年(\d+)月(\d+)日\s*(\d+):(\d+)/);
+  if (!m) return null;
+  const t = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 9, +m[5]);
+  if (!isFinite(t)) return null;
+  return Math.max(0, (Date.now() - t) / 3600000);   // 端末の時計が遅れていても負にしない
+}
+
+/* これを超えたら「古い」とみなす。自動更新は1日3回なので、
+   3枠すべて落とされない限り30時間には届かない。 */
+const STALE_HOURS = 30;
+
 function renderHeader() {
   const m = DATA.meta || {};
   document.getElementById("updated").textContent =
     `最終更新：${m.generated_at || "不明"}　（最新の節：${m.latest_gameweek || "不明"}）`;
+
+  /* 画面には警告を出さない（このサイトは動画・X投稿の素材として画面をそのまま
+     撮るので、帯が写り込むと使えなくなるため）。運用者が気づけるように
+     コンソールにだけ残す。訪問者に見える手がかりは上の「最終更新」の行。
+     data_fresh は「生成した時点」のAPI取得成否でしかなく、更新が丸ごと飛んだ
+     場合は前回の true が残るので、生成時刻の古さは別に見る。 */
+  const age = dataAgeHours(m.generated_at);
+  if (age !== null && age >= STALE_HOURS) {
+    console.warn(`[FPL侍] データが${Math.floor(age)}時間前のものです（生成 ${m.generated_at}）。自動更新が滞っている可能性があります。`);
+  }
   if (m.data_fresh === false) {
-    const warn = document.createElement("div");
-    warn.className = "stale-warning";
-    warn.textContent = "⚠ 一部データの取得に失敗したため、前回の内容を表示しています";
-    document.body.insertBefore(warn, document.querySelector(".tabs"));
+    console.warn("[FPL侍] 生成時に一部データの取得に失敗しています（meta.data_fresh = false）。");
   }
 }
 
@@ -860,6 +883,7 @@ function renderPlayerRich(key) {
 
   // イベントは親に1回だけ付ける（中身を作り替えても効く）
   const head = document.getElementById("player-head");
+  enableSortKeys(head);
   head.addEventListener("click", (e) => {
     const th = e.target.closest("th.sortable");
     if (!th) return;
@@ -1060,6 +1084,7 @@ function refreshPlayerBody() {
   });
 
   // 矢印（↑小さい順＝赤 / ↓大きい順＝緑）
+  markSortableHeaders(document.getElementById("player-head"), key, dir);
   document.querySelectorAll("#player-head th.sortable").forEach((th) => {
     const arr = th.querySelector(".arr");
     if (th.dataset.sort === key) {
@@ -1425,6 +1450,8 @@ function drawTeamRankTable(box, rows) {
 
   box.innerHTML = wideTable(`<table class="rich teamtbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`);
   syncTableStickyRoom();
+  markSortableHeaders(box.querySelector("thead"), key, dir);
+  enableSortKeys(box.querySelector("thead"));
   box.querySelector("thead").addEventListener("click", (e) => {
     const th = e.target.closest("th.sortable");
     if (!th) return;
@@ -1569,6 +1596,8 @@ function drawFdrTable(box) {
     try { localStorage.setItem("fpl_fdr_window", String(fdrWindow)); } catch (e) {}
     drawFdrTable(box);
   });
+  markSortableHeaders(box.querySelector("thead"), fdrSort.key, dir);
+  enableSortKeys(box.querySelector("thead"));
   box.querySelector("thead").addEventListener("click", (e) => {
     const th = e.target.closest("th.sortable");
     if (!th) return;
@@ -1754,8 +1783,49 @@ function rankClass(rank) {
 function emptyMessage(text) {
   return `<div class="empty">${text}</div>`;
 }
+/* ===========================================================
+   並び替え見出しのキーボード操作（選手・チーム・次節FDR の3表で共用）
+   th はボタンではないので、そのままではフォーカスできず並び替えができなかった。
+   role="button" は付けない（th の列見出しとしての意味が消えるため）。
+   tabindex でフォーカスできるようにし、Enter/Space を click に変換して
+   既存のクリック処理へ流す（並び替えのロジックを二重に持たないため）。
+   =========================================================== */
+
+// 各表の描画後に呼ぶ。いまどの列をどちら向きに並べているかを aria-sort で伝える
+// （矢印は色と形でしか出ておらず、支援技術には届いていなかった）
+function markSortableHeaders(container, activeKey, dir) {
+  if (!container) return;
+  container.querySelectorAll("th.sortable").forEach((th) => {
+    th.tabIndex = 0;
+    th.setAttribute("aria-sort",
+      th.dataset.sort === activeKey ? (dir === "asc" ? "ascending" : "descending") : "none");
+  });
+}
+
+// Enter/Space を click に変える。委譲なので中身を作り替えても効く
+function enableSortKeys(container) {
+  if (!container || container.dataset.sortKeysReady) return;
+  container.dataset.sortKeysReady = "1";
+  container.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+    const th = e.target.closest("th.sortable");
+    if (!th) return;
+    e.preventDefault();   // Space でページがスクロールするのを止める
+    th.click();
+  });
+}
+
+/* HTMLに埋め込む文字列のエスケープ。
+   " と ' も必ず変換すること。この2つを通していたため、属性値の中に展開している箇所
+   （ミニリーグ名など）で属性を抜け出して onmouseover 等を注入できる状態だった。
+   ミニリーグ名・チーム名・マネージャー名はFPL利用者が自由に付けられる＝外部入力。 */
 function esc(s) {
-  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 /* ===========================================================
    マイチーム検索（FPL ID → スカッド＆ミニリーグ）

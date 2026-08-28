@@ -47,20 +47,24 @@ body {
   gap: 14px;
   margin-top: 10px;
 }
+/* 白文字＋白14%の背景は、濃いヘッダー用の配色。明るい本文背景(#f5f5f7)の上では
+   実質「白地に白」(1.08:1)で見えなかったため、ブランドの紫に変更した(13.3:1)。
+   44pxはタップ目標の推奨サイズ。 */
 .sns-links .sns {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.14);
-  transition: background 0.15s, transform 0.1s;
+  color: var(--pl-purple);
+  background: rgba(55, 0, 60, 0.08);
+  transition: background 0.15s, color 0.15s, transform 0.1s;
 }
 .sns-links .sns:active { transform: scale(0.92); }
-.sns-links .sns.x:hover { background: #000; }
-.sns-links .sns.yt:hover { background: #ff0000; }
+/* ホバーで地色が濃くなるので、文字色も白へ返す（紫のままだと読めなくなる） */
+.sns-links .sns.x:hover { background: #000; color: #fff; }
+.sns-links .sns.yt:hover { background: #ff0000; color: #fff; }
 
 /* ルール解説ページ */
 .rules-doc {
@@ -224,6 +228,11 @@ body {
   padding: 8px 0;
   flex: 0 0 auto;
 }
+/* <picture> は WebP と PNG を出し分けるためだけの入れ物。レイアウト上は無かったことにして、
+   中の <img> がそのまま flex の子になるようにする。box を作らせると行ボックスのぶん
+   数px高くなり、--topbar-h（表の固定見出しの基準）がずれる。 */
+picture { display: contents; }
+
 .brand-logo {
   width: 34px;
   height: 34px;
@@ -695,6 +704,12 @@ table.rich th.sortable {
 table.rich th.sortable:hover {
   background: #e2d6e6;
 }
+/* 見出しはキーボードでも並び替えできる（tabindex=0 + Enter/Space）。
+   どこにフォーカスがあるか分かるように枠を出す。 */
+table.rich th.sortable:focus-visible {
+  outline: 2px solid var(--pl-purple);
+  outline-offset: -2px;
+}
 .arr {
   display: inline-block;
   width: 12px;           /* 昇順↑/降順↓の有無に関わらず常にこの幅を確保 */
@@ -702,7 +717,9 @@ table.rich th.sortable:hover {
   text-align: left;
   font-weight: 700;
 }
-.arr-desc { color: var(--pl-green); }   /* 大きい順↓＝緑（そのまま） */
+/* 矢印は淡い紫の見出し(#efe9f1)の上に出る。--pl-green(#00ff87) はその上ではコントラスト
+   1.12:1 で、どの列をどちら向きに並べているか判別できなかったため濃い緑に変更した。 */
+.arr-desc { color: #49b605; }           /* 大きい順↓＝緑 */
 .arr-asc { color: var(--hard); }        /* 小さい順↑＝赤 */
 /* 見出し行（1行目）は枠の上端に固定。フィルタ行(.filter-row td)は固定しない */
 table.rich thead tr:first-child th {
@@ -787,7 +804,7 @@ details.col-manager > summary {
 }
 /* ⠿ グリップ（ここは長押し不要ですぐつかめる） */
 .cm-grip {
-  color: #b9b2bd;
+  color: #767080;   /* #b9b2bd は白地で2.07:1しかなく、つまみが見えなかった */
   font-size: 1rem;
   padding: 2px 8px 2px 2px;
   cursor: grab;
@@ -2553,11 +2570,3 @@ code {
 }
 .site-footer p { margin: 2px 0; }
 
-/* ---------- データが古いときの注意バー ---------- */
-.stale-warning {
-  background: #fff3cd;
-  color: #8a6d00;
-  text-align: center;
-  font-size: 0.8rem;
-  padding: 8px;
-}
