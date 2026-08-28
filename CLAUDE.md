@@ -15,12 +15,21 @@ public/ ──(git push main)──▶ GitHub Actions（.github/workflows/deploy
 
 - **public/ がサイト本体**（index.html / app.js / style.css / data.json / icons/）。ビルド工程なし。
 - `public/data.json` は **update.py の生成物。手で編集しない**。
-- ブラウザからFPL APIを直接呼べない（CORS）ため、マイチーム検索とYouTube RSSは
-  **無料中継プロキシ**（app.js の `PROXIES`）経由。遅い・たまに失敗する前提で書く。
-  - **2026-08-28時点で2本とも不調**：`corsproxy.io` は有料化されて `HTTP 401`（要APIキー）、
-    `allorigins.win` は生存しているが 8〜20秒かかる。`proxyFetchText` の中断は12秒なので、
-    250KBある `event/{gw}/live/`（＝スカッドの直近節ポイント）は**事実上いつも失敗する**。
-    差し替えるか、終了済みの節のポイントを update.py で data.json に焼き込むのが本筋。
+- ブラウザからFPL APIを直接呼べない（CORS）ため、マイチーム検索・ミニリーグ順位・
+  ホームのYouTube最新動画は **自前の中継**（Cloudflare Worker）経由。
+  - コードは `worker/fpl-proxy.js`、URLは `https://fpl-proxy.fpltaro39.workers.dev`。
+    app.js 側の入口は `PROXY` と `proxyFetchText(query)` の2つだけ。
+  - 受け口は `?path=<FPL APIのパス>` と `?yt=1`（YouTube RSS）の2種類のみ。
+    **中継先とパスは Worker 側の allowlist で絞ってある**。素通しの公開プロキシにすると
+    踏み台にされて無料枠（1日10万リクエスト）を食い潰されるため、ここは緩めない。
+    呼び出し元も `ALLOWED_ORIGINS`（本番＋localhost）に限定。Origin無しは403。
+  - 2026-08-28に無料の公開プロキシ（allorigins / corsproxy）から移行した。corsproxy は
+    有料化で401、allorigins は520で落ち、**2本同時に死んでスカッドが表示できなくなった**。
+    代替の公開プロキシも4本試して全滅。他人の無料サービスに依存する構成には戻さない。
+  - 実測：`event/{gw}/live/`（436KB）が allorigins は19.7秒で522、自前Workerは0.37秒。
+    エッジキャッシュありでMISS 0.34秒→HIT 0.19秒。`PROXY_TIMEOUT` は10秒。
+  - Worker を直したときは **Cloudflareのダッシュボードに貼り直すのを忘れない**
+    （`wrangler.jsonc` はGit連携に切り替える場合用。CLIはNode未導入のため使えない）。
 
 ## コマンド
 

@@ -1833,33 +1833,34 @@ function esc(s) {
    無料の中継サービス(allorigins)経由で取得します。
    =========================================================== */
 
-const FPL_API = "https://fantasy.premierleague.com/api/";
-// 中継サービス（全部に同時に投げて、最初に成功した応答を採用する）
-const PROXIES = [
-  (u) => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
-  (u) => "https://corsproxy.io/?url=" + encodeURIComponent(u),
-];
+/* 自前の中継（Cloudflare Worker）。
+   以前は無料の公開プロキシ2本（allorigins / corsproxy）に投げていたが、
+   corsproxy が有料化して 401、allorigins が 520 で落ち、2本とも使えなくなって
+   スカッドが表示できなくなった。代替の公開プロキシも4本試したが全滅だったため、
+   自前に置き換えた。中継先とパスは Worker 側で絞ってある（worker/fpl-proxy.js）。
+   実測：event/{gw}/live/（436KB）が allorigins は 19.7秒で522、こちらは 0.37秒。 */
+const PROXY = "https://fpl-proxy.fpltaro39.workers.dev/";
+const PROXY_TIMEOUT = 10000;   // 自前なので待たされない。詰まったら早めに諦める
 
-// プロキシ2本を同時に競争させてテキストを取得（遅い方・失敗した方を待たない）
-async function proxyFetchText(url) {
-  const attempts = PROXIES.map((wrap) => (async () => {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 12000);  // ハングした中継を待ち続けない
-    try {
-      const res = await fetch(wrap(url), { cache: "no-store", signal: ctrl.signal });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      return await res.text();
-    } finally {
-      clearTimeout(timer);
-    }
-  })());
-  return Promise.any(attempts);  // 最初に成功した方を返す（全滅なら reject）
+// 中継経由で本文を取得する。query は "path=entry/1/" や "yt=1"
+async function proxyFetchText(query) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), PROXY_TIMEOUT);
+  try {
+    const res = await fetch(PROXY + "?" + query, { cache: "no-store", signal: ctrl.signal });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return await res.text();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function fplFetch(path) {
   try {
-    return JSON.parse(await proxyFetchText(FPL_API + path));
+    return JSON.parse(await proxyFetchText("path=" + encodeURIComponent(path)));
   } catch (e) {
+    // 原因が分かるようにコンソールには残す（画面には出さない）
+    console.warn("[FPL侍] 取得に失敗:", path, e && e.message);
     throw new Error("FPLサーバーに接続できませんでした。IDが正しいか、少し時間をおいて再度お試しください。");
   }
 }
@@ -1906,7 +1907,10 @@ function startLivePoints(gw, picks) {
       ex[e.id] = lines;
     });
     if (MT) { MT.livePoints = lp; MT.liveExplain = ex; if (MT.mode === "recent") renderSquadPitch(); }
-  }).catch(() => { /* 得点が取れなくてもスカッドは表示済み */ });
+  }).catch((e) => {
+    // 得点が取れなくてもスカッドは表示済み。ただし理由は追えるようにする
+    console.warn("[FPL侍] 直近節のポイント取得に失敗:", e && e.message);
+  });
 }
 
 const SQUAD_CACHE_PREFIX = "fpl_squad_cache_v1_";  // 前回取得したチーム情報（再訪時に即表示）
@@ -2957,11 +2961,11 @@ const YT_RULE_ID = "g9Mkt1CIMZc";                  // 固定表示している�
 async function loadYouTube() {
   const grid = document.getElementById("yt-grid");
   if (!grid) return;
-  const feedUrl = "https://www.youtube.com/feeds/videos.xml?channel_id=" + YT_CHANNEL_ID;
   let xmlText = null;
   try {
-    xmlText = await proxyFetchText(feedUrl);  // プロキシ2本を競争させて速い方を採用
+    xmlText = await proxyFetchText("yt=1");   // チャンネルIDは中継側で固定している
   } catch (e) {
+    console.warn("[FPL侍] 最新動画の取得に失敗:", e && e.message);
     return;  // 取得失敗：固定動画のみ表示
   }
 

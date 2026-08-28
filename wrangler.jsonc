@@ -1,0 +1,9 @@
+{
+  // FPL侍の中継（Cloudflare Worker）の設定。
+  // Cloudflareのダッシュボードからこのリポジトリを繋ぐと、この設定を読んで
+  // worker/fpl-proxy.js がデプロイされる。サイト本体（public/）はGitHub Pages
+  // のままなので、こちらの設定は Pages の公開には一切影響しない。
+  "name": "fpl-proxy",
+  "main": "worker/fpl-proxy.js",
+  "compatibility_date": "2026-08-28"
+}
