@@ -2097,6 +2097,11 @@ const MT_CHIPS = [
 ];
 // WC・FHの節は移籍がFTを消費せず、追加コストも出ない
 function chipUnlimited(chip) { return chip === "wildcard" || chip === "freehit"; }
+// APIの値("bboost"等)を計画タブと同じ短縮表記("BB"等)に直す。未知の値はそのまま返す
+function chipShort(chip) {
+  const hit = MT_CHIPS.find(([v]) => v === chip);
+  return hit ? hit[1] : chip;
+}
 
 function initSquadEditor(entry, picksData, gw, livePoints) {
   const eh = picksData.entry_history || {};
@@ -2479,7 +2484,7 @@ function renderSquadPitch() {
       const cost = MT.eventTransfersCost || 0;
       header = `<div class="mt-gwnav"><span class="mt-gw-cur">第${MT.gw}節</span></div>
         <div class="mt-stats">
-          <div class="mt-stat"><span class="mt-stat-l">チップ</span><span class="mt-stat-v">${MT.chip ? esc(MT.chip) : "なし"}</span></div>
+          <div class="mt-stat"><span class="mt-stat-l">チップ</span><span class="mt-stat-v">${MT.chip ? esc(chipShort(MT.chip)) : "なし"}</span></div>
           <div class="mt-stat"><span class="mt-stat-l">移籍</span><span class="mt-stat-v">${MT.eventTransfers != null ? MT.eventTransfers : 0}</span></div>
           <div class="mt-stat"><span class="mt-stat-l">資金</span><span class="mt-stat-v">£${MT.bank.toFixed(1)}m</span></div>
           <div class="mt-stat"><span class="mt-stat-l">コスト</span><span class="mt-stat-v${cost > 0 ? " neg" : ""}">${cost > 0 ? "-" + cost : "0"}</span></div>
@@ -2487,16 +2492,16 @@ function renderSquadPitch() {
     } else {
       header = `<div class="mt-loading-msg">ポイント反映まで時間がかかっています...</div>`;
     }
-    // スタメン11人の合計ポイント（ピッチ左上・右上のバッジで使う）
-    let total = "−";
-    if (MT.livePoints) {
-      const st = MT.base.squad.filter((p) => p.position <= 11);
-      total = st.reduce((n, p) => n + (mtPoints(p) || 0), 0);
-    }
+    /* ピッチ右上のptバッジ。
+       スタメン11人を自分で合計していたが、これはベンチブーストの節で合わなくなる
+       （BBはベンチ4人も加点されるため）。サマリーの「直近節◯pt」と同じ
+       entry_history.points（＝MT.eventPoints）をそのまま使う。公式の確定値なので
+       キャプテン倍化・自動交代・移籍コストもすべて織り込み済みで、必ず一致する。 */
+    const total = MT.eventPoints != null ? MT.eventPoints : "−";
     wrap.innerHTML = `
       <div class="mt-head${MT.livePoints ? "" : " mt-head-center"}">${header}</div>
       <div class="mt-pitch-outer">
-        <div class="mt-pitch-wrap mt-readonly">
+        <div class="mt-pitch-wrap mt-readonly${MT.chip ? " chip-" + MT.chip : ""}">
           <div class="mt-badge gw">GW${MT.gw}</div>
           ${MT.livePoints ? `<div class="mt-badge pts">${total}pt</div>` : ""}
           <div class="mt-pitch">${rows}</div>
