@@ -2116,7 +2116,14 @@ function initSquadEditor(entry, picksData, gw, livePoints) {
     entry, gw,
     bank: eh.bank != null ? eh.bank / 10 : 0,
     teamValue: eh.value != null ? eh.value / 10 : 0,
-    eventPoints: eh.points != null ? eh.points : (entry.summary_event_points != null ? entry.summary_event_points : null),
+    /* ピッチのptバッジに出す、その節の合計ポイント。
+       entry.summary_event_points を優先する。picks の entry_history.points は
+       節が終わるまでライブ更新されないため（実測：GW2進行中に summary=53 に対して
+       entry_history=30 のまま）、進行中の節でサマリーの表示とずれてしまう。
+       直近節タブが出すのは常に entry.current_event の節なので、summary_event_points が
+       そのまま対応する。節が終われば両者は一致するので、後から食い違うこともない。 */
+    eventPoints: entry.summary_event_points != null ? entry.summary_event_points
+               : (eh.points != null ? eh.points : null),
     eventTransfers: eh.event_transfers != null ? eh.event_transfers : 0,          // その節に使った移籍数
     eventTransfersCost: eh.event_transfers_cost != null ? eh.event_transfers_cost : 0,  // その節の移籍コスト(-4等)
     chip: picksData.active_chip || null,
