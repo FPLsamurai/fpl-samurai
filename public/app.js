@@ -2941,7 +2941,8 @@ async function loadLeagueStandings(leagueId, leagueName, myEntryId) {
   const slot = document.getElementById("league-standings");
   slot.innerHTML = `<div class="empty">順位表を読み込み中…</div>`;
   try {
-    const d = await fplFetch(`leagues-classic/${leagueId}/standings/?page_standings=1`);
+    // page_standings=1 は既定値なので付けない（付けても中身は同じ50件・page=1）
+    const d = await fplFetch(`leagues-classic/${leagueId}/standings/`);
     const rows = (d.standings && d.standings.results) || [];
     let html = `<h3 class="mt-h3">${esc(leagueName)} 順位表（上位${Math.min(rows.length, 20)}）</h3>
       <table class="squad"><thead><tr><th class="num">順位</th><th>チーム / マネージャー</th><th class="num">節pt</th><th class="num">合計</th></tr></thead><tbody>`;

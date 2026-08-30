@@ -45,6 +45,11 @@ const ALLOWED_PATHS = [
 const YT_CHANNEL_ID = "UCyn1RapHcZDrtnXDKLF93SQ";
 const YT_FEED = "https://www.youtube.com/feeds/videos.xml?channel_id=" + YT_CHANNEL_ID;
 
+/* クエリ文字列は「明示的に許可したものだけ」通す。
+   任意のクエリを素通しさせると allowlist の意味が薄れるため。
+   （順位表のページ送りを実装するときはここに足す） */
+const ALLOWED_QUERY = /^page_standings=\d{1,3}$/;
+
 // 秒。試合中に古い値を出し続けないよう短め。FPL側の負荷も下げられる
 const TTL = { "event/": 60, "entry/": 60, "leagues-classic/": 120, default: 300 };
 const YT_TTL = 1800;   // 動画の更新は頻繁でないので長めでよい
@@ -88,7 +93,15 @@ export default {
     const q = new URL(request.url).searchParams;
     const isYt = q.get("yt") === "1";
     const path = isYt ? "yt" : (q.get("path") || "");
-    if (!isYt && !ALLOWED_PATHS.some((re) => re.test(path))) {
+    /* パス本体とクエリを分けて別々に検証する。
+       まとめて正規表現にかけると "standings/?page_standings=1" のように
+       クエリ付きで来たものを弾いてしまう（実際にミニリーグの順位表がこれで400になった）。 */
+    const cut = path.indexOf("?");
+    const pathOnly = cut === -1 ? path : path.slice(0, cut);
+    const query = cut === -1 ? "" : path.slice(cut + 1);
+    const pathOk = ALLOWED_PATHS.some((re) => re.test(pathOnly));
+    const queryOk = !query || ALLOWED_QUERY.test(query);
+    if (!isYt && (!pathOk || !queryOk)) {
       return new Response(JSON.stringify({ error: "path not allowed", path }), {
         status: 400, headers: { "Content-Type": "application/json", ...corsHeaders(origin) },
       });
@@ -130,7 +143,7 @@ export default {
     }
 
     const body = await upstream.arrayBuffer();
-    const ttl = isYt ? YT_TTL : ttlFor(path);
+    const ttl = isYt ? YT_TTL : ttlFor(pathOnly);
     // 保存用（CORSヘッダ無し）
     const forCache = new Response(body, {
       headers: {
