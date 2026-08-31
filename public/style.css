@@ -319,8 +319,10 @@ picture { display: contents; }
 }
 
 /* ---------- ホーム（プロフィール／リンク集） ---------- */
+/* .profile はホームタブ全体（h1・説明文・目次・カード・プロフィール・YouTube）を
+   包んでいる。プロフィールカードだけだった頃の名残で max-width:480px が付いていたが、
+   それだとホームだけ他タブ(690px)より狭くなるので外した。 */
 .profile {
-  max-width: 480px;
   margin: 0 auto;
   text-align: center;
 }
