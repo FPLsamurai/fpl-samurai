@@ -456,7 +456,9 @@ picture { display: contents; }
 /* 運営者ブロックはデータ導線より下なので、寸法も一段落とす。
    ここを大きいままにすると h1 より目立ち、主従が逆転する
    （元は名前1.6rem・ロゴ110pxで、h1より大きかった）。 */
-.profile-logo { width: 46px; height: 46px; border-width: 2px; margin-top: 28px; }
+/* 上に「プロフィール」の区切り(.profile-section: margin 22px 0 10px)が入るので、
+   ロゴ側で改めて上余白は取らない。取ると区切りとの間が開きすぎる。 */
+.profile-logo { width: 46px; height: 46px; border-width: 2px; margin-top: 2px; }
 .profile-name { font-size: 0.98rem; margin: 6px 0 2px; }
 .profile-tag  { font-size: 0.74rem; margin-bottom: 5px; }
 .profile-bio  { font-size: 0.74rem; }
