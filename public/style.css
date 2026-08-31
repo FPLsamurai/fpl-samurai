@@ -444,15 +444,22 @@ picture { display: contents; }
    左揃えで並ぶため（中央揃えだとカード群と軸がずれて浮く）。 */
 .home-lead {
   text-align: left;
-  font-size: 1.12rem;
+  font-size: 1.15rem;   /* カード見出し(0.92rem)より一段上。主張しすぎない大きさ */
   font-weight: 800;
   color: var(--pl-purple);
   line-height: 1.5;
   letter-spacing: 0.01em;
-  margin: 6px 0 12px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid var(--pl-purple);
+  margin: 10px 0 4px;
+  /* 下線は引かない。直下の「目次」(.profile-section)が点線で区切るので、
+     ここにも線を引くと紫のトップバーと合わせて横線が3本重なる。 */
 }
+/* 運営者ブロックはデータ導線より下なので、寸法も一段落とす。
+   ここを大きいままにすると h1 より目立ち、主従が逆転する
+   （元は名前1.6rem・ロゴ110pxで、h1より大きかった）。 */
+.profile-logo { width: 46px; height: 46px; border-width: 2px; margin-top: 28px; }
+.profile-name { font-size: 0.98rem; margin: 6px 0 2px; }
+.profile-tag  { font-size: 0.74rem; margin-bottom: 5px; }
+.profile-bio  { font-size: 0.74rem; }
 /* 「管理者：」は名前より一段落とす（主役は FPL侍 の側） */
 .profile-role {
   font-size: 0.62em;
