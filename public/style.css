@@ -447,6 +447,10 @@ picture { display: contents; }
    サイズ・色・余白すべて .panel h2（1.15rem / 既定の文字色 / 4px 0 6px）と同一。
    下線は引かない。直下の「目次」(.profile-section)が点線で区切るので、
    ここにも線を引くと紫のトップバーと合わせて横線が3本重なる。 */
+/* ホームの説明文。.profile が text-align:center なので、
+   h1・カードと同じ左揃えに戻す（他タブの .note は親が中央揃えでないため既定で左）。 */
+#panel-home .note { text-align: left; }
+
 .home-lead {
   text-align: left;
   font-size: 1.15rem;
