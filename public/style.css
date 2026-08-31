@@ -462,14 +462,6 @@ picture { display: contents; }
 .profile-name { font-size: 0.98rem; margin: 6px 0 2px; }
 .profile-tag  { font-size: 0.74rem; margin-bottom: 5px; }
 .profile-bio  { font-size: 0.74rem; }
-/* 「管理者：」は名前より一段落とす（主役は FPL侍 の側） */
-.profile-role {
-  font-size: 0.62em;
-  font-weight: 700;
-  color: var(--muted);
-  letter-spacing: 0.04em;
-}
-
 .profile-section {
   text-align: left;
   font-size: 0.82rem;
