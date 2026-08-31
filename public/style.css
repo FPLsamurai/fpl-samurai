@@ -439,6 +439,28 @@ picture { display: contents; }
   font-size: 0.78rem;
   color: var(--muted);
 }
+/* ホーム先頭の見出し。ページの1行目として初見の人が最初に読む場所なので、
+   区切りラベル(.profile-section)より強く出す。左揃えなのは、下のカードが
+   左揃えで並ぶため（中央揃えだとカード群と軸がずれて浮く）。 */
+.home-lead {
+  text-align: left;
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: var(--pl-purple);
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  margin: 6px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--pl-purple);
+}
+/* 「管理者：」は名前より一段落とす（主役は FPL侍 の側） */
+.profile-role {
+  font-size: 0.62em;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
 .profile-section {
   text-align: left;
   font-size: 0.82rem;

@@ -77,8 +77,22 @@
     <!-- ============ ホーム（プロフィール） ============ -->
     <section id="panel-home" class="panel is-active">
       <div class="profile">
+
+        <!-- ホームの先頭。初見の人が最初に読む1行なので、ここでサイトの主題を出す。
+             ページ内で唯一の h1（旧h1は下の .profile-name「FPL侍」だったが、ブランド名
+             だけでは何のサイトか伝わらず、検索エンジンに渡す情報も無かった）。
+             区切りラベルの .profile-section より強い .home-lead を当てている。 -->
+        <h1 class="home-lead">FPLのデータを日本語で見る</h1>
+        <button class="linkcard nav-card" data-go="myteam"><span class="lc-ic data"><img class="lc-ic-img" src="icons/myteam.png" alt=""></span><span class="lc-body"><span class="lc-title">スカッド検索</span><span class="lc-sub">FPL IDでスカッド・ミニリーグ確認</span></span></button>
+        <button class="linkcard nav-card" data-go="players"><span class="lc-ic data"><img class="lc-ic-img" src="icons/player.png" alt=""></span><span class="lc-body"><span class="lc-title">選手データ</span><span class="lc-sub">得点・コスパ・xGなどで並べ替え＆絞り込み</span></span></button>
+        <button class="linkcard nav-card" data-go="teams"><span class="lc-ic data"><img class="lc-ic-img" src="icons/team.png" alt=""></span><span class="lc-body"><span class="lc-title">チームデータ</span><span class="lc-sub">攻撃力・守備力・無失点率</span></span></button>
+        <button class="linkcard nav-card" data-go="next"><span class="lc-ic data"><img class="lc-ic-img" src="icons/next.png" alt=""></span><span class="lc-body"><span class="lc-title">次節予測</span><span class="lc-sub">クリーンシート率・相手の強さ</span></span></button>
+        <button class="linkcard nav-card" data-go="rules"><span class="lc-ic data"><img class="lc-ic-img" src="icons/rule.png" alt=""></span><span class="lc-body"><span class="lc-title">FPLルール解説</span><span class="lc-sub">初心者向けの基本ルール</span></span></button>
+
+        <!-- 運営者の情報はデータへの導線より下。初見の人がまず知りたいのは
+             サイトで何ができるかで、誰がやっているかではないため。 -->
         <picture><source srcset="logo.webp" type="image/webp"><img class="profile-logo" src="logo.png" alt="FPL侍" onerror="this.style.display='none'"></picture>
-        <h1 class="profile-name">FPL侍</h1>
+        <p class="profile-name"><span class="profile-role">管理者：</span>FPL侍</p>
         <p class="profile-tag">FPL 日本語攻略サイト ／ プレミアリーグデータ</p>
         <p class="profile-bio">
           FPL（ファンタジープレミアリーグ）を日本語で攻略！<br>
@@ -120,12 +134,6 @@
           </a>
         </div>
 
-        <div class="profile-section">サイトのデータを見る</div>
-        <button class="linkcard nav-card" data-go="myteam"><span class="lc-ic data"><img class="lc-ic-img" src="icons/myteam.png" alt=""></span><span class="lc-body"><span class="lc-title">スカッド検索</span><span class="lc-sub">FPL IDでスカッド・ミニリーグ確認</span></span></button>
-        <button class="linkcard nav-card" data-go="players"><span class="lc-ic data"><img class="lc-ic-img" src="icons/player.png" alt=""></span><span class="lc-body"><span class="lc-title">選手データ</span><span class="lc-sub">得点・コスパ・xGなどで並べ替え＆絞り込み</span></span></button>
-        <button class="linkcard nav-card" data-go="teams"><span class="lc-ic data"><img class="lc-ic-img" src="icons/team.png" alt=""></span><span class="lc-body"><span class="lc-title">チームデータ</span><span class="lc-sub">攻撃力・守備力・無失点率</span></span></button>
-        <button class="linkcard nav-card" data-go="next"><span class="lc-ic data"><img class="lc-ic-img" src="icons/next.png" alt=""></span><span class="lc-body"><span class="lc-title">次節予測</span><span class="lc-sub">クリーンシート率・相手の強さ</span></span></button>
-        <button class="linkcard nav-card" data-go="rules"><span class="lc-ic data"><img class="lc-ic-img" src="icons/rule.png" alt=""></span><span class="lc-body"><span class="lc-title">FPLルール解説</span><span class="lc-sub">初心者向けの基本ルール</span></span></button>
 
         <p class="updated" id="updated">読み込み中…</p>
       </div>
