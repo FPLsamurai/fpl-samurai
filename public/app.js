@@ -174,8 +174,11 @@ const STALE_HOURS = 30;
 
 function renderHeader() {
   const m = DATA.meta || {};
+  /* 「最新の節」は出さない。data.json の latest_gameweek は「集計が確定した節」で、
+     スカッドタブが表示する進行中の節（entry.current_event）とずれるため、
+     並べて出すと食い違って見える。値自体は metaGw() と cmpSeasonLabel() で使うので残す。 */
   document.getElementById("updated").textContent =
-    `最終更新：${m.generated_at || "不明"}　（最新の節：${m.latest_gameweek || "不明"}）`;
+    `最終更新：${m.generated_at || "不明"}`;
 
   /* 画面には警告を出さない（このサイトは動画・X投稿の素材として画面をそのまま
      撮るので、帯が写り込むと使えなくなるため）。運用者が気づけるように
