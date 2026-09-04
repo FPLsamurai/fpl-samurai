@@ -1,7 +1,9 @@
 # FPL侍 データサイト
 
 FPL（Fantasy Premier League）公式APIのデータを日本語で表示する**静的サイト**。
-GitHub Pages で公開（https://fplsamurai.github.io/fpl-samurai/）。動画素材・X投稿素材としての利用が主目的。
+GitHub Pages で公開。独自ドメイン **https://fplsamurai.com**（2026-09-04にCloudflare Registrarで取得）。
+旧URL `https://fplsamurai.github.io/fpl-samurai/` はGitHub側が自動で301転送する。
+動画素材・X投稿素材としての利用が主目的。
 
 ## アーキテクチャ / データフロー
 
@@ -73,6 +75,9 @@ public/ ──(git push main)──▶ GitHub Actions（.github/workflows/deploy
 - JSは**素のJavaScript**（ライブラリ不使用）、Pythonは**標準ライブラリのみ**。この方針を維持する
 - CSSは**スマホ最優先**（縦画面での表の見やすさが最重要）
 - git push は **SSH**（remote に HTTPS トークンを埋め込まない）
+- CloudflareのDNSは **DNS only（グレー雲）を維持する**。Proxied（オレンジ雲）にすると
+  GitHub Pages が証明書を更新できずHTTPSが壊れる。独自ドメインの実体は
+  `public/CNAME`＋GitHub Pagesの Custom domain 設定＋CloudflareのA/CNAMEレコードの3点セット
 - 選手写真・エンブレムは公式CDNへのホットリンク（著作権・肖像権のグレーゾーンと認識済み。
   再アップロードは絶対にしない。`PHOTO_BASE` 1か所で止められる構造を維持する）
   - **画像のローカル保存は禁止。** フッターに「選手写真・クラブエンブレムは当サイトで
