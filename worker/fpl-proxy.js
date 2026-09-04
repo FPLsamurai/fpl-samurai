@@ -22,7 +22,9 @@ const FPL = "https://fantasy.premierleague.com/api/";
 
 // 呼び出しを許可するサイト。ローカル確認用に localhost も入れてある
 const ALLOWED_ORIGINS = [
-  "https://fplsamurai.github.io",
+  "https://fplsamurai.com",
+  "https://www.fplsamurai.com",
+  "https://fplsamurai.github.io",   // 独自ドメイン移行前の旧URL（当面は残す）
   "http://localhost:8000",
   "http://localhost:8124",
 ];
