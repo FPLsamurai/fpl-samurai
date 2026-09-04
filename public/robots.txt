@@ -1,0 +1,12 @@
+# FPL侍（https://fplsamurai.com/）
+# クロールは全面的に許可する。ページは index.html の1枚だけなので隠すものが無い。
+
+User-agent: *
+Allow: /
+
+# データ本体はページではないので巡回対象から外す（合計3MB近くあり、1日3回書き換わる。
+# クロール予算を食うだけで検索結果に出ても意味が無い）
+Disallow: /data.json
+Disallow: /data_2526.json
+
+Sitemap: https://fplsamurai.com/sitemap.xml

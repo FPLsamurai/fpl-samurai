@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 現在サイトは index.html の1枚（タブ切り替えはハッシュ）なのでURLは1件だけ。
+     /rules/ を独立ページに切り出したら、ここに <url> を追加すること。
+     lastmod は「ページの中身（文章・機能）を変えた日」。data.json の自動更新では動かさない。 -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://fplsamurai.com/</loc>
+    <lastmod>2026-09-04</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

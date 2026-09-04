@@ -52,6 +52,41 @@
   }
   </script>
 
+  <!-- 構造化データ：サイトと運営者（検索結果でのブランド認識用。SNSは sameAs で紐づける） -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://fplsamurai.com/#website",
+        "url": "https://fplsamurai.com/",
+        "name": "FPL侍",
+        "alternateName": "FPL日本語攻略サイト",
+        "description": "FPL（ファンタジー・プレミアリーグ）の選手・チームデータ、次節予測、スカッド検索、ルール解説を日本語で提供する無料サイト。",
+        "inLanguage": "ja",
+        "publisher": {"@id": "https://fplsamurai.com/#organization"}
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://fplsamurai.com/#organization",
+        "name": "FPL侍",
+        "url": "https://fplsamurai.com/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://fplsamurai.com/logo.png",
+          "width": 256,
+          "height": 256
+        },
+        "sameAs": [
+          "https://x.com/FPLsamuraiJapan",
+          "https://www.youtube.com/@samuraiFPL"
+        ]
+      }
+    ]
+  }
+  </script>
+
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
