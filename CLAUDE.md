@@ -16,6 +16,15 @@ public/ ──(git push main)──▶ GitHub Actions（.github/workflows/deploy
 ```
 
 - **public/ がサイト本体**（index.html / app.js / style.css / data.json / icons/）。ビルド工程なし。
+- **ページは2枚。** `index.html`（データ各タブ）と `public/rules/index.html`（ルール解説 `/rules/`）。
+  - ルール解説は2026-09-04にタブから独立ページへ切り出した。**トップには複製を残していない**
+    （canonicalの綱引きを起こさないため。同じ文章を2URLに置くとGoogleが強いトップを
+    正規版に選び、/rules/ が検索結果に出なくなる）。
+  - `/rules/` は **app.js を読み込まない静的ページ**。タブはボタンではなくリンク（`../#players` 等）。
+    画像・CSSは `../` で参照する。
+  - 旧ハッシュ `#rules` `#rule-*` は app.js の `applyHash()` が `/rules/` へ `location.replace` で
+    転送する。**動画概要欄やブックマークの旧リンクを生かすためのものなので消さない。**
+  - ルールの文章を直したら、`/rules/` の `FAQPage` 構造化データ（同ファイルのhead）も合わせる。
 - `public/data.json` は **update.py の生成物。手で編集しない**。
 - ブラウザからFPL APIを直接呼べない（CORS）ため、マイチーム検索・ミニリーグ順位・
   ホームのYouTube最新動画は **自前の中継**（Cloudflare Worker）経由。

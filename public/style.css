@@ -258,6 +258,7 @@ picture { display: contents; }
 }
 .tab {
   flex: 1 0 auto;
+  text-decoration: none;   /* ルールタブは <a>（/rules/ へのリンク）なので下線を消す */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -610,9 +611,16 @@ main {
 .panel.is-active {
   display: block;
 }
-.panel h2 {
+.panel h2,
+.panel h1.rules-title {   /* /rules/ は独立ページなので見出しが h1。見た目は h2 と同じ */
   font-size: 1.15rem;
   margin: 4px 0 6px;
+}
+
+/* /rules/ 末尾からトップへ戻る導線 */
+.rules-back {
+  margin: 24px 0 8px;
+  font-size: 0.9rem;
 }
 .note {
   font-size: 0.8rem;

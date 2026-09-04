@@ -83,7 +83,8 @@ async function applyPreseasonFallback() {
    applyHash() → activateTab() の1本に集約する（切替経路を増やさないため）。
    パネルのidを panel-* にしているのは、#players がブラウザ標準の
    アンカージャンプを起こしてスクロール位置が飛ぶのを避けるため。 */
-const TABS = ["home", "myteam", "players", "teams", "next", "rules"];
+// ルール解説は /rules/ という独立ページに切り出したので、ここには含めない
+const TABS = ["home", "myteam", "players", "teams", "next"];
 
 // 指定タブへ切り替え（画面を実際に書き換えるのはここだけ）
 function activateTab(target) {
@@ -97,6 +98,13 @@ function activateTab(target) {
 // 現在のハッシュを読んで反映
 function applyHash() {
   const name = decodeURIComponent(location.hash.slice(1));
+  // 旧URL対応：ルールはタブから /rules/ に切り出した。動画概要欄やブックマークに
+  // 残っている #rules・#rule-faq などは、そのまま新ページの同じ位置へ送る。
+  // replace にしているのは、戻るボタンでここへ戻って無限に往復しないようにするため
+  if (name === "rules" || name.startsWith("rule-")) {
+    location.replace("rules/" + (name === "rules" ? "" : "#" + name));
+    return;
+  }
   if (!name || TABS.includes(name)) { activateTab(name || "home"); return; }
   // ルールタブの目次など、タブ名ではないページ内リンク（#rule-faq 等）。
   // その見出しを含むタブを開いてから位置へ送る（直リンク・リロードでも効く）
@@ -121,7 +129,8 @@ function goTab(target) {
 }
 
 function setupParentTabs() {
-  document.querySelectorAll(".tab").forEach((tab) => {
+  // data-target を持つタブだけ。ルールタブは /rules/ への素のリンクなので触らない
+  document.querySelectorAll(".tab[data-target]").forEach((tab) => {
     tab.addEventListener("click", () => goTab(tab.dataset.target));
   });
   // ロゴ／タイトルのクリックでホームへ（href="#home" がそのまま効く）

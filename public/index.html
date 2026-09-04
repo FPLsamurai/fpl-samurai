@@ -35,22 +35,6 @@
   <meta name="twitter:description" content="選手・チームのデータ分析、次節の対戦難易度予測、マイチームのスカッド編集・移籍シミュレーションができる、FPLの日本語攻略サイト。">
   <meta name="twitter:image" content="https://fplsamurai.com/logo.png">
 
-  <!-- 構造化データ：ルール解説のFAQ（Google検索のリッチリザルト用。ルールタブのFAQと内容を一致させること） -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {"@type": "Question", "name": "FPL（ファンタジープレミアリーグ）は無料ですか？", "acceptedAnswer": {"@type": "Answer", "text": "完全無料です。プレミアリーグ公式のゲームで、課金要素はありません。"}},
-      {"@type": "Question", "name": "FPLは日本からでも参加できますか？", "acceptedAnswer": {"@type": "Answer", "text": "参加できます。公式アプリ・サイトは英語ですが操作はシンプルで、選手データや攻略情報は日本語サイト「FPL侍」で確認できます。"}},
-      {"@type": "Question", "name": "シーズン途中からでも始められますか？", "acceptedAnswer": {"@type": "Answer", "text": "いつでも始められます。参加したゲームウィークからポイントが計上され、ミニリーグでは途中参加でも十分楽しめます。"}},
-      {"@type": "Question", "name": "選んだ選手が試合に出なかったらどうなりますか？", "acceptedAnswer": {"@type": "Answer", "text": "出場0分の選手は0ポイントですが、スタメンの場合はベンチの選手が自動で代わりに入ります。キャプテンが出場しなかった場合は副キャプテンのポイントが2倍になります。"}},
-      {"@type": "Question", "name": "毎週必ず操作しないとダメですか？", "acceptedAnswer": {"@type": "Answer", "text": "操作しなくても前の週のチームがそのまま継続されます。無料移籍は最大5回まで繰り越せるので、忙しい週は放置でも大丈夫です。"}},
-      {"@type": "Question", "name": "FPLの締切はいつですか？", "acceptedAnswer": {"@type": "Answer", "text": "各ゲームウィークの最初の試合キックオフの90分前です。日本時間では土曜の夕方〜夜になることが多いです。"}},
-      {"@type": "Question", "name": "FPL 26/27シーズンの変更点は？", "acceptedAnswer": {"@type": "Answer", "text": "初心者向けのスカッド作成アシスタントが追加され、予想ボーナスポイントが試合開始20分後から表示、総合順位・ミニリーグ順位が試合中もリアルタイム更新されるようになりました。ゲームウィークのポイント確定は最終試合の翌日・日本時間17時に変更、公式の価格変動予測ツールも追加されています。守備貢献（DefCon）とチップの使用回数、予算1億ポンドは変更ありません。"}}
-    ]
-  }
-  </script>
 
   <!-- 構造化データ：サイトと運営者（検索結果でのブランド認識用。SNSは sameAs で紐づける） -->
   <script type="application/ld+json">
@@ -103,7 +87,7 @@
       <button class="tab" data-target="players"><img class="tab-ic" src="icons/player.png" alt="">選手</button>
       <button class="tab" data-target="teams"><img class="tab-ic" src="icons/team.png" alt="">チーム</button>
       <button class="tab" data-target="next"><img class="tab-ic" src="icons/next.png" alt="">次節</button>
-      <button class="tab" data-target="rules"><img class="tab-ic" src="icons/rule.png" alt="">ルール</button>
+      <a class="tab" href="rules/"><img class="tab-ic" src="icons/rule.png" alt="">ルール</a>
     </nav>
   </header>
 
@@ -131,7 +115,7 @@
         <button class="linkcard nav-card" data-go="players"><span class="lc-ic data"><img class="lc-ic-img" src="icons/player.png" alt=""></span><span class="lc-body"><span class="lc-title">選手データ</span><span class="lc-sub">得点・コスパ・xGなどで並べ替え＆絞り込み</span></span></button>
         <button class="linkcard nav-card" data-go="teams"><span class="lc-ic data"><img class="lc-ic-img" src="icons/team.png" alt=""></span><span class="lc-body"><span class="lc-title">チームデータ</span><span class="lc-sub">攻撃力・守備力・無失点率</span></span></button>
         <button class="linkcard nav-card" data-go="next"><span class="lc-ic data"><img class="lc-ic-img" src="icons/next.png" alt=""></span><span class="lc-body"><span class="lc-title">次節予測</span><span class="lc-sub">クリーンシート率・相手の強さ</span></span></button>
-        <button class="linkcard nav-card" data-go="rules"><span class="lc-ic data"><img class="lc-ic-img" src="icons/rule.png" alt=""></span><span class="lc-body"><span class="lc-title">FPLルール解説</span><span class="lc-sub">初心者向けの基本ルール</span></span></button>
+        <a class="linkcard" href="rules/"><span class="lc-ic data"><img class="lc-ic-img" src="icons/rule.png" alt=""></span><span class="lc-body"><span class="lc-title">FPLルール解説</span><span class="lc-sub">初心者向けの基本ルール</span></span></a>
 
         <!-- 運営者の情報はデータへの導線より下。初見の人がまず知りたいのは
              サイトで何ができるかで、誰がやっているかではないため。
@@ -242,210 +226,6 @@
     </section>
 
     <!-- ============ ルール解説 ============ -->
-    <section id="panel-rules" class="panel">
-      <h2>FPL ルール解説（初心者向け・26/27対応）</h2>
-      <p class="note">FPL（ファンタジー・プレミアリーグ）の基本ルールをまとめました。これから始める方はここから！</p>
-      <!-- ルール解説動画へのリンク（冒頭） -->
-      <a class="yt-card-h" href="https://youtu.be/g9Mkt1CIMZc" target="_blank" rel="noopener">
-        <span class="yt-thumb-h">
-          <img src="https://i.ytimg.com/vi/g9Mkt1CIMZc/mqdefault.jpg" alt="" loading="lazy">
-          <span class="yt-tag">ルール解説</span>
-          <span class="yt-play"></span>
-        </span>
-        <span class="yt-title-h">動画で見る：FPLルール解説（26/27版）</span>
-      </a>
-
-      <!-- 目次（タップで各項目へジャンプ。動画のチャプターと同じ並び） -->
-      <nav class="rules-toc" aria-label="ルール解説の目次">
-        <p class="toc-title">目次</p>
-        <ul>
-          <li><a href="#rule-register">1. アカウント登録</a></li>
-          <li><a href="#rule-squad">2. スカッド作成</a></li>
-          <li><a href="#rule-week">3. 1週間の流れ</a></li>
-          <li><a href="#rule-transfer">4. 移籍のルール</a></li>
-          <li><a href="#rule-pickteam">5. スタメン編成</a></li>
-          <li><a href="#rule-points">6. ポイントの仕組み</a></li>
-          <li><a href="#rule-price">7. 価格変動とは</a></li>
-          <li><a href="#rule-chips">8. 4つのチップ</a></li>
-          <li><a href="#rule-league">9. ミニリーグで友達と競う</a></li>
-          <li><a href="#rule-faq">よくある質問（FAQ）</a></li>
-        </ul>
-      </nav>
-
-      <div class="rules-doc">
-        <h3 id="rule-about">FPLとは？</h3>
-        <p>プレミアリーグの実在の選手15人を選んで自分だけのチームを作り、その選手が実際の試合で挙げた成績に応じてポイントを獲得する、無料の公式ゲームです。世界中の人と総合順位を争うほか、友達だけのミニリーグでも競えます。</p>
-
-        <h3 id="rule-register">1. アカウント登録 <a class="rules-time" href="https://youtu.be/g9Mkt1CIMZc?t=50" target="_blank" rel="noopener">▶ 動画 0:50〜</a></h3>
-        <ol>
-          <li><b>プレミアリーグ公式アプリ</b>をダウンロード（ブラウザで fantasy.premierleague.com でもOK）</li>
-          <li>画面左下の「<b>Fantasy</b>」を選択 →「<b>I need to register</b>」で新規登録</li>
-          <li>メールアドレスのほか、<b>Google・Facebook・Apple・X</b> のアカウントでも登録可能</li>
-          <li>メールアドレスの場合は、届いた<b>確認コード</b>を入力してパスワードを設定</li>
-          <li>「<b>Sign in</b>」からログイン</li>
-        </ol>
-
-        <h3 id="rule-squad">2. スカッド作成 <a class="rules-time" href="https://youtu.be/g9Mkt1CIMZc?t=91" target="_blank" rel="noopener">▶ 動画 1:31〜</a></h3>
-        <p>スカッドを組むときのルールは3つだけです。</p>
-        <ul>
-          <li>選手は<b>15人</b>（内訳：<b>GK 2人・DF 5人・MF 5人・FW 3人</b>で固定）</li>
-          <li>予算は<b>£100.0m以内</b>（1億ポンド）</li>
-          <li>同じクラブからは<b>最大3人</b>まで</li>
-        </ul>
-        <p class="rules-sub">※ 26/27から「<b>スカッド作成アシスタント</b>」が追加。3つの質問（応援クラブの選手を入れるか／予算をスタメンとベンチにどう配分するか／攻撃と守備のどちらに厚く投資するか）に答えると15人を自動で組んでくれます。スキップして自分で選ぶこともできます。</p>
-
-        <h3 id="rule-week">3. 1週間の流れ <a class="rules-time" href="https://youtu.be/g9Mkt1CIMZc?t=169" target="_blank" rel="noopener">▶ 動画 2:49〜</a></h3>
-        <p>チームを作ったあとは、この繰り返しです。</p>
-        <ol>
-          <li><b>締切前</b>：移籍・スタメン・キャプテンを確定<br>
-            <span class="rules-sub">※ 締切は各GW（ゲームウィーク）の最初の試合キックオフ<b>90分前</b>。日本時間では土曜の夕方〜夜が多い（金曜に試合がある週は前倒し）</span></li>
-          <li><b>試合</b>：出場した選手のポイントが自動で加算される。締切後の変更はできない<br>
-            <span class="rules-sub">※ 26/27から、<b>予想ボーナスポイントが試合開始20分後から表示</b>され、<b>総合順位・ミニリーグ順位も試合中にリアルタイム更新</b>されます</span></li>
-          <li><b>GW終了後</b>：ポイントが確定し、そのGWの得点と順位が決まる<br>
-            <span class="rules-sub">※ 確定は<b>最終試合の翌日・イギリス時間 午前9時（日本時間 17時）</b>（26/27から変更。昨季は最終試合の終了1時間後）</span></li>
-          <li>次のGWへ。やることは「<b>移籍を考える → スタメンを決める → キャプテンを選ぶ</b>」の繰り返し</li>
-        </ol>
-
-        <h3 id="rule-transfer">4. 移籍のルール <a class="rules-time" href="https://youtu.be/g9Mkt1CIMZc?t=263" target="_blank" rel="noopener">▶ 動画 4:23〜</a></h3>
-        <ul>
-          <li>毎週<b>無料移籍（FT）が1つ</b>追加される</li>
-          <li>未使用分は繰り越せる（<b>最大5つ</b>まで保持）</li>
-          <li>FTを超える追加移籍は<b>1回につき −4ポイント</b>のペナルティ</li>
-          <li><b>確定した移籍は取り消せない。</b>同じ選手を戻す場合も新しい移籍としてカウントされ、追加コストがかかる</li>
-        </ul>
-        <button class="nav-card rules-cta" data-go="players">🔁 選手タブで移籍候補をデータから探す</button>
-
-        <h3 id="rule-pickteam">5. スタメン編成 <a class="rules-time" href="https://youtu.be/g9Mkt1CIMZc?t=300" target="_blank" rel="noopener">▶ 動画 5:00〜</a></h3>
-        <ul>
-          <li>各GWの締切前に<b>スタメン11人</b>を選び、残り4人はベンチに配置</li>
-          <li>可能なフォーメーションは次の8種類：<br>
-            <b>5-4-1／5-3-2／5-2-3<br>4-5-1／4-4-2／4-3-3<br>3-5-2／3-4-3</b><br>
-            <span class="rules-sub">※ GKは必ず1人、DFは最低3人、FWは最低1人</span></li>
-          <li>ベンチには通常ポイントが入らない</li>
-          <li>スタメンの出場が<b>0分</b>だった場合、<b>ベンチの左側から自動交代</b>（自動サブ）。一番出場しそうな選手を左に置く<br>
-            <span class="rules-sub">※ 交代後もフォーメーションが有効になる範囲でのみ行われます（例：DFが3人を下回る交代は不可）。GKはベンチのGKとのみ交代します</span></li>
-          <li>この画面で<b>キャプテン・副キャプテンの変更</b>と<b>ベンチとスタメンの入れ替え</b>ができる</li>
-          <li>変更したら画面右上の「<b>Confirm</b>」で確定。押し忘れると反映されない</li>
-        </ul>
-
-        <h3 id="rule-points">6. ポイントの仕組み <a class="rules-time" href="https://youtu.be/g9Mkt1CIMZc?t=388" target="_blank" rel="noopener">▶ 動画 6:28〜</a></h3>
-
-        <p><b>全ポジション共通</b></p>
-        <table class="rules-table">
-          <thead><tr><th>項目</th><th>ポイント</th></tr></thead>
-          <tbody>
-            <tr><td>60分未満の出場</td><td>1</td></tr>
-            <tr><td>60分以上の出場</td><td>2</td></tr>
-            <tr><td>アシスト（オウンゴール誘発・PK/FK獲得を含む）</td><td>3</td></tr>
-            <tr><td>ボーナスポイント（各試合の上位3名）</td><td>1〜3</td></tr>
-            <tr><td>イエローカード</td><td>−1</td></tr>
-            <tr><td>レッドカード</td><td>−3</td></tr>
-            <tr><td>オウンゴール</td><td>−2</td></tr>
-            <tr><td>PK失敗</td><td>−2</td></tr>
-          </tbody>
-        </table>
-
-        <p><b>ポジション別</b></p>
-        <table class="rules-table">
-          <thead><tr><th>項目</th><th>GK</th><th>DF</th><th>MF</th><th>FW</th></tr></thead>
-          <tbody>
-            <tr><td>ゴール</td><td>10</td><td>6</td><td>5</td><td>4</td></tr>
-            <tr><td>クリーンシート（60分以上出場）</td><td>4</td><td>4</td><td>1</td><td>—</td></tr>
-            <tr><td>2失点ごと</td><td>−1</td><td>−1</td><td>—</td><td>—</td></tr>
-            <tr><td>シュートセーブ3回ごと</td><td>1</td><td>—</td><td>—</td><td>—</td></tr>
-            <tr><td>PKセーブ</td><td>5</td><td>—</td><td>—</td><td>—</td></tr>
-            <tr><td>守備貢献（下記参照）</td><td>—</td><td>2</td><td>2</td><td>2</td></tr>
-          </tbody>
-        </table>
-        <p class="rules-sub">※ 守備貢献（DefCon。25/26から導入、26/27も変更なし）：DFは「クリア・ブロック・インターセプト・タックル」を<b>10回以上</b>、MF・FWはこれに「リカバリー」を加えて<b>12回以上</b>で2pt。当サイトの選手タブでは「DEFCON」列で確認できます。</p>
-
-        <p><b>キャプテンと副キャプテン</b></p>
-        <ul>
-          <li><b>キャプテン（C）</b>はそのGWのポイントが<b>2倍</b></li>
-          <li>キャプテンの出場が0分の場合、<b>副キャプテン（V）</b>のポイントが2倍になる</li>
-          <li>両方プレーしなかった場合は、どちらも2倍にならない</li>
-        </ul>
-        <button class="nav-card rules-cta" data-go="players">⚽ 選手タブで実際のポイントランキングを見る</button>
-
-        <h3 id="rule-price">7. 価格変動とは <a class="rules-time" href="https://youtu.be/g9Mkt1CIMZc?t=503" target="_blank" rel="noopener">▶ 動画 8:23〜</a></h3>
-        <ul>
-          <li>選手の価格は<b>毎日 ±£0.1m 単位</b>で上下する（日本時間の午前10〜11時ごろ）</li>
-          <li>仕組みは公式には非公開。所有者の約10%が、ワイルドカード以外の移籍でその選手を<b>手放すと値下がり</b>、<b>獲得すると値上がり</b>と言われている</li>
-          <li>値下がりした場合：<b>売値も下がる</b></li>
-          <li>値上がりした場合：上がった分の<b>50%しか売値に反映されない</b><br>
-            <span class="rules-sub">例）価格 +£0.2m → 売値 +£0.1m ／ 価格 +£0.1m → 売値 +£0.0m</span></li>
-          <li>26/27から<b>公式の価格変動予測ツール</b>が追加（毎日 イギリス時間 0時／日本時間 朝8時 更新）</li>
-        </ul>
-
-        <h3 id="rule-chips">8. 4つのチップ <a class="rules-time" href="https://youtu.be/g9Mkt1CIMZc?t=556" target="_blank" rel="noopener">▶ 動画 9:16〜</a></h3>
-        <p><b>チーム編成で使うチップ</b></p>
-        <ul>
-          <li><b>ベンチブースト（BB）</b>：そのGWはベンチ4人のポイントも全て加算される</li>
-          <li><b>トリプルキャプテン（TC）</b>：キャプテンのポイントが2倍ではなく<b>3倍</b>になる</li>
-        </ul>
-        <p><b>移籍で使うチップ</b></p>
-        <ul>
-          <li><b>ワイルドカード（WC）</b>：FT1つで追加移籍が<b>全て無料</b>になる<br>
-            <span class="rules-sub">※ FTの繰り越しは維持。FT1つは消費扱い</span></li>
-          <li><b>フリーヒット（FH）</b>：<b>次のGWだけ</b>自由に移籍できる。GWが終わると移籍前のチームに戻る<br>
-            <span class="rules-sub">※ FTの繰り越しは維持。FT1つは消費扱い</span></li>
-        </ul>
-        <p class="rules-sub">※ 使用回数は26/27も変更なし。各チップを<b>前半（GW1〜19）に1回、後半（GW20〜38）に1回</b>で、4種類×2回の<b>合計8枚</b>。前半分は繰り越せないので、<b>GW19の締切（イギリス時間 1月2日 13:30）</b>までに使い切ってください。1つのGWに使えるチップは1枚だけです。</p>
-        <button class="nav-card rules-cta" data-go="next">📅 次節タブで対戦の有利・不利を見る</button>
-
-        <h3 id="rule-league">9. ミニリーグで友達と競う <a class="rules-time" href="https://youtu.be/g9Mkt1CIMZc?t=627" target="_blank" rel="noopener">▶ 動画 10:27〜</a></h3>
-        <p>友達やコミュニティ内だけの順位表が「<b>ミニリーグ</b>」です。総合順位より身近なライバルとの勝負が続けるモチベーションになります。</p>
-        <ul>
-          <li><b>参加する</b>：「Leagues」→「<b>Join a league or cup</b>」→ 招待コードを入力</li>
-          <li><b>作る</b>：「<b>Create a league</b>」→ 発行されたコードを友達に共有</li>
-          <li>種類は2つ：<b>Classic</b>（シーズン合計ポイントで競う）／<b>Head-to-Head</b>（毎週1対1の対戦形式）</li>
-          <li>シーズン途中からの参加でもOK</li>
-          <li>26/27からは<b>ミニリーグの順位も試合中にリアルタイム更新</b>されます</li>
-        </ul>
-        <p class="rules-code">FPL侍のミニリーグ 招待コード：<b>bk0fhe</b><br><span class="rules-sub">「Leagues」→「Join a league or cup」→ このコードを入力すれば参加できます。</span></p>
-        <button class="nav-card rules-cta" data-go="myteam">👥 スカッドタブで自分のミニリーグ順位を見る</button>
-
-        <h3 id="rule-faq">よくある質問</h3>
-        <details class="faq-item">
-          <summary>FPLは無料ですか？</summary>
-          <p>完全無料です。プレミアリーグ公式のゲームで、課金要素はありません。</p>
-        </details>
-        <details class="faq-item">
-          <summary>日本からでも参加できますか？</summary>
-          <p>参加できます。公式アプリ・サイトは英語ですが操作はシンプルです。選手データや攻略情報は当サイトで日本語で確認できます。</p>
-        </details>
-        <details class="faq-item">
-          <summary>シーズン途中からでも始められますか？</summary>
-          <p>いつでも始められます。参加したGWからポイントが計上されます。総合順位では不利ですが、ミニリーグなら途中参加でも十分楽しめます。</p>
-        </details>
-        <details class="faq-item">
-          <summary>選んだ選手が試合に出なかったらどうなりますか？</summary>
-          <p>出場0分の選手は0ポイントですが、スタメンの場合はベンチの選手が自動で代わりに入ります（→ 4. スタメン編成）。キャプテンが出なかった場合は副キャプテンが2倍になります。</p>
-        </details>
-        <details class="faq-item">
-          <summary>毎週必ず操作しないとダメですか？</summary>
-          <p>操作しなくても前の週のチームがそのまま継続されます。無料移籍は最大5回まで繰り越せる（→ 7. 移籍）ので、忙しい週は放置でも大丈夫です。</p>
-        </details>
-        <details class="faq-item">
-          <summary>締切はいつですか？</summary>
-          <p>各GWの最初の試合キックオフの<b>90分前</b>です。日本時間では土曜の夕方〜夜になることが多いです（金曜開催の週は前倒し）。</p>
-        </details>
-        <details class="faq-item">
-          <summary>26/27シーズンの変更点は？</summary>
-          <p>初心者向けの<b>スカッド作成アシスタント</b>が追加され、<b>予想ボーナスポイントが試合開始20分後から表示</b>、<b>総合順位・ミニリーグ順位が試合中もリアルタイム更新</b>されるようになりました。GWのポイント確定は<b>最終試合の翌日・日本時間17時</b>に変更、<b>公式の価格変動予測ツール</b>も追加されています。守備貢献（DefCon）とチップの使用回数、予算£100.0mは変更ありません。</p>
-        </details>
-
-        <h3>このサイトの活用法</h3>
-        <ul>
-          <li><b>選手</b>タブ：得点・コスパ・xGなどで並べ替え＆絞り込み → 移籍候補さがし</li>
-          <li><b>チーム</b>タブ：攻撃力・守備力の比較</li>
-          <li><b>次節</b>タブ：クリーンシート率・対戦相手の強さ → キャプテン選び</li>
-          <li><b>スカッド</b>タブ：自分のスカッドとミニリーグ順位を確認</li>
-        </ul>
-
-        <p class="rules-foot">正式・最新のルールは <b>公式サイト</b>（fantasy.premierleague.com）の Help / Rules も確認してください。</p>
-      </div>
-    </section>
 
   </main>
 
