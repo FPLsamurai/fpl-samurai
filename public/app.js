@@ -766,6 +766,18 @@ const COL_META = {
   gw2:         { label: "2GW",      type: "fx", fx: 1, noSort: true },
   gw3:         { label: "3GW",      type: "fx", fx: 2, noSort: true },
 };
+
+/* 列見出しの文字。1GW/2GW/3GW は実際の節番号（GW4・GW5・GW6…）で出す。
+   節は data.json の next_fixtures から毎回引き直すので、節が進めば自動で繰り上がる。
+   開幕前フォールバック中（今季の日程を出せない）と、計算上38節を超える終盤は
+   節番号が意味を持たないので、定義どおりの「1GW」表記に戻す。 */
+function colLabel(c) {
+  if (c.type === "fx" && !fxFallback) {
+    const g = fdrStartGw() + c.fx;
+    if (g >= 1 && g <= 38) return "GW" + g;
+  }
+  return c.label;
+}
 const FROZEN_ORDER = ["rank", "photo", "name", "team", "position", "cost", "points"];  // ポイントまで左に固定
 const DATA_ORDER_DEFAULT = [
   "value", "ownership", "goals", "assists", "clean_sheets", "starts", "minutes",
@@ -943,7 +955,7 @@ function buildPlayerHead() {
     const numc = (c.type === "num") ? "num " : "";
     // 1行目：見出し（写真列だけ見出し文字を消す）
     const sortable = !c.noSort;
-    const headText = (c.type === "photo") ? "" : esc(c.label);
+    const headText = (c.type === "photo") ? "" : esc(colLabel(c));
     r1 += `<th class="col-${c.key} ${frz}${numc}${sortable ? "sortable" : ""}" ${sortable ? `data-sort="${c.key}"` : ""} style="${st}">${headText}${sortable ? '<span class="arr"></span>' : ""}</th>`;
     // 2行目：フィルタ
     let f = "";
@@ -1189,7 +1201,7 @@ function renderColManager() {
     const checked = !colState.hidden[k];
     return `<div class="colitem" data-cm-key="${k}">
       <span class="cm-grip" aria-hidden="true">⠿</span>
-      <label class="coltoggle"><input type="checkbox" data-cm-show="${k}" ${checked ? "checked" : ""}> ${m.label}</label>
+      <label class="coltoggle"><input type="checkbox" data-cm-show="${k}" ${checked ? "checked" : ""}> ${colLabel(m)}</label>
       <span class="colmove">
         <button type="button" data-cm-up="${k}" ${i === 0 ? "disabled" : ""}>↑</button>
         <button type="button" data-cm-down="${k}" ${i === colState.dataOrder.length - 1 ? "disabled" : ""}>↓</button>
