@@ -1516,8 +1516,8 @@ tbody tr:nth-child(even) {
   .pred-h-short { display: none; }
   .pred-tname { font-size: 0.72rem; }
 }
-.pred-cell.hi-goal { background: #fbe7c4; }   /* ゴール期待値が高い */
-.pred-cell.hi-cs { background: #d7eede; }      /* クリーンシート率が高い */
+.pred-cell.hi-goal { background: #fbe7c4; }   /* ゴール期待値の上位5チーム */
+.pred-cell.hi-cs { background: #d7eede; }      /* クリーンシート率の上位5チーム */
 
 /* ---------- 次節の予測：選手別ゴール期待値ランキング TOP10 ---------- */
 .pgr-title {

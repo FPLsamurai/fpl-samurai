@@ -1670,6 +1670,18 @@ function strengthPill(word) {
   return `<span class="strength ${cls}">${esc(label)}</span>`;
 }
 
+/* 上位5チームの色付けに使う下限値を返す（5位の値そのもの）。
+   5位タイがいる場合は同値をすべて含めるので、色が付くのが6チーム以上になることがある。
+   順位で機械的に5件に切ると、同じ数字なのに片方だけ色が付いて見え方が不公平になるため */
+function top5Cut(values) {
+  const vals = values
+    .filter((v) => v !== null && v !== undefined && isFinite(Number(v)))
+    .map(Number)
+    .sort((a, b) => b - a);
+  if (!vals.length) return null;
+  return vals[Math.min(4, vals.length - 1)];
+}
+
 function drawPredictions(box, pred) {
   const rows = pred.rows || [];
   if (!rows.length) {
@@ -1693,12 +1705,17 @@ function drawPredictions(box, pred) {
   // 並びは日程タブと同じキックオフ順にそろえる（予測はCS率順で来るため並べ替える）
   matches.sort((a, b) => String(a[0].kickoff_raw || "").localeCompare(String(b[0].kickoff_raw || "")));
 
+  // 色付けの基準は固定値ではなく「その節の上位5チーム」。節ごとに対戦相手が変わり
+  // 数値の水準も動くので、固定しきい値だと色が全く付かない節・付きすぎる節が出るため
+  const goalCut = top5Cut(rows.map((r) => r.goal_expect));
+  const csCut = top5Cut(rows.map((r) => r.clean_sheet_pct));
+
   const teamRow = (r) => {
     // 材料になる試合が無いチームは null で来る（未消化・開幕前）。数値を出さず「—」
     const noCs = r.clean_sheet_pct === null || r.clean_sheet_pct === undefined;
     const noG = r.goal_expect === null || r.goal_expect === undefined;
-    const gHi = !noG && Number(r.goal_expect) >= 1.1 ? " hi-goal" : "";
-    const csHi = !noCs && Number(r.clean_sheet_pct) >= 44 ? " hi-cs" : "";
+    const gHi = !noG && goalCut !== null && Number(r.goal_expect) >= goalCut ? " hi-goal" : "";
+    const csHi = !noCs && csCut !== null && Number(r.clean_sheet_pct) >= csCut ? " hi-cs" : "";
     return `<div class="pred-row">
       <span class="pred-team">${teamBadgeByName(r.team)}<span class="pred-tname">${esc(r.team)}</span></span>
       <span class="pred-cell${gHi}">${noG ? "—" : r.goal_expect}</span>
@@ -1715,7 +1732,8 @@ function drawPredictions(box, pred) {
   html += `<p class="note table-note">`
     + `ゴール期待値＝自チームの直近5試合平均xG ×（相手の直近5試合平均被xG ÷ リーグ平均xG）<br>`
     + `クリーンシート%＝e^(−λ)　λ＝相手の直近10試合平均xG ×（自チームの直近10試合平均被xG ÷ リーグ平均xG）<br>`
-    + `リーグ平均xG（μ）＝${esc(pred.league_avg_xg)}`
+    + `リーグ平均xG（μ）＝${esc(pred.league_avg_xg)}<br>`
+    + `色付きのセルは、それぞれの数値が今節の上位5チーム`
     + `</p>`;
   html += playerGoalRankingHtml(pred);
   box.innerHTML = html;
