@@ -448,7 +448,7 @@ picture { display: contents; }
 /* 各タブの見出し(.panel h2)と同じ見え方に揃える。
    ホームの1行目だけ紫にすると、他タブの見出しと書式が食い違って浮くため。
    サイズ・色・余白すべて .panel h2（1.15rem / 既定の文字色 / 4px 0 6px）と同一。
-   下線は引かない。直下の「目次」(.profile-section)が点線で区切るので、
+   下線は引かない。直下のセクション見出し(.profile-section)が点線で区切るので、
    ここにも線を引くと紫のトップバーと合わせて横線が3本重なる。 */
 /* ホームの説明文。.profile が text-align:center なので、
    h1・カードと同じ左揃えに戻す（他タブの .note は親が中央揃えでないため既定で左）。 */
@@ -470,7 +470,9 @@ picture { display: contents; }
 .profile-name { font-size: 0.98rem; margin: 6px 0 2px; }
 .profile-tag  { font-size: 0.74rem; margin-bottom: 5px; }
 .profile-bio  { font-size: 0.74rem; }
-.profile-section {
+/* ホーム内のセクション見出し。h2 にしたので、後ろにある .panel h2 に負けないよう
+   .panel を足して詳細度を上げている（見た目は区切りラベルのまま保つ） */
+.panel .profile-section {
   text-align: left;
   font-size: 0.82rem;
   font-weight: 700;

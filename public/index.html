@@ -101,26 +101,32 @@
              ページ内で唯一の h1（旧h1は下の .profile-name「FPL侍」だったが、ブランド名
              だけでは何のサイトか伝わらず、検索エンジンに渡す情報も無かった）。
              書式は各タブの見出し(.panel h2)と同一にしてある（.home-lead 側で揃えている）。 -->
-        <h1 class="home-lead">FPL日本語攻略ホーム</h1>
-        <!-- FPLを知らない人向けの説明。各タブの h2 直下の説明文と同じ .note を使う。
-             h1 が「FPL日本語攻略ホーム」でゲーム自体の説明を含まないため、ここで補う。 -->
+        <h1 class="home-lead">FPL日本語攻略サイト</h1>
+
+        <!-- FPLを知らない人向けの説明。1段落目でゲームそのものを、2段落目でこのサイトを
+             作った理由を書く。検索から来た人が「何のサイトか」を判断する場所。 -->
+        <h2 class="profile-section">FPL（Fantasy Premier League）とは？</h2>
         <p class="note">
           FPLとは、プレミアリーグの選手15人を選んで自分だけのチームを作り、実際の試合の成績に応じてポイントを獲得する、無料の公式ゲームです。
         </p>
+        <p class="note">
+          世界では1000万人以上がプレイしていますが、公式サイトもアプリもすべて英語。この面白さを日本のもっと多くの人に届けたい——その思いから、このサイトを作りました。
+        </p>
 
-        <!-- カード群の区切り。YouTube欄と同じ .profile-section を使い、
-             ホーム内のセクション見出しの書式を揃える。 -->
-        <div class="profile-section">目次</div>
-        <button class="linkcard nav-card" data-go="myteam"><span class="lc-ic data"><img class="lc-ic-img" src="icons/myteam.png" alt=""></span><span class="lc-body"><span class="lc-title">スカッド検索</span><span class="lc-sub">FPL IDでスカッド・ミニリーグ確認</span></span></button>
-        <button class="linkcard nav-card" data-go="players"><span class="lc-ic data"><img class="lc-ic-img" src="icons/player.png" alt=""></span><span class="lc-body"><span class="lc-title">選手データ</span><span class="lc-sub">得点・コスパ・xGなどで並べ替え＆絞り込み</span></span></button>
-        <button class="linkcard nav-card" data-go="teams"><span class="lc-ic data"><img class="lc-ic-img" src="icons/team.png" alt=""></span><span class="lc-body"><span class="lc-title">チームデータ</span><span class="lc-sub">攻撃力・守備力・無失点率</span></span></button>
-        <button class="linkcard nav-card" data-go="next"><span class="lc-ic data"><img class="lc-ic-img" src="icons/next.png" alt=""></span><span class="lc-body"><span class="lc-title">次節予測</span><span class="lc-sub">クリーンシート率・相手の強さ</span></span></button>
-        <a class="linkcard" href="rules/"><span class="lc-ic data"><img class="lc-ic-img" src="icons/rule.png" alt=""></span><span class="lc-body"><span class="lc-title">FPLルール解説</span><span class="lc-sub">初心者向けの基本ルール</span></span></a>
+        <!-- カード群の区切り。以前は「目次」だったが、同じページ内の見出しへ飛ぶわけでは
+             なく別タブ・別ページへの導線なので実態に合わせた。/rules/ 内の本物の目次とも
+             紛らわしかった。見出しレベルは h2（YouTube欄などと同じ .profile-section の書式）。 -->
+        <h2 class="profile-section">本サイトでできること</h2>
+        <button class="linkcard nav-card" data-go="myteam"><span class="lc-ic data"><img class="lc-ic-img" src="icons/myteam.png" alt=""></span><span class="lc-body"><span class="lc-title">スカッド検索</span><span class="lc-sub">FPL IDでスカッド・ミニリーグ確認できます。</span></span></button>
+        <button class="linkcard nav-card" data-go="players"><span class="lc-ic data"><img class="lc-ic-img" src="icons/player.png" alt=""></span><span class="lc-body"><span class="lc-title">選手データ</span><span class="lc-sub">ゴール・コスパ・xG等の選手データを確認できます。</span></span></button>
+        <button class="linkcard nav-card" data-go="teams"><span class="lc-ic data"><img class="lc-ic-img" src="icons/team.png" alt=""></span><span class="lc-body"><span class="lc-title">チームデータ</span><span class="lc-sub">チームの攻撃力・守備力、対戦表(FDR)を確認できます。</span></span></button>
+        <button class="linkcard nav-card" data-go="next"><span class="lc-ic data"><img class="lc-ic-img" src="icons/next.png" alt=""></span><span class="lc-body"><span class="lc-title">次節予測</span><span class="lc-sub">相手の強さから、ゴール期待値、クリーンシート確率を導き出します。</span></span></button>
+        <a class="linkcard" href="rules/"><span class="lc-ic data"><img class="lc-ic-img" src="icons/rule.png" alt=""></span><span class="lc-body"><span class="lc-title">FPLルール解説</span><span class="lc-sub">初心者向けのFPL基本ルールを分かりやすく解説します。</span></span></a>
 
         <!-- 運営者の情報はデータへの導線より下。初見の人がまず知りたいのは
              サイトで何ができるかで、誰がやっているかではないため。
              区切りは「目次」「YouTube」と同じ .profile-section で書式を揃える。 -->
-        <div class="profile-section">管理者プロフィール</div>
+        <h2 class="profile-section">管理者プロフィール</h2>
         <picture><source srcset="logo.webp" type="image/webp"><img class="profile-logo" src="logo.png" alt="FPL侍" onerror="this.style.display='none'"></picture>
         <p class="profile-name">FPL侍</p>
         <p class="profile-tag">FPL 日本語攻略サイト ／ プレミアリーグデータ</p>
@@ -152,7 +158,7 @@
         </a>
 
         <!-- YouTube：ルール解説（固定）＋最新動画2本（自動取得・横動画） -->
-        <div class="profile-section">YouTube</div>
+        <h2 class="profile-section">YouTube</h2>
         <div class="yt-list" id="yt-grid">
           <a class="yt-card-h" href="https://youtu.be/g9Mkt1CIMZc" target="_blank" rel="noopener">
             <span class="yt-thumb-h">
