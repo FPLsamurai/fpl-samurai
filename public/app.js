@@ -64,6 +64,8 @@ async function init() {
    実績で表示する（価格だけは data_2526.json 生成時に26/27へ差し替え済み）。
    第1節が消化されて data.json に実データが入れば empty=false となり、
    この分岐は自動的に無効化＝通常の26/27表示に戻る。注意書き等は出さない。 */
+let fxFallback = false;   // 開幕前フォールバック中は選手表に今季の日程を出さない
+
 async function applyPreseasonFallback() {
   const empty = !DATA || !DATA.players || !Array.isArray(DATA.players.all) || DATA.players.all.length === 0;
   if (!empty) return;                    // 26/27にデータあり＝通常表示
@@ -73,7 +75,8 @@ async function applyPreseasonFallback() {
     const fb = await res.json();
     DATA.players = fb.players;            // ランキング（選手）だけ昨季に差し替え
     DATA.teams = fb.teams;               // ランキング（チーム）だけ昨季に差し替え
-    DATA.team_next3 = {};                // 昨季の所属で今季日程は出せないので 1GW/2GW/3GW 列は—にする
+    fxFallback = true;                   // 昨季の所属で今季日程は出せないので 1GW/2GW/3GW 列は—にする
+    // （team_fixtures 自体は消さない。FDR表とスカッド計画タブが同じデータを使っている）
   } catch (e) { /* 失敗しても通常フロー（空表示）で続行 */ }
 }
 
@@ -1063,6 +1066,19 @@ function fxShort(f) {
   return (tm && tm.short) || f.o;
 }
 
+/* 対戦セルの中身。選手表の 1GW/2GW/3GW と チームのFDR表で共用する。
+   同じ関数を通すことで、両画面の表示が構造的にズレなくなる。
+   ダブルGWは相手を2行に重ね、色は難しい方に合わせる。ブランクGW（空配列）は「—」 */
+function fxCellInner(list) {
+  if (!list || !list.length) return { cls: "fdr-none", html: `<span class="sub">—</span>`, tip: "" };
+  const lv = Math.max(...list.map((f) => fdrLevel(f.d)));
+  return {
+    cls: fdrClass(lv),
+    html: list.map((f) => `${esc(fxShort(f))}(${f.h ? "H" : "A"})`).join("<br>"),
+    tip: list.map((f) => `${fxShort(f)}（${f.h ? "ホーム" : "アウェイ"}・${fdrWord(f.d)}）`).join(" / "),
+  };
+}
+
 /* ---- 本体（中身）を絞り込み・並べ替えして描く ---- */
 function refreshPlayerBody() {
   const rows = (DATA.players && DATA.players[currentRichKey]) || [];
@@ -1107,6 +1123,8 @@ function refreshPlayerBody() {
       arr.className = "arr";
     }
   });
+  const fxStart = fdrStartGw();   // 1GW列＝この節。行ごとに計算すると無駄なので先に1回だけ
+
   let html = "";
   filtered.forEach((r, i) => {
     let tds = "";
@@ -1136,15 +1154,14 @@ function refreshPlayerBody() {
           : esc(r.team);
         tds += `<td class="${frz}col-team" style="${st}">${badge}</td>`;
       } else if (c.type === "fx") {
-        // 1GW/2GW/3GW：相手を3文字略称＋(H/A)で1行に。背景は対戦難易度（とても強い〜弱い）
-        const f = ((DATA.team_next3 && DATA.team_next3[String(r.team_id)]) || [])[c.fx];
-        if (!f) {
-          tds += `<td class="${frz}fx-cell" style="${st}"><span class="sub">—</span></td>`;
-        } else {
-          const ha = f.h ? "H" : "A";
-          const tip = `${f.o}（${f.h ? "ホーム" : "アウェイ"}）／${fdrWord(f.d)}`;
-          tds += `<td class="${frz}fx-cell ${fdrClass(f.d)}" style="${st}" title="${esc(tip)}">${esc(fxShort(f))}(${ha})</td>`;
-        }
+        // 1GW/2GW/3GW：チームデータのFDR表とまったく同じソース（team_fixtures）の
+        // 同じ節を引く。以前は team_next3（未消化試合を時系列で3件）を見ていたため、
+        // 節の途中に積み残しがあるとFDR表と違う対戦が出ていた。
+        const list = fxFallback
+          ? []
+          : ((DATA.team_fixtures && DATA.team_fixtures[String(r.team_id)]) || {})[String(fxStart + c.fx)];
+        const cell = fxCellInner(list);
+        tds += `<td class="${frz}fx-cell ${cell.cls}" style="${st}" title="${esc(cell.tip)}">${cell.html}</td>`;
       } else {
         const main = c.key === "points" ? "main-num" : "";
         tds += `<td class="num ${frz}${main}" style="${st}">${esc(r[c.key])}</td>`;
@@ -1574,12 +1591,8 @@ function drawFdrTable(box) {
     ${gws.map((g, i) => `<th class="col-fdr sortable" data-sort="gw:${i}">GW${g}${arrow("gw:" + i)}</th>`).join("")}`;
 
   const cellHtml = (list) => {
-    if (!list.length) return `<td class="fx-cell fdr-none"><span class="sub">—</span></td>`;
-    // ダブルGWは相手を2行に重ね、色は難しい方に合わせる（スカッドのカードと同じ扱い）
-    const lv = Math.max(...list.map((f) => fdrLevel(f.d)));
-    const txt = list.map((f) => `${esc(fxShort(f))}(${f.h ? "H" : "A"})`).join("<br>");
-    const tip = list.map((f) => `${fxShort(f)}（${f.h ? "ホーム" : "アウェイ"}・${fdrWord(f.d)}）`).join(" / ");
-    return `<td class="fx-cell ${fdrClass(lv)}" title="${esc(tip)}">${txt}</td>`;
+    const c = fxCellInner(list);   // 選手表の 1GW/2GW/3GW と共通
+    return `<td class="fx-cell ${c.cls}" title="${esc(c.tip)}">${c.html}</td>`;
   };
 
   const body = rows.map((r, i) => {

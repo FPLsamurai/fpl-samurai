@@ -734,41 +734,6 @@ def compute_predictions(bootstrap, fixtures, team_matches, team_map, mu):
     }
 
 
-def compute_team_next3(fixtures, team_map, team_matches, mu):
-    """
-    チームごとの「次の3試合」（選手データの 1GW/2GW/3GW 列で使う）。
-    o = 相手の日本語名 ／ s = 相手の3文字略称 ／ h = ホームか
-    d = そのチームから見た対戦難易度(1〜5。公式FDR。5=とても強い)
-    f = 相手の直近10試合の平均被xG ÷ リーグ平均xG(μ)
-    （選手の得点期待値 = 選手のxG/90 × f として画面側で計算する係数）
-    オフシーズン（未消化試合なし）のときは空。
-    """
-    upcoming = [f for f in fixtures if not fixture_done(f) and f.get("kickoff_time")]
-    upcoming.sort(key=lambda f: f["kickoff_time"])
-
-    def opp_factor(opp_id):
-        rows = team_matches.get(opp_id, [])
-        vals = [r["xgc"] for r in rows[-10:]]
-        if not vals or mu <= 0:
-            return 1.0  # データが無い相手は「平均的な相手」とみなす
-        return round((sum(vals) / len(vals)) / mu, 3)
-
-    out = {}
-    for f in upcoming:
-        for me, opp, home in ((f["team_h"], f["team_a"], True), (f["team_a"], f["team_h"], False)):
-            lst = out.setdefault(str(me), [])
-            if len(lst) < 3:
-                # 難易度は「自分から見た」もの（ホームなら team_h_difficulty）
-                lst.append({
-                    "o": team_map.get(opp, {}).get("name_ja", "?"),
-                    "s": team_map.get(opp, {}).get("short", "?"),
-                    "h": home,
-                    "d": f.get("team_h_difficulty" if home else "team_a_difficulty") or 3,
-                    "f": opp_factor(opp),
-                })
-    return out
-
-
 def compute_team_fixtures(fixtures, team_map):
     """
     チームごとの「節→対戦相手」。スカッド計画タブで、カード下段に
@@ -928,7 +893,6 @@ def main():
         },
         "players": player_tables,
         "elements": build_element_map(bootstrap, team_map, pos_map, jp_names),
-        "team_next3": compute_team_next3(fixtures, team_map, team_matches, mu),
         "team_fixtures": compute_team_fixtures(fixtures, team_map),
         "teams_meta": {str(tid): {"name": m["name_ja"], "short": m["short"], "code": m["code"]}
                        for tid, m in team_map.items()},
