@@ -1810,18 +1810,19 @@ function drawSchedule(box, fx) {
     );
     return;
   }
-  const cards = matches.map((m) => `<div class="match-card">
+  // カードの作りは予測タブ（.pred-match / .pred-row）と共通にする。
+  // 以前は2チームを1行に並べていたが、最長のチーム名＋「とても強い」2つが1行に
+  // 収まるよう文字を縮める必要があり、予測タブと見比べると明らかに小さかった。
+  // 予測と同じ「1チーム＝1行」にすることで、同じクラス＝同じ文字サイズで揃う。
+  const cards = matches.map((m) => `<div class="pred-match sched-match">
       <div class="match-time">${esc(m.kickoff)}</div>
-      <div class="match-teams">
-        <span class="match-team home">
-          <span class="tname">${esc(m.home)}</span>
-          ${strengthPill(m.home_opponent_strength)}
-        </span>
-        <span class="match-vs">vs</span>
-        <span class="match-team away">
-          <span class="tname">${esc(m.away)}</span>
-          ${strengthPill(m.away_opponent_strength)}
-        </span>
+      <div class="pred-row sched-row">
+        <span class="pred-team"><span class="pred-tname">${esc(m.home)}</span></span>
+        ${strengthPill(m.home_opponent_strength)}
+      </div>
+      <div class="pred-row sched-row">
+        <span class="pred-team"><span class="pred-tname">${esc(m.away)}</span></span>
+        ${strengthPill(m.away_opponent_strength)}
       </div>
     </div>`);
   box.innerHTML = gwHeadHtml(fx.event_name, fx.deadline) + twoColumns(cards)
