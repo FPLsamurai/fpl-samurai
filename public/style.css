@@ -470,6 +470,17 @@ picture { display: contents; }
 .profile-name { font-size: 0.98rem; margin: 6px 0 2px; }
 .profile-tag  { font-size: 0.74rem; margin-bottom: 5px; }
 .profile-bio  { font-size: 0.74rem; }
+/* 「各タブの使い方」内の見出し（h3）。/rules/ の h3 と同じ見た目にして、
+   サイト内で見出しの表情をそろえる。段落が短いので上下の余白だけ詰めてある */
+.panel h3.home-h3 {
+  text-align: left;   /* 親の .profile が中央寄せなので明示的に戻す（左の緑線と揃える） */
+  font-size: 0.95rem;
+  color: var(--pl-purple);
+  border-left: 4px solid var(--pl-green);
+  padding-left: 8px;
+  margin: 18px 0 6px;
+}
+
 /* ホーム内のセクション見出し。h2 にしたので、後ろにある .panel h2 に負けないよう
    .panel を足して詳細度を上げている（見た目は区切りラベルのまま保つ） */
 .panel .profile-section {
