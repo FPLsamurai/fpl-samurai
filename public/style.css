@@ -354,6 +354,13 @@ picture { display: contents; }
   line-height: 1.7;
   margin: 0 0 18px;
 }
+/* SNSアイコンの上に置く一言。アイコンだけでは何のリンクか伝わらないので、
+   どこで発信しているかを文字でも示す（検索エンジンにも運営実態として伝わる） */
+.profile-sns-lead {
+  font-size: 0.86rem;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
 .sns-links {
   display: flex;
   justify-content: center;
