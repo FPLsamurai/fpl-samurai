@@ -291,7 +291,7 @@ function renderSetPieces() {
    ・選手を1人選ぶと、同ポジションの選手を足していける（合計4人まで）
    ・軸は初期＝ポジション標準（共通3＋ポジション別）。
      「スタッツを選ぶ」を選んだときだけチェックリストが開き、3〜8個で自由に組める
-   ・目盛りは「同ポジション・900分以上」の中での偏差値
+   ・目盛りは「同ポジション・一定の出場時間以上」の中での偏差値（下限は cmpMinMinutes）
        T = 50 + 10 ×(値 − 平均)÷標準偏差 を T25〜T78 → 半径0〜1（最小0.06）
    ・数字は実数値だけを軸ラベルの下に出す（偏差値は出さない）
    =========================================================== */
@@ -299,7 +299,24 @@ function renderSetPieces() {
 // 選手の色。1人目パープル／2人目ピンクは固定（凡例・線・数値すべてこの色で統一）
 const CMP_COLORS = ["#37003c", "#ff2882", "#00857d", "#e07b00"];
 const CMP_MAX = 4;                    // 合計4人まで（1人目＋3人）
-const CMP_MIN_MINUTES = 900;          // 偏差値の母集団に入れる最低出場時間
+/* 偏差値の母集団に入れる最低出場時間。
+   固定900分だと第20節あたりまで該当者がゼロになり、標準偏差0＝全員が偏差値50＝
+   全軸が同じ半径、という「動いているのに何も伝えていないチャート」になる。
+   そこで「その時点で出場できた時間の半分以上」を下限にし、900分で頭打ちにする。
+   節数から計算しないのは、ブランクGW・ダブルGWで実際の試合数がずれるため。 */
+const CMP_MIN_MINUTES_CAP = 900;      // 下限の上限。第20節以降はここに張り付く（＝従来と同じ）
+const CMP_POOL_MIN = 8;               // 母集団がこれ未満だと偏差値が暴れるので下限を緩める
+
+function cmpMinMinutes(pos) {
+  const pool = cmpPool().filter((p) => p.position === pos);
+  const maxMin = pool.reduce((m, p) => Math.max(m, Number(p.minutes) || 0), 0);
+  let th = Math.max(90, Math.min(CMP_MIN_MINUTES_CAP, Math.round(maxMin * 0.5)));
+  // 開幕直後など母集団が小さすぎるときは45分ずつ緩める
+  while (th > 45 && pool.filter((p) => (Number(p.minutes) || 0) >= th).length < CMP_POOL_MIN) {
+    th -= 45;
+  }
+  return th;
+}
 const CMP_T_LOW = 25, CMP_T_HIGH = 78;  // この偏差値の幅を半径0〜1に対応させる
 
 // 軸の定義（共通3つ＋ポジション別）。fmt=実数値の書き方
@@ -550,9 +567,10 @@ function cmpClearQuery() {
   if (q) q.value = "";
 }
 
-/* ---- 偏差値（同ポジション・900分以上が母集団） ---- */
+/* ---- 偏差値（同ポジション・一定の出場時間以上が母集団） ---- */
 function cmpStats(pos, keys) {
-  const pool = cmpPool().filter((p) => p.position === pos && Number(p.minutes) >= CMP_MIN_MINUTES);
+  const min = cmpMinMinutes(pos);
+  const pool = cmpPool().filter((p) => p.position === pos && Number(p.minutes) >= min);
   const out = {};
   keys.forEach((k) => {
     const vals = pool.map((p) => Number(p[k]) || 0);
@@ -633,7 +651,8 @@ function paintCmpChart(canvas, players) {
   ctx.fillText(title, W / 2, 66);
   ctx.fillStyle = "#cbb8d2";
   ctx.font = F(600, 21);
-  ctx.fillText(`${cmpSeasonLabel()} ／ 同ポジション（${pos}・${CMP_MIN_MINUTES}分以上）内の偏差値で描画`, W / 2, 106);
+  // 下限は節の進み具合で変わるので、実際に使った値をそのまま書く（固定文言にすると嘘になる）
+  ctx.fillText(`${cmpSeasonLabel()} ／ 同ポジション（${pos}・${cmpMinMinutes(pos)}分以上）内の偏差値で描画`, W / 2, 106);
   ctx.font = F(700, 19);
   ctx.fillText("FPL侍", W / 2, 136);
 
