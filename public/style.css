@@ -470,6 +470,18 @@ picture { display: contents; }
 .profile-name { font-size: 0.98rem; margin: 6px 0 2px; }
 .profile-tag  { font-size: 0.74rem; margin-bottom: 5px; }
 .profile-bio  { font-size: 0.74rem; }
+/* 「各タブの使い方」で、説明文の頭に置くタブへのリンク。
+   見出し＝やりたいこと、この行＝行き先、という役割分担。
+   説明文と同じ行に続けるので inline のまま太字＋紫で差をつける。 */
+.home-go {
+  font-weight: 700;
+  color: var(--pl-purple);
+  text-decoration: none;
+  margin-right: 0.4em;
+  white-space: nowrap;   /* 「▶︎ 選手データ」が途中で改行しないように */
+}
+.home-go:hover { text-decoration: underline; }
+
 /* 「各タブの使い方」内の見出し（h3）。/rules/ の h3 と同じ見た目にして、
    サイト内で見出しの表情をそろえる。段落が短いので上下の余白だけ詰めてある */
 .panel h3.home-h3 {
