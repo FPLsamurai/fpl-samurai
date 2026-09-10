@@ -40,13 +40,9 @@ body {
   color: #cbb8d2;
 }
 
-/* SNSリンク（ヘッダー） */
-.sns-links {
-  display: flex;
-  justify-content: center;
-  gap: 14px;
-  margin-top: 10px;
-}
+/* SNSアイコン（管理者プロフィール）。
+   以前ここに .sns-links の並び指定もあったが、後方で同じセレクタが上書きしていて
+   効いていなかったため削除した。並び方は下の方の .sns-links を参照。 */
 /* 白文字＋白14%の背景は、濃いヘッダー用の配色。明るい本文背景(#f5f5f7)の上では
    実質「白地に白」(1.08:1)で見えなかったため、ブランドの紫に変更した(13.3:1)。
    44pxはタップ目標の推奨サイズ。 */
@@ -348,19 +344,17 @@ picture { display: contents; }
   font-weight: 700;
   margin: 0 0 10px;
 }
-.profile-bio {
+/* .profile-sns-lead ＝ SNSアイコンの上の一言。アイコンだけでは何のリンクか
+   伝わらないので文字でも示す。書式は bio と同じルールに相乗りさせ、
+   片方だけサイズを変えて揃わなくなるのを防ぐ（下余白だけ別に詰める）。 */
+.profile-bio,
+.profile-sns-lead {
   font-size: 0.86rem;
   color: var(--muted);
   line-height: 1.7;
   margin: 0 0 18px;
 }
-/* SNSアイコンの上に置く一言。アイコンだけでは何のリンクか伝わらないので、
-   どこで発信しているかを文字でも示す（検索エンジンにも運営実態として伝わる） */
-.profile-sns-lead {
-  font-size: 0.86rem;
-  color: var(--muted);
-  margin: 0 0 8px;
-}
+.profile-sns-lead { margin-bottom: 8px; }
 .sns-links {
   display: flex;
   justify-content: center;
@@ -476,7 +470,8 @@ picture { display: contents; }
 .profile-logo { width: 46px; height: 46px; border-width: 2px; margin-top: 2px; }
 .profile-name { font-size: 0.98rem; margin: 6px 0 2px; }
 .profile-tag  { font-size: 0.74rem; margin-bottom: 5px; }
-.profile-bio  { font-size: 0.74rem; }
+.profile-bio,
+.profile-sns-lead { font-size: 0.74rem; }
 /* 「各タブの使い方」で、説明文の頭に置くタブへのリンク。
    見出し＝やりたいこと、この行＝行き先、という役割分担。
    説明文と同じ行に続けるので inline のまま太字＋紫で差をつける。 */
