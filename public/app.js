@@ -801,10 +801,10 @@ function colLabel(c) {
 }
 const FROZEN_ORDER = ["rank", "photo", "name", "team", "position", "cost", "points"];  // ポイントまで左に固定
 const DATA_ORDER_DEFAULT = [
-  "value", "ownership", "goals", "assists", "clean_sheets", "starts", "minutes",
-  "xg", "xg90", "g_minus_xg", "xa", "xa90", "defcon", "defcon90",
+  // 移籍の判断に直結するものを前に置く。全部が初期表示（並べ替えは⚙から）
+  "ownership", "goals", "assists", "clean_sheets", "defcon", "starts", "gw1", "gw2", "gw3",
+  "value", "minutes", "xg", "xg90", "g_minus_xg", "xa", "xa90", "defcon90",
   "bonus", "ppg", "saves", "saves90", "pk_saved", "yellow", "red",
-  "gw1", "gw2", "gw3",
 ];
 const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
 // 選手写真。公式は季節ごとに別パス（premierleague25=25/26）で最新版を配信。
@@ -813,7 +813,7 @@ const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
 const PHOTO_BASE = "https://resources.premierleague.com/premierleague25/photos/players/110x140/";
 const BADGE_BASE = "https://resources.premierleague.com/premierleague/badges/70/t";
 // 設定の保存キー。標準の列構成を変えたら末尾のバージョンを上げる（全員に新標準を適用するため）
-const CONFIG_KEY = "fpl_player_cols_v6";
+const CONFIG_KEY = "fpl_player_cols_v7";
 
 let playerSort = { key: "points", dir: "desc" };
 // チーム・ポジションは複数選択（空配列＝絞り込みなし）
@@ -831,7 +831,7 @@ let recentWindow = (() => {
 
 /* ---- 列の表示設定の保存・読み込み（ブラウザに記憶） ---- */
 function defaultColState() {
-  // 写真は初期は非表示（⚙列の表示・並び替えでオンにできる）
+  // 写真は初期は非表示（⚙列の表示・並び替えでオンにできる）。データ列は全部表示
   return { dataOrder: [...DATA_ORDER_DEFAULT], hidden: { photo: true }, freezeUntil: "name" };
 }
 function loadColState() {
