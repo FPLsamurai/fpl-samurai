@@ -4,22 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- 基本SEO -->
   <title>FPL日本語攻略サイト | FPL侍</title>
   <meta name="description" content="FPL（ファンタジー・プレミアリーグ）を日本語で攻略。選手・チームのデータ分析、xG・コスパ・無失点率、次節の対戦難易度予測、マイチームのスカッド編集・移籍シミュレーションができる無料サイトです。">
   <meta name="keywords" content="FPL,ファンタジープレミアリーグ,Fantasy Premier League,プレミアリーグ,データ,攻略,xG,移籍,キャプテン,日本語">
   <meta name="theme-color" content="#37003c">
   <link rel="canonical" href="https://fplsamurai.com/">
-  <!-- ファビコンは全ページ読み込みで取得されるので小さいものを別に置く。
-       logo.png（256px）はOGPとホーム画面追加アイコン専用 -->
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="logo.png">
 
-  <!-- 画像CDNへ事前接続（選手写真・エンブレム・YouTubeサムネの初回表示を少し速く） -->
   <link rel="preconnect" href="https://resources.premierleague.com">
   <link rel="preconnect" href="https://i.ytimg.com">
 
-  <!-- OGP（X・LINE・Facebook等で共有した時の表示） -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="FPL侍">
   <meta property="og:title" content="FPL日本語データ・攻略サイト | FPL侍">
@@ -28,15 +23,12 @@
   <meta property="og:image" content="https://fplsamurai.com/logo.png">
   <meta property="og:locale" content="ja_JP">
 
-  <!-- Twitter（X）カード -->
   <meta name="twitter:card" content="summary">
   <meta name="twitter:site" content="@FPLsamuraiJapan">
   <meta name="twitter:title" content="FPL日本語データ・攻略サイト | FPL侍">
   <meta name="twitter:description" content="選手・チームのデータ分析、次節の対戦難易度予測、マイチームのスカッド編集・移籍シミュレーションができる、FPLの日本語攻略サイト。">
   <meta name="twitter:image" content="https://fplsamurai.com/logo.png">
 
-
-  <!-- 構造化データ：サイトと運営者（検索結果でのブランド認識用。SNSは sameAs で紐づける） -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -75,7 +67,6 @@
 </head>
 <body>
 
-  <!-- トップバー：ロゴ＋タイトル＋メニュー（PC=1段／スマホ=2段） -->
   <header class="topbar">
     <a class="brand" href="#home" id="brand-home" aria-label="ホームへ">
       <picture><source srcset="logo.webp" type="image/webp"><img class="brand-logo" src="logo.png" alt="FPL侍" onerror="this.style.display='none'"></picture>
@@ -93,18 +84,11 @@
 
   <main>
 
-    <!-- ============ ホーム（プロフィール） ============ -->
     <section id="panel-home" class="panel is-active">
       <div class="profile">
 
-        <!-- ホームの先頭。初見の人が最初に読む1行なので、ここでサイトの主題を出す。
-             ページ内で唯一の h1（旧h1は下の .profile-name「FPL侍」だったが、ブランド名
-             だけでは何のサイトか伝わらず、検索エンジンに渡す情報も無かった）。
-             書式は各タブの見出し(.panel h2)と同一にしてある（.home-lead 側で揃えている）。 -->
         <h1 class="home-lead">FPL日本語攻略サイト</h1>
 
-        <!-- FPLを知らない人向けの説明。1段落目でゲームそのものを、2段落目でこのサイトを
-             作った理由を書く。検索から来た人が「何のサイトか」を判断する場所。 -->
         <h2 class="profile-section">FPL（Fantasy Premier League）とは？</h2>
         <p class="note">
           FPLとは、プレミアリーグの選手15人を選んで自分だけのチームを作り、実際の試合の成績に応じてポイントを獲得する、無料の公式ゲームです。
@@ -113,9 +97,6 @@
           世界で1000万人以上がプレイしているこのゲームですが、日本語対応しておらず、全て英語となっています。この面白さを日本の多くのサッカーファンに届けたいという思いから、このサイトを作りました。
         </p>
 
-        <!-- カード群の区切り。以前は「目次」だったが、同じページ内の見出しへ飛ぶわけでは
-             なく別タブ・別ページへの導線なので実態に合わせた。/rules/ 内の本物の目次とも
-             紛らわしかった。見出しレベルは h2（YouTube欄などと同じ .profile-section の書式）。 -->
         <h2 class="profile-section">本サイトでできること</h2>
         <button class="linkcard nav-card" data-go="myteam"><span class="lc-ic data"><img class="lc-ic-img" src="icons/myteam.png" alt=""></span><span class="lc-body"><span class="lc-title">スカッド検索</span><span class="lc-sub">FPL IDでスカッド・ミニリーグ確認できます。</span></span></button>
         <button class="linkcard nav-card" data-go="players"><span class="lc-ic data"><img class="lc-ic-img" src="icons/player.png" alt=""></span><span class="lc-body"><span class="lc-title">選手データ</span><span class="lc-sub">ゴール、xG等のデータを確認できます。</span></span></button>
@@ -123,10 +104,6 @@
         <button class="linkcard nav-card" data-go="next"><span class="lc-ic data"><img class="lc-ic-img" src="icons/next.png" alt=""></span><span class="lc-body"><span class="lc-title">次節予測</span><span class="lc-sub">次節のゴール、クリーンシートを予測します。</span></span></button>
         <a class="linkcard" href="rules/"><span class="lc-ic data"><img class="lc-ic-img" src="icons/rule.png" alt=""></span><span class="lc-body"><span class="lc-title">FPLルール解説</span><span class="lc-sub">基本ルールを分かりやすく解説します。</span></span></a>
 
-        <!-- カードは「どこへ行けるか」の導線なので1行に抑え、各タブで実際に何ができるかは
-             ここにまとめて置く。カードの中に長文を入れると5枚が1画面に収まらなくなり、
-             動画・X投稿の素材として使いにくくなるため、セクションを分けている。
-             見出しは h2（セクション）→ h3（各タブ）の階層にしてある。 -->
         <h2 class="profile-section">各タブの使い方</h2>
 
         <h3 class="home-h3">自分のチームを計画したい</h3>
@@ -144,9 +121,6 @@
         <h3 class="home-h3">これからFPLを始めたい</h3>
         <p class="note"><a class="home-go" href="rules/">▶︎ FPLルール解説</a>アカウント登録から移籍、ポイントの数え方、4つのチップ、ミニリーグの作り方まで9項目にまとめています。26/27シーズンの変更点にも対応しているので、今シーズンから始める方はここから読んでください。</p>
 
-        <!-- 運営者の情報はデータへの導線より下。初見の人がまず知りたいのは
-             サイトで何ができるかで、誰がやっているかではないため。
-             区切りは「目次」「YouTube」と同じ .profile-section で書式を揃える。 -->
         <h2 class="profile-section">管理者プロフィール</h2>
         <picture><source srcset="logo.webp" type="image/webp"><img class="profile-logo" src="logo.png" alt="FPL侍" onerror="this.style.display='none'"></picture>
         <p class="profile-name">FPL侍</p>
@@ -165,7 +139,6 @@
           </a>
         </div>
 
-        <!-- SNS・外部リンクカード -->
         <a class="linkcard" href="https://www.youtube.com/@samuraiFPL" target="_blank" rel="noopener">
           <span class="lc-ic yt"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M23.5 6.2a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.51A3.02 3.02 0 0 0 .5 6.2 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.8 3.02 3.02 0 0 0 2.12 2.14c1.88.51 9.38.51 9.38.51s7.5 0 9.38-.51a3.02 3.02 0 0 0 2.12-2.14A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.2 3.6-6.2 3.6Z"/></svg></span>
           <span class="lc-body"><span class="lc-title">YouTube：FPL侍</span><span class="lc-sub">@samuraiFPL</span></span>
@@ -179,7 +152,6 @@
           <span class="lc-body"><span class="lc-title">質問箱</span><span class="lc-sub">マシュマロで匿名の質問を送る</span></span>
         </a>
 
-        <!-- YouTube：ルール解説（固定）＋最新動画2本（自動取得・横動画） -->
         <h2 class="profile-section">YouTube</h2>
         <div class="yt-list" id="yt-grid">
           <a class="yt-card-h" href="https://youtu.be/g9Mkt1CIMZc" target="_blank" rel="noopener">
@@ -192,12 +164,10 @@
           </a>
         </div>
 
-
         <p class="updated" id="updated">読み込み中…</p>
       </div>
     </section>
 
-    <!-- ============ 選手 ============ -->
     <section id="panel-players" class="panel">
       <h2>選手データ</h2>
       <div class="subtabs scrollable" data-group="players">
@@ -212,7 +182,6 @@
       <div id="players-content"></div>
     </section>
 
-    <!-- ============ チーム ============ -->
     <section id="panel-teams" class="panel">
       <h2>チームデータ</h2>
       <div class="subtabs scrollable" data-group="teams">
@@ -227,7 +196,6 @@
       <div id="teams-content"></div>
     </section>
 
-    <!-- ============ 次節 ============ -->
     <section id="panel-next" class="panel">
       <h2>次節データ</h2>
       <div class="subtabs" data-group="next">
@@ -238,7 +206,6 @@
       <div id="next-content"></div>
     </section>
 
-    <!-- ============ マイチーム ============ -->
     <section id="panel-myteam" class="panel">
       <h2>スカッド検索</h2>
       <p class="note">
@@ -253,13 +220,8 @@
       <div id="myteam-result"></div>
     </section>
 
-    <!-- ============ ルール解説 ============ -->
-
   </main>
 
-  <!-- 「複製・保存しておらず」は事実の記述。選手写真・エンブレムは公式CDNへの
-       ホットリンクで、リポジトリにも data.json にも画像を持っていない。
-       この構造を変えるとこの一文が虚偽になるので、画像のローカル保存は禁止（CLAUDE.md参照）。 -->
   <footer class="site-footer">
     <p>データ出典：Fantasy Premier League 公式API</p>
     <p>本サイトは個人が制作した非公式のファンメイドです。</p>
