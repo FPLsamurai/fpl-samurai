@@ -1960,6 +1960,24 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   cursor: pointer;
 }
 
+/* 資金の▲▼。FT数と同じく手で直せる値。4つ並びのボックス（スマホで幅約77px）に収まるよう、
+   金額の右に縦に積む。横に並べると「£-12.3m」のような長い金額で溢れる */
+.mt-bank-row { display: inline-flex; align-items: center; gap: 3px; }
+.mt-bank-adj { display: inline-flex; flex-direction: column; gap: 2px; }
+.mt-bank-adj button {
+  width: 18px;
+  height: 13px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: #f1ecf3;
+  color: var(--pl-purple);
+  font-size: 0.5rem;
+  line-height: 13px;
+  cursor: pointer;
+}
+.mt-bank-adj button:active { background: var(--pl-purple); color: #fff; }
+
 /* この節の移籍プラン（OUT→IN一覧）＋リセット */
 .mt-transfers {
   border: 1px solid var(--border);
@@ -2022,50 +2040,6 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   border-radius: 8px;
   padding: 6px 10px;
   margin: 2px 0 6px;
-}
-/* 売却額の −／＋（0.1ずつ）。FT数と同じく、公開APIで取れない値を手で直すための操作 */
-.mt-sell-ctl {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  margin-left: 4px;
-  white-space: nowrap;
-  vertical-align: middle;
-}
-.mt-sell-ctl button {
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  background: #fff;
-  color: var(--pl-purple);
-  font-size: 0.8rem;
-  font-weight: 800;
-  line-height: 1;
-  cursor: pointer;
-}
-.mt-sell-ctl button:disabled { opacity: 0.35; cursor: default; }
-.mt-sell-ctl b {
-  min-width: 3.6em;
-  text-align: center;
-  font-size: 0.8rem;
-  font-variant-numeric: tabular-nums;
-}
-/* 手で直した売却額は、現在価格のままのものと見分けられるよう点線の下線を付ける */
-.mt-sell-ctl.is-edited b { color: var(--pl-purple); text-decoration: underline dotted; }
-/* 候補リスト上部：OUT選手ごとの売却額の行 */
-.mt-sell-list {
-  padding: 6px 12px;
-  background: #f7f4f8;
-  border-bottom: 1px solid var(--border);
-}
-.mt-sell-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  padding: 2px 0;
 }
 /* 計画タブのGWナビ（LiveFPL風 ‹前／第N節／次›） */
 .mt-gwnav {

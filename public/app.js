@@ -2209,7 +2209,6 @@ function initSquadEditor(entry, picksData, gw, livePoints) {
     basePlanGw,
     planGw: basePlanGw,   // 計画タブで表示中のGW
     plans: {},            // {gw: {squad, bank, ft, inhElems}} 節ごとの独立プラン（前の節から引き継いで作る）
-    sell: {},             // 売却額の手動設定 {element_id: £m}。公開APIでは購入価格が取れないため、FT数と同じく手で直す
     sel: null,            // 詳細表示中の position(1-15)（カード本体タップ＝緑枠＋主将C等のバー）
     swapFrom: null,       // 入れ替え元の position（⇅タップ＝半透明。次にタップした選手と入れ替え）
     outs: [],             // 移籍OUT対象の position 一覧（✕タップ＝半透明。複数可・押した順）
@@ -2309,7 +2308,7 @@ function invalidateAfter(gw) {
 function savePlans() {
   try {
     localStorage.setItem(PLAN_STORE_PREFIX + MT.entry.id, JSON.stringify({
-      baseGw: MT.gw, planGw: MT.planGw, plans: MT.plans, sell: MT.sell,
+      baseGw: MT.gw, planGw: MT.planGw, plans: MT.plans,
     }));
   } catch (e) {}
 }
@@ -2318,7 +2317,6 @@ function savePlans() {
 function restorePlans() {
   try {
     const s = JSON.parse(localStorage.getItem(PLAN_STORE_PREFIX + MT.entry.id));
-    if (s && s.sell) MT.sell = s.sell;   // 売却額の手動設定は節が進んでも引き継ぐ
     if (s && s.baseGw === MT.gw && s.plans) {
       MT.plans = s.plans;
       if (s.planGw >= MT.basePlanGw && s.planGw <= 38) MT.planGw = s.planGw;
@@ -2465,7 +2463,7 @@ function renderSquadPitch() {
       const o = t.out ? DATA.elements[String(t.out)] : null;
       const i = t.in ? DATA.elements[String(t.in)] : null;
       return `<div class="mt-tr-row">
-        <span class="mt-tr-side out"><span class="mt-tr-tag">OUT</span>${o ? esc(o.j || o.n) : "-"}${t.out ? sellCtlHtml(t.out) : ""}</span>
+        <span class="mt-tr-side out"><span class="mt-tr-tag">OUT</span>${o ? esc(o.j || o.n) : "-"}<span class="sub">£${o ? o.c : "-"}m</span></span>
         <span class="mt-tr-arrow">→</span>
         <span class="mt-tr-side in"><span class="mt-tr-tag">IN</span>${i ? esc(i.j || i.n) : "-"}<span class="sub">£${i ? i.c : "-"}m</span></span>
       </div>`;
@@ -2488,7 +2486,9 @@ function renderSquadPitch() {
           <button type="button" class="mt-stat mt-stat-btn" id="mt-ft-toggle" title="タップで無料移籍数を変更（1〜5）"${unlimited ? " disabled" : ""}>
             <span class="mt-stat-l">移籍/FT ✎</span><span class="mt-stat-v">${made}/${free}</span>
           </button>
-          <div class="mt-stat"><span class="mt-stat-l">資金</span><span class="mt-stat-v${mtBankShown(P) < 0 ? " neg" : ""}">£${mtBankShown(P).toFixed(1)}m</span></div>
+          <div class="mt-stat mt-stat-bank"><span class="mt-stat-l">資金</span>
+            <span class="mt-bank-row"><span class="mt-stat-v${mtBankShown(P) < 0 ? " neg" : ""}">£${mtBankShown(P).toFixed(1)}m</span><span class="mt-bank-adj"><button type="button" data-bank="1" aria-label="資金を£0.1m増やす" title="資金を£0.1m増やす">▲</button><button type="button" data-bank="-1" aria-label="資金を£0.1m減らす" title="資金を£0.1m減らす">▼</button></span></span>
+          </div>
           <div class="mt-stat"><span class="mt-stat-l">コスト</span><span class="mt-stat-v${cost > 0 ? " neg" : ""}">${cost > 0 ? "-" + cost : "0"}</span></div>
         </div>
       </div>
@@ -2525,10 +2525,10 @@ function renderSquadPitch() {
       MT.outs = [];
       renderSquadPitch();
     }));
-    // 移籍プラン欄のOUT側の売却額 −／＋
-    wrap.querySelectorAll(".mt-transfers [data-sell]").forEach((b) => b.addEventListener("click", (ev) => {
+    // ステータスの「資金」の▲▼（£0.1mずつ手直し）
+    wrap.querySelectorAll("[data-bank]").forEach((b) => b.addEventListener("click", (ev) => {
       ev.stopPropagation();
-      adjustSell(+b.dataset.sell, +b.dataset.dir);
+      adjustBank(+b.dataset.bank);
     }));
     // 右上✕＝移籍フロー（詳細バーは出さない）。複数選手を同時にOUT対象にできる（もう一度✕で解除）
     wrap.querySelectorAll(".mt-ctrl-x").forEach((s) => s.addEventListener("click", (e) => {
@@ -2848,58 +2848,32 @@ function teamFilterList() {
   return _teamFilterList;
 }
 
-/* 売却額（£m）。手動設定があればそれ、無ければ現在価格。
-   公式ルールでは売却額が現在価格を超えることはない（値上がり分は半分しか戻らず、
-   値下がりしたら現在価格で売る）ので、上限は常に現在価格に抑える。 */
-function sellPrice(id) {
-  const el = DATA.elements[String(id)];
-  if (!el) return 0;
-  const v = MT.sell[id];
-  return v == null ? el.c : Math.min(v, el.c);
-}
-function sellMin(id) {
-  const el = DATA.elements[String(id)];
-  return el ? Math.min(3.5, el.c) : 3.5;   // 選手価格の下限（£3.5m）より下は無い
-}
-// −／＋で0.1ずつ動かす。この節ですでに売った選手なら、確定資金にも差分を反映して後の節を作り直す
-function adjustSell(id, dir) {
+/* 資金を£0.1mずつ手で直す（FT数と同じく、公開APIで取れない値の補正用）。
+   この計画では売却額を現在価格で計算しているが、公式の売却額は値上がり分の半分しか戻らない。
+   そのずれを合計資金で直せるようにする。後の節のプランは資金を引き継いで作られているので、
+   同じ差分を足して整合を保つ（リセットはしない）。フリーヒット明けに戻す資金（inh.bank）も同様 */
+function adjustBank(dir) {
   clearMtMsg();
-  const el = DATA.elements[String(id)];
-  if (!el) return;
-  const old = sellPrice(id);
-  const next = Math.round(Math.min(el.c, Math.max(sellMin(id), old + dir * 0.1)) * 10) / 10;
-  if (next === old) return;
-  if (next === el.c) delete MT.sell[id]; else MT.sell[id] = next;   // 現在価格に戻したら設定ごと消す
-  const P = MT.plans[MT.planGw];
-  if (P && planDiffPairs(P).some((t) => t.out === id)) {
-    P.bank = Math.round((P.bank + (next - old)) * 10) / 10;
-    invalidateAfter(MT.planGw);
-  }
+  const d = dir * 0.1;
+  Object.keys(MT.plans).forEach((g) => {
+    if (+g < MT.planGw) return;
+    const Q = MT.plans[g];
+    Q.bank = Math.round((Q.bank + d) * 10) / 10;
+    if (Q.inh) Q.inh.bank = Math.round((Q.inh.bank + d) * 10) / 10;
+  });
   savePlans();
   renderSquadPitch();
-}
-// 売却額の −／＋ 表示（候補リストと移籍プラン欄で共用）
-function sellCtlHtml(id) {
-  const el = DATA.elements[String(id)];
-  if (!el) return "";
-  const v = sellPrice(id);
-  const edited = v !== el.c;
-  return `<span class="mt-sell-ctl${edited ? " is-edited" : ""}" title="売却額。公式は値上がり分の半分しか戻らないので、必要なら0.1ずつ調整">`
-    + `<button type="button" data-sell="${id}" data-dir="-1" aria-label="売却額を0.1下げる"${v <= sellMin(id) ? " disabled" : ""}>−</button>`
-    + `<b>£${v.toFixed(1)}m</b>`
-    + `<button type="button" data-sell="${id}" data-dir="1" aria-label="売却額を0.1上げる"${v >= el.c ? " disabled" : ""}>＋</button>`
-    + `</span>`;
 }
 
 /* ✕で外した（まだ代わりを入れていない）選手の売却額の合計。
    P.bank は「確定した移籍」だけを反映した値で保存もされるので、ここは書き換えず、
    表示と候補の残額計算のときにだけ足す。✕の解除・候補を閉じる・節の移動などで
    MT.outs が空になれば自動的に元の資金表示に戻る。
-   売却額は sellPrice()（手動設定があればその値、無ければ現在価格）。 */
+   売却額は現在価格で計算する。公式の売却額とずれた分は、ステータスの「資金」の▲▼で直す（adjustBank）。 */
 function mtPendingSale(P) {
   const sum = MT.outs.reduce((acc, pos) => {
     const pk = P.squad.find((p) => p.position === pos);
-    return acc + (pk ? sellPrice(pk.element) : 0);
+    return acc + (pk ? elOf(pk).c : 0);
   }, 0);
   return Math.round(sum * 10) / 10;
 }
@@ -2969,10 +2943,6 @@ function renderMtPicker(query) {
       <strong>OUT: ${outEls.map((e) => esc(e.j || e.n)).join("・")} の候補</strong>
       <button type="button" id="mt-picker-close">✕</button>
     </div>
-    <div class="mt-sell-list">${outPicks.map((pk) => {
-      const oe = elOf(pk);
-      return `<div class="mt-sell-row"><span>${esc(oe.j || oe.n)}の売却額</span>${sellCtlHtml(pk.element)}</div>`;
-    }).join("")}</div>
     <input type="search" id="mt-picker-q" placeholder="選手名で検索（英字／カタカナ）" value="${esc(q)}">
     <div class="mt-picker-tools">
       <label class="mt-fteam">チーム
@@ -2986,10 +2956,6 @@ function renderMtPicker(query) {
     <div class="mt-picker-list">${rowHtml}</div>`;
   const newList = box.querySelector(".mt-picker-list");
   if (newList) newList.scrollTop = savedScroll;
-  box.querySelectorAll("[data-sell]").forEach((b) => b.addEventListener("click", (ev) => {
-    ev.stopPropagation();
-    adjustSell(+b.dataset.sell, +b.dataset.dir);
-  }));
   box.querySelector("#mt-picker-close").addEventListener("click", () => {
     box.hidden = true; MT.sel = null; MT.outs = []; MT.pickQ = ""; MT.pickOpen = null; renderSquadPitch();
   });
@@ -3050,7 +3016,7 @@ function pickDetailHtml(e) {
   const outEl = outPick ? elOf(outPick) : null;
   let info = "";
   if (outEl) {
-    const diff = Math.round((e.c - sellPrice(outPick.element)) * 10) / 10;
+    const diff = Math.round((e.c - outEl.c) * 10) / 10;
     const after = Math.round((mtBankShown(P) - e.c) * 10) / 10;   // 表示中の資金と揃える
     const simSet = new Set(P.squad.map((p) => p.element));
     simSet.delete(outPick.element); simSet.add(e.id);
@@ -3085,11 +3051,10 @@ function doMtTransfer(inId) {
   if (pos == null) return;
   const pick = P.squad.find((p) => p.position === pos);
   const out = elOf(pick);
-  const outId = pick.element;   // 下で pick.element を書き換える前に控えておく
   // 同一チーム3人まで（公式のルール）は止めない。計画段階では「先に4人目を入れて、
   // あとで誰かを外す」組み方もあるので、警告は移籍プラン欄に常時表示するだけにする
   pick.element = inId;
-  P.bank = Math.round((P.bank + sellPrice(outId) - inc.c) * 10) / 10;
+  P.bank = Math.round((P.bank + out.c - inc.c) * 10) / 10;
   MT.outs = MT.outs.filter((q) => q !== pos);
   MT.pickOpen = null;
   invalidateAfter(MT.planGw);
