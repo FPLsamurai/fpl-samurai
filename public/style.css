@@ -2012,6 +2012,61 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
 .mt-tr-side.in .mt-tr-tag { background: #e6f7ee; color: var(--easy); }
 .mt-tr-arrow { color: var(--muted); flex: 0 0 auto; }
 .mt-tr-none { font-size: 0.8rem; color: var(--muted); padding: 4px 0; }
+/* 同じクラブ4人以上のときの警告。移籍プラン欄のヘッダー直下に、該当する間ずっと出す */
+.mt-tr-warn {
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--hard);
+  background: #fde8e8;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin: 2px 0 6px;
+}
+/* 売却額の −／＋（0.1ずつ）。FT数と同じく、公開APIで取れない値を手で直すための操作 */
+.mt-sell-ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 4px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.mt-sell-ctl button {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: #fff;
+  color: var(--pl-purple);
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+.mt-sell-ctl button:disabled { opacity: 0.35; cursor: default; }
+.mt-sell-ctl b {
+  min-width: 3.6em;
+  text-align: center;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+/* 手で直した売却額は、現在価格のままのものと見分けられるよう点線の下線を付ける */
+.mt-sell-ctl.is-edited b { color: var(--pl-purple); text-decoration: underline dotted; }
+/* 候補リスト上部：OUT選手ごとの売却額の行 */
+.mt-sell-list {
+  padding: 6px 12px;
+  background: #f7f4f8;
+  border-bottom: 1px solid var(--border);
+}
+.mt-sell-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  padding: 2px 0;
+}
 /* 計画タブのGWナビ（LiveFPL風 ‹前／第N節／次›） */
 .mt-gwnav {
   display: flex;
