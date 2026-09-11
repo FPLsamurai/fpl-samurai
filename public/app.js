@@ -2478,7 +2478,7 @@ function renderSquadPitch() {
           <button type="button" class="mt-stat mt-stat-btn" id="mt-ft-toggle" title="タップで無料移籍数を変更（1〜5）"${unlimited ? " disabled" : ""}>
             <span class="mt-stat-l">移籍/FT ✎</span><span class="mt-stat-v">${made}/${free}</span>
           </button>
-          <div class="mt-stat"><span class="mt-stat-l">資金</span><span class="mt-stat-v${P.bank < 0 ? " neg" : ""}">£${P.bank.toFixed(1)}m</span></div>
+          <div class="mt-stat"><span class="mt-stat-l">資金</span><span class="mt-stat-v${mtBankShown(P) < 0 ? " neg" : ""}">£${mtBankShown(P).toFixed(1)}m</span></div>
           <div class="mt-stat"><span class="mt-stat-l">コスト</span><span class="mt-stat-v${cost > 0 ? " neg" : ""}">${cost > 0 ? "-" + cost : "0"}</span></div>
         </div>
       </div>
@@ -2833,6 +2833,24 @@ function teamFilterList() {
   return _teamFilterList;
 }
 
+/* ✕で外した（まだ代わりを入れていない）選手の売却額の合計。
+   P.bank は「確定した移籍」だけを反映した値で保存もされるので、ここは書き換えず、
+   表示と候補の残額計算のときにだけ足す。✕の解除・候補を閉じる・節の移動などで
+   MT.outs が空になれば自動的に元の資金表示に戻る。
+   売却額は現在価格で計算（公式の売却額は値上がり分の半分しか戻らないため、
+   値上がりした選手は実際より少し多めに出る。公開APIでは購入価格が取れない）。 */
+function mtPendingSale(P) {
+  const sum = MT.outs.reduce((acc, pos) => {
+    const pk = P.squad.find((p) => p.position === pos);
+    return acc + (pk ? elOf(pk).c : 0);
+  }, 0);
+  return Math.round(sum * 10) / 10;
+}
+// 表示用の資金＝確定分＋保留中の売却額（浮動小数の誤差で -0.0 等にならないよう0.1単位に丸める）
+function mtBankShown(P) {
+  return Math.round((P.bank + mtPendingSale(P)) * 10) / 10;
+}
+
 function renderMtPicker(query) {
   const box = document.getElementById("mt-picker");
   if (!box || !MT.outs.length) return;
@@ -2846,7 +2864,8 @@ function renderMtPicker(query) {
   const q = (query || "").trim();
   MT.pickQ = q;
   const ql = q.toLowerCase();
-  const afterOf = (e) => { const o = outFor(e); return P.bank + (o ? o.c : 0) - e.c; };
+  // 残額＝表示中の資金（保留中のOUTを全部売った前提）−この選手の価格
+  const afterOf = (e) => Math.round((mtBankShown(P) - e.c) * 10) / 10;
 
   let list = Object.entries(DATA.elements)
     .map(([id, e]) => ({ id: +id, ...e }))
@@ -2967,7 +2986,7 @@ function pickDetailHtml(e) {
   let info = "";
   if (outEl) {
     const diff = e.c - outEl.c;
-    const after = P.bank + outEl.c - e.c;
+    const after = Math.round((mtBankShown(P) - e.c) * 10) / 10;   // 表示中の資金と揃える
     const simSet = new Set(P.squad.map((p) => p.element));
     simSet.delete(outPick.element); simSet.add(e.id);
     const madeAfter = P.inhElems.filter((x) => !simSet.has(x)).length;
@@ -3001,15 +3020,18 @@ function doMtTransfer(inId) {
   if (pos == null) return;
   const pick = P.squad.find((p) => p.position === pos);
   const out = elOf(pick);
-  // 同一チーム3人まで
+  // 同一チーム3人まで（公式のルール）。計画段階では「先に4人目を入れて、あとで誰かを外す」
+  // という組み方もあるので、止めずに警告だけ出して追加する
   const teamCount = {};
   P.squad.forEach((p) => { if (p.position === pos) return; const e = elOf(p); teamCount[e.t] = (teamCount[e.t] || 0) + 1; });
-  if ((teamCount[inc.t] || 0) >= 3) { MT.msg = "同じチームから選べるのは3人までです"; renderSquadPitch(); return; }
+  const overClub = (teamCount[inc.t] || 0) >= 3;
   pick.element = inId;
   P.bank = P.bank + out.c - inc.c;
   MT.outs = MT.outs.filter((q) => q !== pos);
   MT.pickOpen = null;
   invalidateAfter(MT.planGw);
+  // invalidateAfter が「後の節をリセットしました」を出すことがあるので、警告はその後に足して両方残す
+  if (overClub) MT.msg = "同じチームから選べるのは3人までです" + (MT.msg ? "／" + MT.msg : "");
   savePlans();
   renderSquadPitch();  // OUT対象が残っていれば候補リストは開いたまま
 }
