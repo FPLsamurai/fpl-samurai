@@ -43,13 +43,13 @@ async function init() {
   setupParentTabs();
   setupSubtabs();
   setupMyTeam();
-  loadYouTube();          // ホームのYouTube最新動画（取得失敗しても他は動く）
   try {
     const res = await fetch(DATA_URL, { cache: "no-cache" });
     if (!res.ok) throw new Error("データファイルを読み込めませんでした");
     DATA = await res.json();
     await applyPreseasonFallback();   // 26/27がまだ空なら選手・チームを昨季データで代替表示
     renderHeader();
+    loadYouTube();          // ホームのYouTube最新動画（data.json の分。取得失敗しても他は動く）
     // 各タブの初期表示
     renderPlayers("all");
     renderTeams("totals");
@@ -1938,7 +1938,11 @@ async function fplFetch(path) {
   } catch (e) {
     // 原因が分かるようにコンソールには残す（画面には出さない）
     console.warn("[FPL侍] 取得に失敗:", path, e && e.message);
-    throw new Error("FPLサーバーに接続できませんでした。IDが正しいか、少し時間をおいて再度お試しください。");
+    const err = new Error("FPLサーバーに接続できませんでした。IDが正しいか、少し時間をおいて再度お試しください。");
+    // 「見つからない（404）」は呼び出し側で言い分けられるよう、ステータスを持たせておく
+    const m = /HTTP (\d+)/.exec((e && e.message) || "");
+    if (m) err.status = +m[1];
+    throw err;
   }
 }
 
@@ -2033,7 +2037,12 @@ async function loadMyTeam(id) {
     }
   } catch (err) {
     // キャッシュを表示済みなら、裏の更新失敗は黙って無視（表示はそのまま使える）
-    if (!cached) box.innerHTML = emptyMessage("取得に失敗しました。<br>" + esc(err.message || err));
+    if (!cached) {
+      // 404＝そのIDのチームが存在しない。ミニリーグのIDを入れてしまう等の取り違えが多い
+      box.innerHTML = err.status === 404
+        ? emptyMessage("このFPL IDのチームが見つかりませんでした。<br>ミニリーグのIDではなく、「Points」ページのアドレスにある <code>/entry/数字/</code> の数字を入力してください。")
+        : emptyMessage("取得に失敗しました。<br>" + esc(err.message || err));
+    }
   }
 }
 
@@ -2065,7 +2074,13 @@ function renderMyTeam(entry, picksData, gw, livePoints) {
     </div>
     <div id="mt-squad"></div>`;
   } else {
-    html += `<h3 class="mt-h3">スカッド</h3>` + emptyMessage("スカッド情報を取得できませんでした（シーズン開始前の可能性があります）。");
+    // current_event が無い＝このチームはまだ1節も迎えていない（作ったばかり・開幕前）。
+    // FPLの公開APIは、最初の節の締切を過ぎるまでスカッドを公開しないので、ここでは表示できない
+    const dl = (DATA && DATA.next_fixtures && DATA.next_fixtures.deadline) || "";
+    const noPicksMsg = entry.current_event == null
+      ? `このチームはまだ最初の節を迎えていないため、スカッドを表示できません。<br>FPLの仕様で、スカッドは最初の節の締切${dl ? `（${esc(dl)}）` : ""}を過ぎると公開され、ここに表示されます。`
+      : "スカッド情報を取得できませんでした。少し時間をおいて再度お試しください。";
+    html += `<h3 class="mt-h3">スカッド</h3>` + emptyMessage(noPicksMsg);
   }
 
   // --- ミニリーグ ---
@@ -3097,31 +3112,40 @@ const YT_RULE_ID = "g9Mkt1CIMZc";                  // 固定表示している�
 async function loadYouTube() {
   const grid = document.getElementById("yt-grid");
   if (!grid) return;
-  let xmlText = null;
+  // 1日3回のバッチ（update.py）がRSSを取って data.json に入れている。
+  // 以前は閲覧のたびに中継でYouTubeを呼んでいたが、RSSが不安定で約半分が失敗していた
+  let list = (DATA && DATA.youtube && Array.isArray(DATA.youtube.videos)) ? DATA.youtube.videos : null;
+  if (!list) {
+    // data.json にまだ入っていないとき（新しい形式のバッチが動く前など）だけ、従来どおり中継から取る
+    list = await fetchYouTubeViaProxy();
+    if (!list) return;  // 取得失敗：固定動画のみ表示
+  }
+  const html = [];
+  for (const v of list) {
+    if (!v.id || v.id === YT_RULE_ID) continue;
+    html.push(ytCardHTML(v.id, v.title || ""));
+    if (html.length >= 2) break;
+  }
+  if (html.length) grid.insertAdjacentHTML("beforeend", html.join(""));
+}
+
+// 従来の取得方法（中継の ?yt=1 でRSSを取って解析）。data.json に動画が無いときの予備
+async function fetchYouTubeViaProxy() {
+  let xmlText;
   try {
     xmlText = await proxyFetchText("yt=1");   // チャンネルIDは中継側で固定している
   } catch (e) {
     console.warn("[FPL侍] 最新動画の取得に失敗:", e && e.message);
-    return;  // 取得失敗：固定動画のみ表示
+    return null;
   }
-
-  let entries;
   try {
     const doc = new DOMParser().parseFromString(xmlText, "text/xml");
-    entries = Array.from(doc.getElementsByTagName("entry"));
-  } catch (e) { return; }
-
-  const html = [];
-  for (const en of entries) {
     // <id>yt:video:VIDEOID</id> から動画IDを取り出す（名前空間に依存しない）
-    const idText = (en.getElementsByTagName("id")[0] || {}).textContent || "";
-    const vid = idText.split(":").pop();
-    const title = ((en.getElementsByTagName("title")[0] || {}).textContent || "").trim();
-    if (!vid || vid === YT_RULE_ID) continue;
-    html.push(ytCardHTML(vid, title));
-    if (html.length >= 2) break;
-  }
-  if (html.length) grid.insertAdjacentHTML("beforeend", html.join(""));
+    return Array.from(doc.getElementsByTagName("entry")).map((en) => ({
+      id: ((en.getElementsByTagName("id")[0] || {}).textContent || "").split(":").pop(),
+      title: ((en.getElementsByTagName("title")[0] || {}).textContent || "").trim(),
+    }));
+  } catch (e) { return null; }
 }
 
 function ytCardHTML(vid, title) {

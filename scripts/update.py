@@ -32,6 +32,7 @@ import sys
 import time
 import urllib.request
 import urllib.error
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 
 # ----------------------------------------------------------------------
@@ -80,6 +81,11 @@ POSITION_SHORT = {
 }
 
 WEEKDAY_JA = ["月", "火", "水", "木", "金", "土", "日"]
+
+# ホームに出すYouTubeの最新動画（チャンネルのRSS）。チャンネルIDは中継（Worker）と同じ
+YT_CHANNEL_ID = "UCyn1RapHcZDrtnXDKLF93SQ"
+YT_FEED = "https://www.youtube.com/feeds/videos.xml?channel_id=" + YT_CHANNEL_ID
+YT_KEEP = 5   # 画面に出すのは2本だが、固定表示のルール解説動画を除く分の余裕を持たせる
 
 
 def difficulty_to_words(level):
@@ -841,6 +847,47 @@ def compute_set_pieces(bootstrap, team_map, jp_names):
 # メイン
 # ----------------------------------------------------------------------
 
+def load_previous_youtube():
+    """前回の data.json に入っている最新動画（取得に失敗したときの代わりに使う）"""
+    try:
+        with open(os.path.join(PUBLIC_DIR, "data.json"), encoding="utf-8") as f:
+            return json.load(f).get("youtube")
+    except Exception:
+        return None
+
+
+def fetch_youtube_videos(prev):
+    """
+    ホームに出すYouTubeの最新動画（チャンネルのRSS）。
+    以前はブラウザから中継（Worker）経由で閲覧のたびに取得していたが、YouTubeのRSSは
+    実測で約半分が404/5xxになる不安定さだったため、1日3回のこのバッチで取得して data.json に入れる。
+    3回試しても取れなければ、前回の値（prev）をそのまま使う（動画欄を空にしない）。
+    戻り値: ({"videos": [{"id", "title"}, ...], "fetched_at": "..."} または prev, 取得に成功したか)
+    """
+    ns = {"a": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml/schemas/2015"}
+    for attempt in range(1, 4):
+        try:
+            req = urllib.request.Request(YT_FEED, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=20) as res:
+                root = ET.fromstring(res.read())
+            videos = []
+            for en in root.findall("a:entry", ns):
+                vid = (en.findtext("yt:videoId", default="", namespaces=ns)
+                       or en.findtext("a:id", default="", namespaces=ns).split(":")[-1])
+                title = (en.findtext("a:title", default="", namespaces=ns) or "").strip()
+                if vid:
+                    videos.append({"id": vid, "title": title})
+            if videos:
+                now = datetime.now(timezone(timedelta(hours=9)))
+                return {"videos": videos[:YT_KEEP], "fetched_at": now.strftime("%Y年%m月%d日 %H:%M")}, True
+            print(f"  YouTube RSS: 動画が0件でした（{attempt}回目）")
+        except Exception as e:
+            print(f"  YouTube RSS の取得に失敗（{attempt}回目）: {e}")
+        if attempt < 3:
+            time.sleep(3)
+    return prev, False
+
+
 def main():
     print("=" * 50)
     print("FPL侍 データ更新を開始します（v2）")
@@ -879,6 +926,9 @@ def main():
     latest_gw_label = f"第{latest['id']}節" if latest else "未開幕"
     now_jst = datetime.now(timezone(timedelta(hours=9)))
 
+    # ホームのYouTube最新動画。取れなければ前回の data.json の値をそのまま使う
+    youtube, yt_ok = fetch_youtube_videos(load_previous_youtube())
+
     site_data = {
         "meta": {
             "generated_at": now_jst.strftime("%Y年%m月%d日 %H:%M"),
@@ -901,6 +951,7 @@ def main():
         "clean_sheets": clean_sheets,
         "next_fixtures": next_fixtures,
         "predictions": predictions,
+        "youtube": youtube,
     }
 
     # 配信用なので改行・空白なしのコンパクト形式（現在公開中のdata.jsonと同じ形式）
@@ -915,6 +966,8 @@ def main():
     print(f"  チーム合計: {len(team_section['totals'])}チーム")
     print(f"  次節予測: {predictions['event_name'] or 'なし（オフシーズン）'}（{len(predictions['rows'])}行）")
     print(f"  次節ゴール期待値ランキング: {len(predictions['player_goals'])}人")
+    yt_n = len((youtube or {}).get("videos", []))
+    print(f"  YouTube最新動画: {yt_n}本" + ("" if yt_ok else "（今回は取得できず、前回分を使用）"))
     if not (ok1 and ok2):
         print("  ⚠ 一部APIに接続できず、前回データを使った箇所があります")
     print("\n公開するなら git でコミット＆プッシュしてください（README.md 参照）。")

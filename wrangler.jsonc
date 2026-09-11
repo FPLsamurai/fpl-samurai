@@ -5,5 +5,9 @@
   // のままなので、こちらの設定は Pages の公開には一切影響しない。
   "name": "fpl-proxy",
   "main": "worker/fpl-proxy.js",
-  "compatibility_date": "2026-08-28"
+  "compatibility_date": "2026-08-28",
+  // リクエストごとのログ（Workers Logs）。どの問い合わせが404だったか等を、ダッシュボードの
+  // Observability で見るため。いまはダッシュボードに手で貼る運用なので、同じ設定を
+  // ダッシュボード側でもONにしている（このファイルはGit連携に切り替えたときに効く）
+  "observability": { "enabled": true }
 }

@@ -26,8 +26,13 @@ public/ ──(git push main)──▶ GitHub Actions（.github/workflows/deploy
     転送する。**動画概要欄やブックマークの旧リンクを生かすためのものなので消さない。**
   - ルールの文章を直したら、`/rules/` の `FAQPage` 構造化データ（同ファイルのhead）も合わせる。
 - `public/data.json` は **update.py の生成物。手で編集しない**。
-- ブラウザからFPL APIを直接呼べない（CORS）ため、マイチーム検索・ミニリーグ順位・
-  ホームのYouTube最新動画は **自前の中継**（Cloudflare Worker）経由。
+- ホームのYouTube最新動画は、update.py が1日3回チャンネルのRSSを取得して data.json の `youtube` に入れる
+  （2026-09-11〜）。以前は閲覧のたびに中継の `?yt=1` で取っていたが、YouTubeのRSSは実測で約半分が
+  404/5xxだった。バッチ側は3回まで試し、取れなければ前回の値を残すので動画欄が抜けない。
+  data.json に `youtube` が無いときだけ app.js が従来の `?yt=1` を使う（古い app.js を持つ閲覧者の
+  ためにも、Worker の `?yt=1` は消さない）。
+- ブラウザからFPL APIを直接呼べない（CORS）ため、マイチーム検索・ミニリーグ順位は
+  **自前の中継**（Cloudflare Worker）経由。
   - コードは `worker/fpl-proxy.js`、URLは `https://fpl-proxy.fpltaro39.workers.dev`。
     app.js 側の入口は `PROXY` と `proxyFetchText(query)` の2つだけ。
   - 受け口は `?path=<FPL APIのパス>` と `?yt=1`（YouTube RSS）の2種類のみ。
@@ -41,6 +46,11 @@ public/ ──(git push main)──▶ GitHub Actions（.github/workflows/deploy
     エッジキャッシュありでMISS 0.34秒→HIT 0.19秒。`PROXY_TIMEOUT` は10秒。
   - Worker を直したときは **Cloudflareのダッシュボードに貼り直すのを忘れない**
     （`wrangler.jsonc` はGit連携に切り替える場合用。CLIはNode未導入のため使えない）。
+  - リクエストごとのログ（Workers Logs）を有効にしている（ダッシュボードの Settings → Observability）。
+    どの問い合わせが404だったか等は Observability タブで見る。FPL側の4xxには、打ち間違いのIDのほか、
+    作ったばかりのチームで締切前の節のスカッドを先読みした404（画面には影響しない）も含まれる。
+  - 利用状況の目安：ダッシュボードの Metrics。宣伝の翌日（2026-09-11）で1日約700回・エラー0・
+    CPU中央値1.4ms・応答の中央値0.06秒。無料枠は1日10万回（日本時間9時リセット）。
 
 ## コマンド
 
@@ -93,6 +103,12 @@ public/ ──(git push main)──▶ GitHub Actions（.github/workflows/deploy
 - 見出しは h2（セクション）→ h3（各タブ）。「各タブの使い方」の見出しは「やりたいこと」で、本文の頭の「▶︎ タブ名」が該当タブへのリンク
 - 管理者プロフィールはデータへの導線より下に置く（初見の人がまず知りたいのは何ができるかで、誰がやっているかではない）
 - YouTube欄は、ルール解説動画（固定）＋最新動画2本（Worker経由で自動取得）
+
+### スカッド検索（app.js）
+- 作ったばかりのチーム（`entry.current_event` が無い）は、FPLの公開APIが最初の節の締切を過ぎるまでスカッドを公開しない。
+  「取得できません」ではなく、締切日時（data.json の `next_fixtures.deadline`）つきで「締切後に表示される」と案内する。
+  宣伝で新しく始めた人ほどここに当たる
+- 存在しないID（404）は、ミニリーグのIDとの取り違えが多いので、入力するIDの場所を案内する
 
 ### ルール解説（rules/index.html）
 - title・description・OGPはこのページ専用の文言にする（トップの使い回しにしない）。「FPL ルール」「FPL 初心者」で検索する人向けの独立ページ
