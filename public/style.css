@@ -1939,6 +1939,11 @@ button.mt-stat-btn {
 button.mt-stat-btn .mt-stat-v {
   border-bottom: 1.5px dashed var(--pl-purple);
 }
+/* 点線の下線（1.5px）のぶん値の行が高くなり、計画タブのボックスが直近節タブより
+   1.5px高くなっていた（直近節 47.8px／計画 49.3px）。下線は残したまま、
+   その高さだけ打ち消して両タブのボックスを同じ大きさにそろえる */
+button.mt-stat-btn .mt-stat-v,
+.mt-stat-chip select { margin-bottom: -1.5px; }
 /* WC・FHの節はFTが∞になるので、手動変更のボタンは無効化する */
 button.mt-stat-btn:disabled { opacity: 0.45; cursor: default; }
 button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
@@ -1960,20 +1965,22 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   cursor: pointer;
 }
 
-/* 資金の▲▼。FT数と同じく手で直せる値。4つ並びのボックス（スマホで幅約77px）に収まるよう、
-   金額の右に縦に積む。横に並べると「£-12.3m」のような長い金額で溢れる */
-.mt-bank-row { display: inline-flex; align-items: center; gap: 3px; }
-.mt-bank-adj { display: inline-flex; flex-direction: column; gap: 2px; }
+/* 資金の▲▼。FT数と同じく手で直せる値なので、移籍/FTの「✎」と同じく見出しの行に横並びで置く。
+   金額の横だとスマホ（中身の幅75px）では「£-6.6m」（51px）でも溢れ、
+   縦に積むと直近節タブよりボックスが高くなる（48→55px）ため。
+   見出しの文字の行（0.6rem）より背が高いと、そのぶんボックスが直近節より高くなるので、
+   高さ12px・行の上端揃えにして行の高さを変えないようにしている */
+.mt-bank-adj { display: inline-flex; gap: 2px; margin-left: 4px; vertical-align: top; }
 .mt-bank-adj button {
-  width: 18px;
-  height: 13px;
+  width: 16px;
+  height: 12px;
   padding: 0;
   border: none;
   border-radius: 3px;
   background: #f1ecf3;
   color: var(--pl-purple);
   font-size: 0.5rem;
-  line-height: 13px;
+  line-height: 12px;
   cursor: pointer;
 }
 .mt-bank-adj button:active { background: var(--pl-purple); color: #fff; }

@@ -2486,9 +2486,7 @@ function renderSquadPitch() {
           <button type="button" class="mt-stat mt-stat-btn" id="mt-ft-toggle" title="タップで無料移籍数を変更（1〜5）"${unlimited ? " disabled" : ""}>
             <span class="mt-stat-l">移籍/FT ✎</span><span class="mt-stat-v">${made}/${free}</span>
           </button>
-          <div class="mt-stat mt-stat-bank"><span class="mt-stat-l">資金</span>
-            <span class="mt-bank-row"><span class="mt-stat-v${mtBankShown(P) < 0 ? " neg" : ""}">£${mtBankShown(P).toFixed(1)}m</span><span class="mt-bank-adj"><button type="button" data-bank="1" aria-label="資金を£0.1m増やす" title="資金を£0.1m増やす">▲</button><button type="button" data-bank="-1" aria-label="資金を£0.1m減らす" title="資金を£0.1m減らす">▼</button></span></span>
-          </div>
+          <div class="mt-stat mt-stat-bank"><span class="mt-stat-l">資金<span class="mt-bank-adj"><button type="button" data-bank="1" aria-label="資金を£0.1m増やす" title="資金を£0.1m増やす">▲</button><button type="button" data-bank="-1" aria-label="資金を£0.1m減らす" title="資金を£0.1m減らす">▼</button></span></span><span class="mt-stat-v${mtBankShown(P) < 0 ? " neg" : ""}">£${mtBankShown(P).toFixed(1)}m</span></div>
           <div class="mt-stat"><span class="mt-stat-l">コスト</span><span class="mt-stat-v${cost > 0 ? " neg" : ""}">${cost > 0 ? "-" + cost : "0"}</span></div>
         </div>
       </div>
