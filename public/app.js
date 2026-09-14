@@ -332,12 +332,10 @@ const CMP_AXIS_META = {
   assists:      { label: "アシスト",   fmt: (v) => String(v) },
   bonus:        { label: "ボーナス",   fmt: (v) => String(v) },
   xg:           { label: "xG",         fmt: (v) => Number(v).toFixed(2) },
-  xg90:         { label: "xG/90",      fmt: (v) => Number(v).toFixed(2) },
+  xgi:          { label: "xGI",        fmt: (v) => Number(v).toFixed(2) },
   // ここから下は「スタッツを選ぶ」で足せる項目（標準の軸には入らない）
   xa:           { label: "xA",         fmt: (v) => Number(v).toFixed(2) },
-  xa90:         { label: "xA/90",      fmt: (v) => Number(v).toFixed(2) },
   g_minus_xg:   { label: "G-xG",       fmt: (v) => Number(v).toFixed(2) },
-  defcon90:     { label: "DEFCON/90",  fmt: (v) => Number(v).toFixed(2) },
   saves90:      { label: "セーブ/90",  fmt: (v) => Number(v).toFixed(2) },
   minutes:      { label: "出場時間",   fmt: (v) => String(v) },
   ownership:    { label: "所持率",     fmt: (v) => Number(v).toFixed(1) + "%" },
@@ -349,18 +347,18 @@ const CMP_AXES = {
   GK: ["starts", "cost", "points", "clean_sheets", "saves", "pk_saved"],
   DF: ["starts", "cost", "points", "clean_sheets", "defcon", "goals", "assists"],
   MF: ["starts", "cost", "points", "goals", "assists", "defcon", "bonus"],
-  FW: ["starts", "cost", "points", "goals", "assists", "xg", "xg90", "bonus"],
+  FW: ["starts", "cost", "points", "goals", "assists", "xg", "xgi", "bonus"],
 };
 // 「スタッツを選ぶ」で選べる候補（ポジションごとに意味のあるものだけ）
 const CMP_AXIS_CHOICES = {
   GK: ["starts", "cost", "points", "minutes", "ownership", "value", "ppg", "bonus",
        "clean_sheets", "saves", "saves90", "pk_saved"],
   DF: ["starts", "cost", "points", "minutes", "ownership", "value", "ppg", "bonus",
-       "clean_sheets", "defcon", "defcon90", "goals", "assists", "xg", "xa"],
+       "clean_sheets", "defcon", "goals", "assists", "xgi", "xg", "xa"],
   MF: ["starts", "cost", "points", "minutes", "ownership", "value", "ppg", "bonus",
-       "clean_sheets", "defcon", "defcon90", "goals", "assists", "xg", "xg90", "xa", "xa90"],
+       "clean_sheets", "defcon", "goals", "assists", "xgi", "xg", "xa"],
   FW: ["starts", "cost", "points", "minutes", "ownership", "value", "ppg", "bonus",
-       "goals", "assists", "xg", "xg90", "xa", "xa90", "g_minus_xg"],
+       "goals", "assists", "xgi", "xg", "xa", "g_minus_xg"],
 };
 const CMP_AXIS_MIN = 3;   // レーダーとして成立する最小
 const CMP_AXIS_MAX = 8;   // これより多いとラベルがぶつかる
@@ -773,6 +771,8 @@ const COL_META = {
   g_minus_xg:  { label: "G-xG",      type: "num" },
   xa:          { label: "xA",        type: "num" },
   xa90:        { label: "xA/90",     type: "num" },
+  xgi:         { label: "xGI",       type: "num" },
+  xgi90:       { label: "xGI/90",    type: "num" },
   defcon:      { label: "DEFCON",    type: "num" },
   defcon90:    { label: "DEFCON/90", type: "num" },
   bonus:       { label: "ボーナス",  type: "num" },
@@ -803,7 +803,7 @@ const FROZEN_ORDER = ["rank", "photo", "name", "team", "position", "cost", "poin
 const DATA_ORDER_DEFAULT = [
   // 移籍の判断に直結するものを前に置く。全部が初期表示（並べ替えは⚙から）
   "ownership", "goals", "assists", "clean_sheets", "defcon", "starts", "gw1", "gw2", "gw3",
-  "value", "minutes", "xg", "xg90", "g_minus_xg", "xa", "xa90", "defcon90",
+  "value", "minutes", "xg", "xg90", "g_minus_xg", "xa", "xa90", "xgi", "xgi90", "defcon90",
   "bonus", "ppg", "saves", "saves90", "pk_saved", "yellow", "red",
 ];
 const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
@@ -813,7 +813,7 @@ const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
 const PHOTO_BASE = "https://resources.premierleague.com/premierleague25/photos/players/110x140/";
 const BADGE_BASE = "https://resources.premierleague.com/premierleague/badges/70/t";
 // 設定の保存キー。標準の列構成を変えたら末尾のバージョンを上げる（全員に新標準を適用するため）
-const CONFIG_KEY = "fpl_player_cols_v7";
+const CONFIG_KEY = "fpl_player_cols_v8";
 
 let playerSort = { key: "points", dir: "desc" };
 // チーム・ポジションは複数選択（空配列＝絞り込みなし）
@@ -1197,7 +1197,10 @@ function refreshPlayerBody() {
         tds += `<td class="${frz}fx-cell ${cell.cls}" style="${st}" title="${esc(cell.tip)}">${cell.html}</td>`;
       } else {
         const main = c.key === "points" ? "main-num" : "";
-        tds += `<td class="num ${frz}${main}" style="${st}">${esc(r[c.key])}</td>`;
+        /* data.json に無い項目は "undefined" と表示されてしまうので「−」にする。
+           列を増やした直後、app.js だけ新しく data.json が古い閲覧者に起きる（どちらも max-age=600） */
+        const v = r[c.key];
+        tds += `<td class="num ${frz}${main}" style="${st}">${v == null ? "−" : esc(v)}</td>`;
       }
     });
     html += `<tr>${tds}</tr>`;
@@ -2499,7 +2502,7 @@ function renderSquadPitch() {
             </select>
           </label>
           <button type="button" class="mt-stat mt-stat-btn" id="mt-ft-toggle" title="タップで無料移籍数を変更（1〜5）"${unlimited ? " disabled" : ""}>
-            <span class="mt-stat-l">移籍/FT ✎</span><span class="mt-stat-v">${made}/${free}</span>
+            <span class="mt-stat-l">移籍数/FT ✎</span><span class="mt-stat-v">${made}/${free}</span>
           </button>
           <div class="mt-stat mt-stat-bank"><span class="mt-stat-l">資金<span class="mt-bank-adj"><button type="button" data-bank="1" aria-label="資金を£0.1m増やす" title="資金を£0.1m増やす">▲</button><button type="button" data-bank="-1" aria-label="資金を£0.1m減らす" title="資金を£0.1m減らす">▼</button></span></span><span class="mt-stat-v${mtBankShown(P) < 0 ? " neg" : ""}">£${mtBankShown(P).toFixed(1)}m</span></div>
           <div class="mt-stat"><span class="mt-stat-l">コスト</span><span class="mt-stat-v${cost > 0 ? " neg" : ""}">${cost > 0 ? "-" + cost : "0"}</span></div>
@@ -2570,7 +2573,7 @@ function renderSquadPitch() {
       savePlans();
       renderSquadPitch();
     });
-    // 移籍/FTステータスのタップで無料移籍数を1〜5で切り替え（公開APIから取れないため手動設定）
+    // 移籍数/FTステータスのタップで無料移籍数を1〜5で切り替え（公開APIから取れないため手動設定）
     wrap.querySelector("#mt-ft-toggle").addEventListener("click", () => {
       clearMtMsg();
       P.ft = (P.ft % 5) + 1;
@@ -2594,10 +2597,12 @@ function renderSquadPitch() {
     let header;
     if (MT.livePoints) {
       const cost = MT.eventTransfersCost || 0;
+      // WC・FHの節は移籍が無制限なので件数ではなく∞を出す（計画タブのFT欄と同じ表記・同じ判定）
+      const trShown = chipUnlimited(MT.chip) ? "∞" : (MT.eventTransfers != null ? MT.eventTransfers : 0);
       header = `<div class="mt-gwnav"><span class="mt-gw-cur">第${MT.gw}節</span></div>
         <div class="mt-stats">
           <div class="mt-stat"><span class="mt-stat-l">チップ</span><span class="mt-stat-v">${MT.chip ? esc(chipShort(MT.chip)) : "なし"}</span></div>
-          <div class="mt-stat"><span class="mt-stat-l">移籍</span><span class="mt-stat-v">${MT.eventTransfers != null ? MT.eventTransfers : 0}</span></div>
+          <div class="mt-stat"><span class="mt-stat-l">移籍数</span><span class="mt-stat-v">${trShown}</span></div>
           <div class="mt-stat"><span class="mt-stat-l">資金</span><span class="mt-stat-v">£${MT.bank.toFixed(1)}m</span></div>
           <div class="mt-stat"><span class="mt-stat-l">コスト</span><span class="mt-stat-v${cost > 0 ? " neg" : ""}">${cost > 0 ? "-" + cost : "0"}</span></div>
         </div>`;
@@ -2751,16 +2756,16 @@ function openMtBreakdown(pos) {
 // 計画タブ：ポジション別に表示するシーズンスタッツ
 const SEASON_STAT_LABELS = {
   points: "ポイント", goals: "ゴール", assists: "アシスト", clean_sheets: "無失点",
-  saves: "セーブ", pk_saved: "PKストップ", defcon90: "DEFCON/90",
-  xg90: "xG/90", xa90: "xA/90", bonus: "ボーナス",
+  saves: "セーブ", pk_saved: "PKストップ", defcon: "DEFCON",
+  xgi: "xGI", xg: "xG", xa: "xA", bonus: "ボーナス",
 };
 const POS_STATS = {
   GK: ["points", "assists", "clean_sheets", "saves", "pk_saved", "bonus"],
-  DF: ["points", "goals", "assists", "clean_sheets", "defcon90", "bonus"],
-  MF: ["points", "goals", "assists", "xg90", "defcon90", "bonus"],
-  FW: ["points", "goals", "assists", "xg90", "xa90", "bonus"],
+  DF: ["points", "goals", "assists", "clean_sheets", "defcon", "bonus"],
+  MF: ["points", "goals", "assists", "xgi", "defcon", "bonus"],
+  FW: ["points", "goals", "assists", "xgi", "xg", "xa", "bonus"],
 };
-const SEASON_STAT_FLOAT = { defcon90: 1, xg90: 1, xa90: 1 };  // 小数2桁で表示する項目
+const SEASON_STAT_FLOAT = { xgi: 1, xg: 1, xa: 1 };  // 小数2桁で表示する項目（DEFCONは整数なので入れない）
 
 // 写真コード → シーズンスタッツ（data.json の players.all）。初回だけ作る
 let _seasonByPhoto = null;
@@ -3002,8 +3007,8 @@ function renderMtPicker(query) {
 // 移籍候補のスタッツ絞り込みの選択肢（cost は elements の価格、他は players.all）
 const STAT_FILTER_OPTS = [
   ["points", "ポイント"], ["cost", "価格"], ["goals", "ゴール"], ["assists", "アシスト"],
-  ["clean_sheets", "無失点"], ["defcon90", "DEFCON/90"], ["saves", "セーブ"],
-  ["pk_saved", "PKストップ"], ["xg90", "xG/90"], ["xa90", "xA/90"], ["bonus", "ボーナス"],
+  ["clean_sheets", "無失点"], ["defcon", "DEFCON"], ["saves", "セーブ"],
+  ["pk_saved", "PKストップ"], ["xgi", "xGI"], ["xg", "xG"], ["xa", "xA"], ["bonus", "ボーナス"],
 ];
 function pickStatValue(e, key) {
   if (key === "cost") return e.c;

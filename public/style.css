@@ -1931,7 +1931,7 @@ tr.me-row td { background: #eafff3 !important; }
 .mt-stat-l { font-size: 0.6rem; color: var(--muted); }
 .mt-stat-v { font-size: 0.85rem; font-weight: 800; color: var(--pl-purple); }
 .mt-stat-v.neg { color: var(--hard); }
-/* タップで変更できるステータス（移籍/FT）。破線下線で「押せる」ことを示す */
+/* タップで変更できるステータス（移籍数/FT）。破線下線で「押せる」ことを示す */
 button.mt-stat-btn {
   font: inherit;
   cursor: pointer;
@@ -1965,7 +1965,7 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   cursor: pointer;
 }
 
-/* 資金の▲▼。FT数と同じく手で直せる値なので、移籍/FTの「✎」と同じく見出しの行に横並びで置く。
+/* 資金の▲▼。FT数と同じく手で直せる値なので、移籍数/FTの「✎」と同じく見出しの行に横並びで置く。
    金額の横だとスマホ（中身の幅75px）では「£-6.6m」（51px）でも溢れ、
    縦に積むと直近節タブよりボックスが高くなる（48→55px）ため。
    見出しの文字の行（0.6rem）より背が高いと、そのぶんボックスが直近節より高くなるので、

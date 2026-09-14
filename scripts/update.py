@@ -394,6 +394,7 @@ def window_row(base, el, rows):
     points = s("total_points")
     xg = sf("expected_goals")
     xa = sf("expected_assists")
+    xgi = sf("expected_goal_involvements")  # xGI＝xG+xA（公式の合計値。xg+xaを足すと丸め誤差が出る）
     defcon = s("defensive_contribution")
     saves = s("saves")
     cost = el.get("now_cost", 0) / 10.0
@@ -414,6 +415,8 @@ def window_row(base, el, rows):
         "g_minus_xg": round(goals - xg, 2),
         "xa": round(xa, 2),
         "xa90": p90(xa),
+        "xgi": round(xgi, 2),
+        "xgi90": p90(xgi),
         "defcon": defcon,
         "defcon90": p90(defcon),
         "bonus": s("bonus"),
@@ -423,7 +426,6 @@ def window_row(base, el, rows):
         "pk_saved": s("penalties_saved"),
         "yellow": s("yellow_cards"),
         "red": s("red_cards"),
-        "xgi": round(sf("expected_goal_involvements"), 2),
     }}
 
 
@@ -480,6 +482,8 @@ def compute_player_tables(bootstrap, histories, team_map, pos_map, jp_names):
             "g_minus_xg": round(goals - xg_total, 2),       # G-xG（上振れ/下振れ）
             "xa": round(to_float(el.get("expected_assists")), 2),          # xA合計
             "xa90": round(to_float(el.get("expected_assists_per_90")), 2),  # xA/90
+            "xgi": round(to_float(el.get("expected_goal_involvements")), 2),          # xGI合計（xG+xA）
+            "xgi90": round(to_float(el.get("expected_goal_involvements_per_90")), 2),  # xGI/90
             "defcon": el.get("defensive_contribution", 0), # DEFCON合計
             "defcon90": round(to_float(el.get("defensive_contribution_per_90")), 2),
             "bonus": el.get("bonus", 0),
