@@ -998,22 +998,35 @@ function buildPlayerHead() {
     `<tr>${r1}</tr><tr class="filter-row">${r2}</tr>`;
 }
 
-/* ---- チーム／ポジションの複数選択フィルタ ---- */
+/* ---- チーム／ポジションの複数選択フィルタ ----
+   選手表とFDR表で共用する。get/set＝選択状態の置き場所、apply＝選び直した後の描き直し、
+   prefix＝絞り込み中のボタンの頭に付ける文字、allLabel＝絞り込んでいないときの文字
+   （どちらも列見出しの下に置かないボタン用） */
 const MULTI_FILTERS = {
-  team: { title: "チーム", options: () => teamOptions() },
-  pos:  { title: "ポジション", options: () => ["GK", "DF", "MF", "FW"] },
+  team: { title: "チーム", options: () => teamOptions(),
+          get: () => playerFilters.team, set: (v) => { playerFilters.team = v; }, apply: redrawPlayerFilter },
+  pos:  { title: "ポジション", options: () => ["GK", "DF", "MF", "FW"],
+          get: () => playerFilters.pos, set: (v) => { playerFilters.pos = v; }, apply: redrawPlayerFilter },
+  fdrTeam: { title: "チーム", options: () => fdrTeamOptions(), prefix: "チーム：", allLabel: "チーム",
+          get: () => fdrTeams, set: (v) => { fdrTeams = v; }, apply: () => redrawFdr() },
 };
+function redrawPlayerFilter() {
+  buildPlayerHead();      // ボタンの表示（件数／全て）を更新
+  refreshPlayerBody();
+}
 
 // フィルタ行に出すボタン（タップでチェックボックス一覧を開く）
 // 「全部チェック」も「1つもチェックなし」も、結果は全選手が対象なので「全て」と表示する
 function multiFilterButton(kind) {
-  const sel = playerFilters[kind];
+  const sel = MULTI_FILTERS[kind].get();
   const total = MULTI_FILTERS[kind].options().length;
   const isAll = sel.length === 0 || sel.length === total;
   let text;
   if (isAll) text = "全て";
   else if (sel.length === 1) text = kind === "pos" ? sel[0] : "1件";
   else text = `${sel.length}件`;
+  const conf = MULTI_FILTERS[kind];
+  text = isAll && conf.allLabel ? conf.allLabel : (conf.prefix || "") + text;
   return `<button type="button" class="colsel fsel${isAll ? "" : " is-on"}" data-fsel="${kind}"
     title="${MULTI_FILTERS[kind].title}で絞り込み（複数選択できます）">${esc(text)}</button>`;
 }
@@ -1026,7 +1039,7 @@ function closeFilterPanel() {
 function openFilterPanel(kind, btn) {
   closeFilterPanel();
   const conf = MULTI_FILTERS[kind];
-  const sel = playerFilters[kind];
+  const sel = conf.get();
   const items = conf.options().map((v) =>
     `<label class="fsel-item"><input type="checkbox" value="${esc(v)}" ${sel.includes(v) ? "checked" : ""}>${esc(v)}</label>`
   ).join("");
@@ -1056,10 +1069,9 @@ function openFilterPanel(kind, btn) {
     toggleBtn.dataset.act = isAll ? "clear" : "all";
   };
   const apply = () => {
-    playerFilters[kind] = [...p.querySelectorAll("input:checked")].map((i) => i.value);
+    conf.set([...p.querySelectorAll("input:checked")].map((i) => i.value));
     syncToggle();
-    buildPlayerHead();      // ボタンの表示（件数／全て）を更新
-    refreshPlayerBody();
+    conf.apply();           // ボタンの表示（件数／全て）と表を描き直す
   };
   p.addEventListener("change", apply);
   toggleBtn.addEventListener("click", () => {
@@ -1565,12 +1577,21 @@ function drawTeamByGw(box, byGw) {
 }
 
 /* ---- FDRタブ：チーム × 次のN節の対戦難易度表（いわゆるFDRティッカー） ---- */
-const FDR_WINDOWS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const FDR_WINDOWS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];   // ほかに "all"＝開始節から最終節まで
 let fdrWindow = (() => {
-  try { const s = +localStorage.getItem("fpl_fdr_window"); if (FDR_WINDOWS.includes(s)) return s; } catch (e) {}
+  try {
+    // 未保存(null)を数値にすると0になるので、文字列のまま判定する
+    const s = localStorage.getItem("fpl_fdr_window");
+    if (s === "all") return "all";
+    if (FDR_WINDOWS.includes(+s)) return +s;
+  } catch (e) {}
   return 6;
 })();
 let fdrSort = { key: "total", dir: "asc" };   // 既定＝合計が小さい順＝日程が楽な順
+// 表の開始節（null＝次の未消化節）。選手表の1GW〜3GWとは連動させない。節が進むと古くなるので保存しない
+let fdrFrom = null;
+let fdrTeams = [];     // チームの絞り込み（空＝全チーム）
+let fdrBox = null;     // 絞り込みパネルから描き直すときの描画先
 
 // 表の開始節＝次の未消化節。next_fixtures の節名（例「第2節」）から取る
 function fdrStartGw() {
@@ -1586,9 +1607,11 @@ function drawFdrTable(box) {
   if (!Object.keys(tf).length || !Object.keys(meta).length) {
     return (box.innerHTML = emptyMessage("まだ日程データがありません。"));
   }
-  const start = fdrStartGw();
+  fdrBox = box;
+  const start = fdrFrom || fdrStartGw();
+  const last = fdrWindow === "all" ? 38 : Math.min(start + fdrWindow - 1, 38);
   const gws = [];
-  for (let g = start; g < start + fdrWindow && g <= 38; g++) gws.push(g);
+  for (let g = start; g <= last; g++) gws.push(g);
 
   // チームごとに、対象節の対戦相手と平均難易度をまとめる
   const rows = Object.entries(meta).map(([id, m]) => {
@@ -1603,13 +1626,18 @@ function drawFdrTable(box) {
     };
   });
 
+  // チームで絞り込む（空＝全チーム）。順位は絞り込んだ中で振り直す
+  const shown = fdrTeams.length ? rows.filter((r) => fdrTeams.includes(r.team)) : rows;
+  // 節の列で並べている途中で節数を減らし、その列が無くなったら合計順に戻す
+  if (fdrSort.key.startsWith("gw:") && +fdrSort.key.slice(3) >= gws.length) fdrSort = { key: "total", dir: "asc" };
+
   const { key, dir } = fdrSort;
   const gwVal = (r, i) => {
     const list = r.cells[i];
     if (!list.length) return dir === "asc" ? 999 : -1;   // ブランクGWは常に端へ
     return list.reduce((n, f) => n + fdrLevel(f.d), 0);
   };
-  rows.sort((a, b) => {
+  shown.sort((a, b) => {
     if (key === "team") return dir === "asc" ? a.team.localeCompare(b.team, "ja") : b.team.localeCompare(a.team, "ja");
     let av, bv;
     if (key.startsWith("gw:")) { const i = +key.slice(3); av = gwVal(a, i); bv = gwVal(b, i); }
@@ -1631,8 +1659,8 @@ function drawFdrTable(box) {
     return `<td class="fx-cell ${c.cls}" title="${esc(c.tip)}">${c.html}</td>`;
   };
 
-  const body = rows.map((r, i) => {
-    const rankNum = dir === "asc" ? i + 1 : rows.length - i;
+  const body = shown.map((r, i) => {
+    const rankNum = dir === "asc" ? i + 1 : shown.length - i;
     // 難易度は合計値なのでFDRの1〜5の色は当てはまらない。背景はグレー固定にする
     const totalCell = `<td class="main-num fdr-total">${r.total == null ? "—" : r.total}</td>`;
     return `<tr>
@@ -1643,20 +1671,31 @@ function drawFdrTable(box) {
     </tr>`;
   }).join("");
 
-  // 表示する節数は「チーム別」タブと同じプルダウンで選ぶ
-  const seg = `<select id="fdr-picker" class="picker">${
-    FDR_WINDOWS.map((n) => `<option value="${n}"${n === fdrWindow ? " selected" : ""}>${n}節</option>`).join("")
-  }</select>`;
+  // 1段目＝表示する節数（全節＝最終節まで）。
+  // 2段目＝「直近」タブの期間切替と同じ見た目のボタン列（開始節の前後移動と、チームの複数選択）
+  const opts = FDR_WINDOWS.map((n) => `<option value="${n}"${n === fdrWindow ? " selected" : ""}>${n}節</option>`).join("")
+    + `<option value="all"${fdrWindow === "all" ? " selected" : ""}>全節</option>`;
+  const seg = `<select id="fdr-picker" class="picker" aria-label="表示する節数">${opts}</select>
+    <div class="recent-seg fdr-seg">
+      <button type="button" data-fdr-nav="-1"${start <= 1 ? " disabled" : ""}>◀︎前へ</button>
+      ${multiFilterButton("fdrTeam")}
+      <button type="button" data-fdr-nav="1"${start >= 38 ? " disabled" : ""}>次へ▶︎</button>
+    </div>`;
 
   box.innerHTML = seg + wideTable(
     `<table class="rich teamtbl tbl-fdr"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`);
   syncTableStickyRoom();
 
   box.querySelector("#fdr-picker").addEventListener("change", (e) => {
-    fdrWindow = +e.target.value;
+    fdrWindow = e.target.value === "all" ? "all" : +e.target.value;
     try { localStorage.setItem("fpl_fdr_window", String(fdrWindow)); } catch (e) {}
-    drawFdrTable(box);
+    redrawFdr();
   });
+  // ◀︎前へ／次へ▶︎：開始節を1節ずつ動かす（過去の節の日程も team_fixtures に入っている）
+  box.querySelectorAll("[data-fdr-nav]").forEach((b) => b.addEventListener("click", () => {
+    fdrFrom = Math.min(38, Math.max(1, start + +b.dataset.fdrNav));
+    redrawFdr();
+  }));
   markSortableHeaders(box.querySelector("thead"), fdrSort.key, dir);
   enableSortKeys(box.querySelector("thead"));
   box.querySelector("thead").addEventListener("click", (e) => {
@@ -1665,12 +1704,23 @@ function drawFdrTable(box) {
     const k = th.dataset.sort;
     if (fdrSort.key === k) fdrSort.dir = fdrSort.dir === "asc" ? "desc" : "asc";
     else fdrSort = { key: k, dir: "asc" };   // 難易度も名前も、まずは小さい順＝楽な順/五十音順
-    const wrap = box.querySelector(".data-table-wrap");
-    const sl = wrap ? wrap.scrollLeft : 0;
-    drawFdrTable(box);
-    const nw = box.querySelector(".data-table-wrap");
-    if (nw) nw.scrollLeft = sl;
+    redrawFdr();
   });
+}
+
+// 横スクロール位置を保ったまま描き直す（並べ替え・節の移動・節数・チーム絞り込みで共用）
+function redrawFdr() {
+  if (!fdrBox) return;
+  const wrap = fdrBox.querySelector(".data-table-wrap");
+  const sl = wrap ? wrap.scrollLeft : 0;
+  drawFdrTable(fdrBox);
+  const nw = fdrBox.querySelector(".data-table-wrap");
+  if (nw) nw.scrollLeft = sl;
+}
+
+// FDRタブのチーム絞り込みの選択肢（表の行と同じ teams_meta の名前・五十音順）
+function fdrTeamOptions() {
+  return Object.values(DATA.teams_meta || {}).map((m) => m.name).sort((a, b) => a.localeCompare(b, "ja"));
 }
 
 /* ===========================================================

@@ -1115,6 +1115,9 @@ table.rich.tbl-fdr td.fdr-total {
   font-size: 0.85rem;
 }
 table.rich.tbl-fdr tbody tr:nth-child(even) td.fdr-total { background: #e7e7e7; }
+/* FDRタブ：節数プルダウンの下のボタン列（◀︎前へ／チーム／次へ▶︎）は「直近」タブの .recent-seg をそのまま使う。
+   端の節で押せない前へ・次へだけ薄くする。チームは絞り込み中に .is-on で塗られる */
+.fdr-seg button:disabled { opacity: 0.4; cursor: default; }
 
 /* 公式FDRの5段階（1=とても弱い … 5=とても強い） */
 table.rich td.fx-cell.fdr-1 { background: #12fc7a; color: #1b1b1f; }
