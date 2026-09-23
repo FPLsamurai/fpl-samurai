@@ -3213,8 +3213,12 @@ function ytCardHTML(vid, title) {
   </a>`;
 }
 
+/* 読み込みに失敗しても、ホームの紹介文やルールへの導線は消さない。
+   以前は <main> を丸ごと置き換えていたため、data.json を読めないGoogle（robots.txtで禁止していた）には
+   エラー文だけのページに見え、トップがソフト404と判定された（2026-09-18）。
+   データを使う場所（選手・チーム・次節の表とスカッド検索）にだけ案内を出す */
 function showLoadError(err) {
-  document.querySelector("main").innerHTML = `<div class="empty">
+  const msg = `<div class="empty">
     <p>データの読み込みに失敗しました。</p>
     <p class="sub">${esc(err.message || err)}</p>
     <p class="sub" style="margin-top:12px;">
@@ -3222,4 +3226,12 @@ function showLoadError(err) {
       README.md の「自分のPCでサイトを確認する」の手順で開いてください。
     </p>
   </div>`;
+  ["players-content", "teams-content", "next-content", "myteam-result"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = msg;
+  });
+  // スカッド検索はデータ（選手名・価格）が無いと描けないので押せなくする
+  const go = document.getElementById("id-go");
+  if (go) go.disabled = true;
+  console.warn("[FPL侍] data.json の読み込みに失敗:", err);
 }

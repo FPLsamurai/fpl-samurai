@@ -119,6 +119,13 @@ public/ ──(git push main)──▶ GitHub Actions（.github/workflows/deploy
 - 構造化データは `FAQPage`（ページ下部の details のFAQと内容を一致させる）と `BreadcrumbList`（検索結果に「FPL侍 > ルール解説」と出すため）
 - 目次の並びは、ルール解説動画のチャプターと同じにしてある
 
+### robots.txt
+- **`data.json`（と `data_2526.json`）をクロール禁止にしない。** Googleはトップを表示するとき app.js を実行して
+  data.json を読みに行く。以前は「容量が大きい・ページではない」として `Disallow` していたため、Googleだけ読み込みに
+  失敗し、トップがエラー文だけのページに見えて**ソフト404**と判定された（2026-09-18に Search Console で4件。
+  `/` `/index.html` `?utm_…` など同じトップの表記違い）。ページ2枚の規模ならクロールの割り当ては問題にならない
+- 同じ理由で、app.js の `showLoadError()` は `<main>` を丸ごと消さず、データを使う表の場所にだけ案内を出す
+
 ### sitemap.xml
 - `lastmod` は「ページの中身（文章・機能）を変えた日」。data.json の自動更新では動かさない。ページを増やしたら `<url>` を追加する
 
