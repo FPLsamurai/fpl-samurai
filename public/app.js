@@ -1742,9 +1742,9 @@ function renderNext(key) {
 }
 
 /* 節の見出し。第◯節は左、移籍締切は行の中央（公式の deadline_time＝第1戦の1時間半前） */
-function gwHeadHtml(name, deadline) {
+function gwHeadHtml(name, deadline, extraClass) {
   const dl = deadline ? `<span class="gw-deadline">移籍締切：${esc(deadline)}</span>` : "";
-  return `<div class="gw-head"><span class="gw-name">${esc(name || "次節")}</span>${dl}<span></span></div>`;
+  return `<div class="gw-head${extraClass || ""}"><span class="gw-name">${esc(name || "次節")}</span>${dl}<span></span></div>`;
 }
 
 /* 10試合を2列×5試合に分ける。左上→左下→右上→右下の順（＝前半を左列、後半を右列） */
@@ -1826,15 +1826,24 @@ function drawPredictions(box, pred) {
     + `<span><span class="pred-h-long">クリーンシート</span><span class="pred-h-short">CS</span>％</span></div>`;
   const cards = matches.map((m) => `<div class="pred-match">${m.map(teamRow).join("")}</div>`);
 
-  let html = gwHeadHtml(pred.event_name, pred.deadline);
+  // 予測タブは下にチーム別データ・選手別データが続くので、ホームのセクション見出しと同じ点線で区切る
+  let html = gwHeadHtml(pred.event_name, pred.deadline, " sec-line");
   html += twoColumns(cards, head);
-  html += `<p class="note table-note">`
-    + `ゴール期待値＝自チームの直近5試合平均xG ×（相手の直近5試合平均被xG ÷ リーグ平均xG）<br>`
-    + `クリーンシート%＝e^(−λ)　λ＝相手の直近10試合平均xG ×（自チームの直近10試合平均被xG ÷ リーグ平均xG）<br>`
-    + `リーグ平均xG（μ）＝${esc(pred.league_avg_xg)}<br>`
-    + `色付きのセルは、それぞれの数値が今節の上位5チーム`
-    + `</p>`;
+  // 見出しは2段。1段目の「チーム別データ」はゴール・CSの2表でまとめて1回だけ出す
+  const teamGoal = teamRankingHtml(rows, "goal_expect", "ゴール期待値ランキング TOP5", "期待値",
+    (v) => fmtExpected(v), "");
+  const teamCs = teamRankingHtml(rows, "clean_sheet_pct", "クリーンシート確率ランキング TOP5", "CS％",
+    (v) => Math.round(v) + "%", " pgr-exp-cs");
+  if (teamGoal || teamCs) html += `<div class="pgr-group">チーム別データ</div>` + teamGoal + teamCs;
   html += playerGoalRankingHtml(pred);
+  // 計算式の説明は、上の一覧・チーム別・選手別の分をまとめて予測タブの最後に1回だけ出す
+  // （「自分」＝チーム別ではそのチーム、選手別ではその選手）
+  html += `<p class="note table-note">`
+    + `ゴール期待値＝自分の直近5試合平均xG ×（相手の直近5試合平均被xG ÷ リーグ平均xG）<br>`
+    + `クリーンシート%＝e^(−λ)　λ＝相手の直近10試合平均xG ×（自分の直近10試合平均被xG ÷ リーグ平均xG）<br>`
+    + `リーグ平均xG（μ）＝${esc(pred.league_avg_xg)}<br>`
+    + `それぞれの数値TOP5のセルに色付け`
+    + `</p>`;
   box.innerHTML = html;
 }
 
@@ -1845,6 +1854,33 @@ function fmtExpected(v) {
   const n = Number(v);
   if (!isFinite(n)) return "—";
   return n >= 10 ? n.toFixed(1) : n.toFixed(2);
+}
+
+/* チーム別ランキング TOP5（ゴール期待値／クリーンシート%）。見た目は選手別TOP10と共通の .pgr。
+   5位タイは全部載せる（上の対戦カードの色付け top5Cut と同じ基準にして、色付きセルと顔ぶれを一致させる）。
+   同値は同順位。材料が無い（null）チームは載せない。計算式の説明は呼び出し側でまとめて出す */
+function teamRankingHtml(rows, key, title, valueLabel, fmt, expClass) {
+  const valid = rows.filter((r) => r[key] !== null && r[key] !== undefined && isFinite(Number(r[key])));
+  const cut = top5Cut(valid.map((r) => r[key]));
+  if (cut === null) return "";
+  const top = valid.filter((r) => Number(r[key]) >= cut)
+    .sort((a, b) => Number(b[key]) - Number(a[key]));
+  let rank = 0;
+  const items = top.map((r, i) => {
+    if (i === 0 || Number(r[key]) !== Number(top[i - 1][key])) rank = i + 1;
+    const home = r.home_away === "ホーム";
+    return `<div class="pgr-row">
+      <span class="pgr-rank ${rankClass(rank)}">${rank}</span>
+      <span class="pgr-who">${teamBadgeByName(r.team)}<span class="pgr-names"><span class="pgr-name">${esc(r.team)}</span></span></span>
+      <span class="pgr-mid"><span class="pgr-opp">vs ${esc(teamShortByName(r.opponent))}(${home ? "H" : "A"})</span></span>
+      <span class="pgr-exp${expClass}">${fmt(r[key])}</span>
+    </div>`;
+  }).join("");
+  return `<h3 class="pgr-title">${title}</h3>
+    <div class="pgr pgr-team-rank">
+      <div class="pgr-head"><span></span><span>チーム</span><span>対戦</span><span>${valueLabel}</span></div>
+      ${items}
+    </div>`;
 }
 
 function playerGoalRankingHtml(pred) {
@@ -1868,12 +1904,12 @@ function playerGoalRankingHtml(pred) {
       <span class="pgr-exp">${fmtExpected(r.expected_goals)}</span>
     </div>`;
   }).join("");
-  return `<h3 class="pgr-title">【選手別】ゴール期待値ランキング TOP10</h3>
+  return `<div class="pgr-group">選手別データ</div>
+    <h3 class="pgr-title">ゴール期待値ランキング TOP10</h3>
     <div class="pgr">
       <div class="pgr-head"><span></span><span>選手</span><span>対戦</span><span>xG平均</span><span>期待値</span></div>
       ${items}
-    </div>
-    <p class="note table-note">ゴール期待値＝選手の直近5試合平均xG ×（相手の直近5試合平均被xG ÷ リーグ平均xG）</p>`;
+    </div>`;
 }
 
 function drawSchedule(box, fx) {

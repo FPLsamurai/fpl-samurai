@@ -1553,6 +1553,20 @@ tbody tr:nth-child(even) {
   font-size: 1rem;
   color: var(--pl-purple);
 }
+/* 見出し1段目の「チーム別データ」「選手別データ」。下に点線を引き、2段目の見出しは線のすぐ下に置く */
+.pgr-group {
+  margin: 22px 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--pl-purple);
+}
+.pgr-group + .pgr-title { margin-top: 8px; }
+/* 予測タブの区切り（第◯節・チーム別データ・選手別データの下）。ホームの .profile-section と同じ点線 */
+.gw-head.sec-line,
+.pgr-group {
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--border);
+}
 .pgr {
   background: var(--card);
   border: 0.5px solid #ececf0;
@@ -1664,6 +1678,16 @@ tbody tr:nth-child(even) {
   .pgr-opp { font-size: 0.72rem; }
   .pgr-xg { font-size: 0.8rem; }
   .pgr-photo { width: 24px; height: 30px; }
+}
+/* チーム別ランキング TOP5：xG平均の列が無い4列版。CS%は上の対戦カードの色付けと同じ緑 */
+.pgr-team-rank .pgr-head,
+.pgr-team-rank .pgr-row { grid-template-columns: 26px minmax(0, 1fr) 104px 60px; }
+.pgr-team-rank .team-badge { width: 26px; height: 26px; flex: none; }
+.pgr-exp.pgr-exp-cs { background: #d7eede; }
+@media (max-width: 480px) {
+  .pgr-team-rank .pgr-head,
+  .pgr-team-rank .pgr-row { grid-template-columns: 20px minmax(0, 1fr) 72px 56px; }
+  .pgr-team-rank .team-badge { width: 22px; height: 22px; }
 }
 
 /* ---------- 次節の日程（カード形式） ---------- */
