@@ -2752,7 +2752,7 @@ const EXPLAIN_JA = {
   yellow_cards: "イエロー",
   red_cards: "レッド",
   bonus: "ボーナス",
-  defensive_contribution: "守備貢献",
+  defensive_contribution: "DEFCON",
 };
 
 // 選手写真のimg HTML（無ければユニフォーム、それも無ければ非表示）
@@ -2815,7 +2815,7 @@ function openMtBreakdown(pos) {
   const mult = pick.is_captain ? (MT.chip === "3xc" ? 3 : 2) : 1;
   const total = base * mult;
 
-  // ボーナス・守備貢献は value が得点そのもの／達成度なので「×N」を付けない
+  // ボーナス・DEFCONは value が得点そのもの／達成度なので「×N」を付けない
   const noCount = { bonus: 1, defensive_contribution: 1 };
   const rowsHtml = lines.map((s) => {
     const ja = EXPLAIN_JA[s.identifier] || s.identifier;
