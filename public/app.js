@@ -758,9 +758,9 @@ const COL_META = {
   name:        { label: "選手名",    type: "name",  frozen: true, width: 130, lock: true },
   position:    { label: "POS",      type: "pos",   frozen: true, width: 46 },
   cost:        { label: "価格",      type: "num",   frozen: true, width: 56 },
-  points:      { label: "ポイント",  type: "num",   frozen: true, width: 62 },
+  ownership:   { label: "所持率",    type: "num",   frozen: true, width: 56 },
+  points:      { label: "ポイント",  type: "num" },
   value:       { label: "コスパ",    type: "num" },
-  ownership:   { label: "所持率",    type: "num" },
   goals:       { label: "ゴール",    type: "num" },
   assists:     { label: "アシスト",  type: "num" },
   clean_sheets:{ label: "無失点",    type: "num" },
@@ -799,13 +799,16 @@ function colLabel(c) {
   }
   return c.label;
 }
-const FROZEN_ORDER = ["rank", "photo", "name", "team", "position", "cost", "points"];  // ポイントまで左に固定
+const FROZEN_ORDER = ["rank", "photo", "name", "team", "position", "cost", "ownership"];  // 基本列（左側に並ぶ列）
 const DATA_ORDER_DEFAULT = [
-  // 移籍の判断に直結するものを前に置く。全部が初期表示（並べ替えは⚙から）
-  "ownership", "goals", "assists", "clean_sheets", "defcon", "starts", "gw1", "gw2", "gw3",
-  "value", "minutes", "xg", "xg90", "g_minus_xg", "xa", "xa90", "xgi", "xgi90", "defcon90",
-  "bonus", "ppg", "saves", "saves90", "pk_saved", "yellow", "red",
+  // ポイントの内訳になる項目＋次の3節を前に置き、ここまでを初期表示にする（DATA_SHOWN_DEFAULT）
+  "points", "starts", "goals", "assists", "clean_sheets", "defcon", "saves", "bonus", "gw1", "gw2", "gw3",
+  // 以下は初期は非表示。「⚙その他データの追加」から表示・並べ替えできる
+  "minutes", "ppg", "value", "xg", "xg90", "g_minus_xg", "xa", "xa90", "xgi", "xgi90", "defcon90",
+  "saves90", "pk_saved", "yellow", "red",
 ];
+// 初期表示するデータ列。列が多いとスマホで横スクロールが長くなり、動画・X投稿の素材にも収まらないため絞る
+const DATA_SHOWN_DEFAULT = new Set(DATA_ORDER_DEFAULT.slice(0, DATA_ORDER_DEFAULT.indexOf("gw3") + 1));
 const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
 // 選手写真。公式は季節ごとに別パス（premierleague25=25/26）で最新版を配信。
 // 旧パス（premierleague/.../250x250/p{code}）は24/25で更新停止しているため新パスを使用。
@@ -813,7 +816,7 @@ const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
 const PHOTO_BASE = "https://resources.premierleague.com/premierleague25/photos/players/110x140/";
 const BADGE_BASE = "https://resources.premierleague.com/premierleague/badges/70/t";
 // 設定の保存キー。標準の列構成を変えたら末尾のバージョンを上げる（全員に新標準を適用するため）
-const CONFIG_KEY = "fpl_player_cols_v8";
+const CONFIG_KEY = "fpl_player_cols_v9";
 
 let playerSort = { key: "points", dir: "desc" };
 // チーム・ポジションは複数選択（空配列＝絞り込みなし）
@@ -831,8 +834,10 @@ let recentWindow = (() => {
 
 /* ---- 列の表示設定の保存・読み込み（ブラウザに記憶） ---- */
 function defaultColState() {
-  // 写真は初期は非表示（⚙列の表示・並び替えでオンにできる）。データ列は全部表示
-  return { dataOrder: [...DATA_ORDER_DEFAULT], hidden: { photo: true }, freezeUntil: "name" };
+  // 写真と、DATA_SHOWN_DEFAULT 以外のデータ列は初期は非表示（⚙その他データの追加でオンにできる）
+  const hidden = { photo: true };
+  DATA_ORDER_DEFAULT.forEach((k) => { if (!DATA_SHOWN_DEFAULT.has(k)) hidden[k] = true; });
+  return { dataOrder: [...DATA_ORDER_DEFAULT], hidden, freezeUntil: "name" };
 }
 function loadColState() {
   try {
@@ -841,7 +846,7 @@ function loadColState() {
     const known = new Set(DATA_ORDER_DEFAULT);
     const order = s.dataOrder.filter((k) => known.has(k));
     DATA_ORDER_DEFAULT.forEach((k) => { if (!order.includes(k)) order.push(k); });
-    // 固定範囲（無効な値なら標準=ポイントまで）
+    // 固定範囲（無効な値なら標準=選手名まで）
     const fu = (s.freezeUntil === "none" || FROZEN_ORDER.includes(s.freezeUntil))
       ? s.freezeUntil : "name";
     return { dataOrder: order, hidden: s.hidden || {}, freezeUntil: fu };
@@ -856,7 +861,7 @@ function saveColState() {
 /* ---- 今表示する列の一覧（固定列＋データ列） ---- */
 function getActiveColumns() {
   // 「どこまで固定するか」（none=固定なし）
-  const fu = colState.freezeUntil ?? "points";
+  const fu = colState.freezeUntil ?? "name";
   const cut = fu === "none" ? 0 : FROZEN_ORDER.indexOf(fu) + 1;
 
   // 左側の基本列のうち、固定する部分（sticky）
@@ -1246,7 +1251,7 @@ function renderColManager() {
   // データ列の「全て選択」チェック（全データ列が表示中なら on）
   const allDataShown = colState.dataOrder.every((k) => !colState.hidden[k]);
   // 「どこまで固定するか」の選択肢
-  const fu = colState.freezeUntil ?? "points";
+  const fu = colState.freezeUntil ?? "name";
   const freezeOptions = [
     `<option value="none" ${fu === "none" ? "selected" : ""}>固定しない</option>`,
     ...FROZEN_ORDER.map((k) =>
@@ -1255,7 +1260,7 @@ function renderColManager() {
 
   document.getElementById("col-manager").innerHTML = `
     <details class="col-manager" ${cmOpen ? "open" : ""}>
-      <summary>⚙ 列の表示・並び替え</summary>
+      <summary>⚙ その他データの追加（列の設定）</summary>
       <div class="cm-section">
         <div class="cm-title">左に固定する範囲（横スクロールしても残る列）</div>
         <select id="cm-freeze" class="cm-freeze">${freezeOptions}</select>
