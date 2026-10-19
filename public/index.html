@@ -113,10 +113,10 @@
         <p class="note"><a class="home-go" href="#players">▶︎ 選手データ</a>シーズン合計だけでなく、直近1・3・5・10試合やホーム／アウェイ別にも切り替えられるので、調子が良い選手が見つかります。セットプレーキッカーの一覧や、同ポジションの選手を最大4人まで比べられるレーダーチャートもあります。</p>
 
         <h3 class="home-h3">日程が楽なチームを知りたい</h3>
-        <p class="note"><a class="home-go" href="#teams">▶︎ チームデータ</a>DF選手を買う時に被xGや無失点率が参考になります。FDRでは今後1〜10節の対戦難易度が楽な順に並べられます。</p>
+        <p class="note"><a class="home-go" href="#teams">▶︎ チームデータ</a>FDRでは今後1〜10節の対戦難易度が楽な順に並べられます。DF選手を買う時は被xGや無失点率も参考になります。</p>
 
         <h3 class="home-h3">キャプテンを決めたい</h3>
-        <p class="note"><a class="home-go" href="#next">▶︎ 次節予測</a>ゴール期待値とクリーンシート確率は、それぞれ上位5チームに色が付き、選手別のゴール期待値・ゴール関与期待値ランキング（全選手TOP10とFW・MF・DF別TOP5）も確認できます。直近の平均xGと相手の被xGから計算しているので、数字でキャプテンを選べます。</p>
+        <p class="note"><a class="home-go" href="#next">▶︎ 次節予測</a>対戦タブでは各試合のゴール期待値とクリーンシート確率が並び、それぞれ上位5チームに色が付きます。ランキングタブでは、チーム別と選手別（全選手TOP10とFW・MF・DF別TOP5）のゴール期待値・ゴール関与期待値を確認できます。直近の平均xGと相手の被xGから計算しているので、数字でキャプテンを選べます。</p>
 
         <h3 class="home-h3">これからFPLを始めたい</h3>
         <p class="note"><a class="home-go" href="rules/">▶︎ FPLルール解説</a>アカウント登録から移籍、ポイントの数え方、4つのチップ、ミニリーグの作り方まで9項目にまとめています。26/27シーズンの変更点にも対応しているので、今シーズンから始める方はここから読んでください。</p>
@@ -185,12 +185,12 @@
     <section id="panel-teams" class="panel">
       <h2>チームデータ</h2>
       <div class="subtabs scrollable" data-group="teams">
-        <button class="subtab is-active" data-key="totals">合計</button>
+        <button class="subtab is-active" data-key="fdr">FDR</button>
+        <button class="subtab" data-key="totals">合計</button>
         <button class="subtab" data-key="recent">直近</button>
         <button class="subtab" data-key="home">ホーム</button>
         <button class="subtab" data-key="away">アウェイ</button>
         <button class="subtab" data-key="by_gw">チーム別</button>
-        <button class="subtab" data-key="fdr">FDR</button>
       </div>
       <p class="note" id="teams-note"></p>
       <div id="teams-content"></div>
@@ -199,8 +199,8 @@
     <section id="panel-next" class="panel">
       <h2>次節データ</h2>
       <div class="subtabs" data-group="next">
-        <button class="subtab is-active" data-key="schedule">日程</button>
-        <button class="subtab" data-key="predict">予測</button>
+        <button class="subtab is-active" data-key="match">対戦</button>
+        <button class="subtab" data-key="ranking">ランキング</button>
       </div>
       <p class="note" id="next-note"></p>
       <div id="next-content"></div>

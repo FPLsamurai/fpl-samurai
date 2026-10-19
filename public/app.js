@@ -52,8 +52,8 @@ async function init() {
     loadYouTube();          // ホームのYouTube最新動画（data.json の分。取得失敗しても他は動く）
     // 各タブの初期表示
     renderPlayers("all");
-    renderTeams("totals");
-    renderNext("schedule");
+    renderTeams("fdr");
+    renderNext("match");
   } catch (err) {
     showLoadError(err);
   }
@@ -1736,13 +1736,12 @@ function renderNext(key) {
   const box = document.getElementById("next-content");
 
   // 説明文はそれぞれの表の下に置くので、表の上の note は空にしておく
-  if (key === "predict") {
-    const pred = DATA.predictions || {};
-    note.textContent = "";
-    drawPredictions(box, pred);
-  } else if (key === "schedule") {
-    note.textContent = "";
-    drawSchedule(box, DATA.next_fixtures || {});
+  note.textContent = "";
+  const pred = DATA.predictions || {};
+  if (key === "match") {
+    drawMatches(box, DATA.next_fixtures || {}, pred);
+  } else if (key === "ranking") {
+    drawRankings(box, pred);
   }
 }
 
@@ -1753,25 +1752,11 @@ function gwHeadHtml(name, deadline, extraClass) {
 }
 
 /* 10試合を2列×5試合に分ける。左上→左下→右上→右下の順（＝前半を左列、後半を右列） */
-function twoColumns(cards, headHtml) {
+function twoColumns(cards) {
   const mid = Math.ceil(cards.length / 2);
-  const head = headHtml || "";
-  const col1 = head + cards.slice(0, mid).join("");
-  const col2 = cards.length > mid ? head + cards.slice(mid).join("") : "";
+  const col1 = cards.slice(0, mid).join("");
+  const col2 = cards.slice(mid).join("");
   return `<div class="two-cols"><div class="two-col">${col1}</div><div class="two-col">${col2}</div></div>`;
-}
-
-/* 相手の強さ：4段階のラベル＋色分け（とても強い/強い/普通/弱い）。とても弱いは弱いに寄せる */
-function strengthPill(word) {
-  const M = {
-    "とても強い": ["とても強い", "st-vhard"],
-    "強い":       ["強い",       "st-hard"],
-    "普通":       ["普通",       "st-mid"],
-    "弱い":       ["弱い",       "st-weak"],
-    "とても弱い": ["弱い",       "st-weak"],
-  };
-  const [label, cls] = M[word] || [word, "st-mid"];
-  return `<span class="strength ${cls}">${esc(label)}</span>`;
 }
 
 /* 上位5チームの色付けに使う下限値を返す（5位の値そのもの）。
@@ -1786,77 +1771,93 @@ function top5Cut(values) {
   return vals[Math.min(4, vals.length - 1)];
 }
 
-function drawPredictions(box, pred) {
-  const rows = pred.rows || [];
-  if (!rows.length) {
+/* 対戦タブ：次節の10試合を1カードずつ。カードの上の見出し行に、左からキックオフ日時・列名
+   （G期待値・CS%）を置き、カードの中は1チーム＝1行で「チーム名｜ゴール期待値｜CS%」を並べる。
+   以前は日程タブ（日時＋相手の強さ）と予測タブ（期待値＋CS%）に分かれていたが、
+   同じ10試合を同じカードで2回見せていたので1枚にまとめた（2026-10-20）。
+   試合の並びと日時は next_fixtures、数値は predictions.rows から取る。
+   開幕前など予測の材料が無いときも、日時と対戦カードだけは出す（数値は「—」） */
+function drawMatches(box, fx, pred) {
+  const matches = (fx.matches || []).slice()
+    .sort((a, b) => String(a.kickoff_raw || "").localeCompare(String(b.kickoff_raw || "")));
+  if (!matches.length) {
     box.innerHTML = emptyMessage(
       "いまは次の試合の予定がありません（オフシーズンの可能性があります）。<br>" +
-      "新シーズンが始まると、ここに各チームの「クリーンシート率」と「ゴール期待値」が表示されます。<br>" +
-      "それまでは「チーム」タブの「直近フォーム」で各チームの調子を確認できます。"
+      "新シーズンが始まると、ここに次節の対戦と各チームの「ゴール期待値」「クリーンシート率」が表示されます。"
     );
     return;
   }
-  // 対戦ごとにまとめる（ホームを上に）。各試合はh/aの2行で来る
-  const map = {};
-  rows.forEach((r) => {
-    const key = [r.team, r.opponent].slice().sort().join("");
-    (map[key] = map[key] || []).push(r);
-  });
-  const matches = Object.values(map).map((pair) => {
-    if (pair.length === 2) return pair[0].home_away === "ホーム" ? pair : [pair[1], pair[0]];
-    return pair;
-  });
-  // 並びは日程タブと同じキックオフ順にそろえる（予測はCS率順で来るため並べ替える）
-  matches.sort((a, b) => String(a[0].kickoff_raw || "").localeCompare(String(b[0].kickoff_raw || "")));
+  const rows = pred.rows || [];
+  const byTeam = {};
+  rows.forEach((r) => { byTeam[r.team] = r; });
 
   // 色付けの基準は固定値ではなく「その節の上位5チーム」。節ごとに対戦相手が変わり
   // 数値の水準も動くので、固定しきい値だと色が全く付かない節・付きすぎる節が出るため
   const goalCut = top5Cut(rows.map((r) => r.goal_expect));
   const csCut = top5Cut(rows.map((r) => r.clean_sheet_pct));
 
-  const teamRow = (r) => {
+  const teamRow = (team) => {
     // 材料になる試合が無いチームは null で来る（未消化・開幕前）。数値を出さず「—」
+    const r = byTeam[team] || {};
     const noCs = r.clean_sheet_pct === null || r.clean_sheet_pct === undefined;
     const noG = r.goal_expect === null || r.goal_expect === undefined;
     const gHi = !noG && goalCut !== null && Number(r.goal_expect) >= goalCut ? " hi-goal" : "";
     const csHi = !noCs && csCut !== null && Number(r.clean_sheet_pct) >= csCut ? " hi-cs" : "";
     return `<div class="pred-row">
-      <span class="pred-team">${teamBadgeByName(r.team)}<span class="pred-tname">${esc(r.team)}</span></span>
+      <span class="pred-team">${teamBadgeByName(team)}<span class="pred-tname">${esc(team)}</span></span>
       <span class="pred-cell${gHi}">${noG ? "—" : r.goal_expect}</span>
       <span class="pred-cell${csHi}">${noCs ? "—" : Math.round(r.clean_sheet_pct) + "%"}</span>
     </div>`;
   };
-  const head = `<div class="pred-head"><span></span>`
-    + `<span><span class="pred-h-long">ゴール</span><span class="pred-h-short">G</span>期待値</span>`
-    + `<span><span class="pred-h-long">クリーンシート</span><span class="pred-h-short">CS</span>％</span></div>`;
-  const cards = matches.map((m) => `<div class="pred-match">${m.map(teamRow).join("")}</div>`);
+  const cards = matches.map((m) => `<div class="pred-head">
+      <span class="match-time">${esc(m.kickoff)}</span><span>G期待値</span><span>CS％</span>
+    </div>
+    <div class="pred-match">${teamRow(m.home)}${teamRow(m.away)}</div>`);
 
-  // 予測タブは下にチーム別データ・選手別データが続くので、ホームのセクション見出しと同じ点線で区切る
-  let html = gwHeadHtml(pred.event_name, pred.deadline, " sec-line");
-  html += twoColumns(cards, head);
-  // 見出しは2段。1段目の「チーム別データ」はゴール・CSの2表でまとめて1回だけ出す
-  const teamGoal = teamRankingHtml(rows, "goal_expect", "ゴール期待値ランキング TOP5", "期待値",
+  let html = gwHeadHtml(fx.event_name || pred.event_name, fx.deadline || pred.deadline);
+  html += twoColumns(cards);
+  html += `<p class="note table-note">`
+    + (rows.length
+      ? `ゴール期待値＝自分の直近5試合平均xG ×（相手の直近5試合平均被xG ÷ リーグ平均xG）<br>`
+        + `クリーンシート%＝e^(−λ)　λ＝相手の直近10試合平均xG ×（自分の直近10試合平均被xG ÷ リーグ平均xG）<br>`
+        + `リーグ平均xG（μ）＝${esc(pred.league_avg_xg)}<br>`
+        + `それぞれの数値TOP5のセルに色付け`
+      : "")
+    + `</p>`;
+  box.innerHTML = html;
+}
+
+/* ランキングタブ：チーム別（ゴール／クリーンシート）と選手別（ゴール／ゴールorアシスト）。
+   見出しは2段。1段目の「チームランキング」「選手ランキング」の下に切り替えと表が続く */
+function drawRankings(box, pred) {
+  const rows = pred.rows || [];
+  const teamGoal = teamRankingHtml(rows, "goal_expect", "ゴール期待値 TOP5", "期待値",
     (v) => fmtExpected(v), "");
-  const teamCs = teamRankingHtml(rows, "clean_sheet_pct", "クリーンシート確率ランキング TOP5", "CS％",
+  const teamCs = teamRankingHtml(rows, "clean_sheet_pct", "クリーンシート確率 TOP5", "CS％",
     (v) => Math.round(v) + "%", " pgr-exp-cs");
-  if (teamGoal || teamCs) {
-    html += `<div class="pgr-group">チーム別データ</div>` + pgrModesHtml("team", [
+  const team = (teamGoal || teamCs)
+    ? `<div class="pgr-group">チームランキング</div>` + pgrModesHtml("team", [
       { key: "goal", label: "ゴール", html: teamGoal },
       { key: "cs", label: "クリーンシート", html: teamCs },
-    ]);
+    ])
+    : "";
+  const player = playerGoalRankingHtml(pred);
+  if (!team && !player) {
+    box.innerHTML = emptyMessage(
+      "いまはランキングを出せるデータがありません（開幕前やオフシーズンの可能性があります）。<br>" +
+      "試合が始まると、ここにチーム別・選手別の次節ランキングが表示されます。"
+    );
+    return;
   }
-  html += playerGoalRankingHtml(pred);
-  // 計算式の説明は、上の一覧・チーム別・選手別の分をまとめて予測タブの最後に1回だけ出す
-  // （「自分」＝チーム別ではそのチーム、選手別ではその選手）
-  html += `<p class="note table-note">`
+  // 計算式の説明はタブの最後に1回だけ（「自分」＝チーム別ではそのチーム、選手別ではその選手）
+  box.innerHTML = gwHeadHtml(pred.event_name, pred.deadline) + team + player
+    + `<p class="note table-note">`
     + `ゴール期待値＝自分の直近5試合平均xG ×（相手の直近5試合平均被xG ÷ リーグ平均xG）<br>`
     + (pred.player_involve && pred.player_involve.length
       ? `ゴール関与期待値＝選手の直近5試合平均xGI ×（相手の直近5試合平均被xG ÷ リーグ平均xG）<br>` : "")
     + `クリーンシート%＝e^(−λ)　λ＝相手の直近10試合平均xG ×（自分の直近10試合平均被xG ÷ リーグ平均xG）<br>`
-    + `リーグ平均xG（μ）＝${esc(pred.league_avg_xg)}<br>`
-    + `それぞれの数値TOP5のセルに色付け`
+    + `リーグ平均xG（μ）＝${esc(pred.league_avg_xg)}`
     + `</p>`;
-  box.innerHTML = html;
   setupPgrModes(box);
 }
 
@@ -1896,14 +1897,14 @@ function teamRankingHtml(rows, key, title, valueLabel, fmt, expClass) {
     </div>`;
 }
 
-/* 選手別データ：「ゴール」「ゴールorアシスト」の切り替えの下に、【全選手】TOP10 と【FW】【MF】【DF】の各TOP5を並べる。
+/* 選手ランキング：「ゴール」「ゴールorアシスト」の切り替えの下に、【全選手】TOP10 と【FW】【MF】【DF】の各TOP5を並べる。
    ゴール関与は data.json に player_involve がある時だけ（古いデータでは切り替えを出さずゴールだけ） */
 function playerGoalRankingHtml(pred) {
   const goal = playerGoalSetHtml(pred.player_goals, pred.player_goals_by_pos, "ゴール期待値", "xG平均");
   if (!goal) return "";
   const involve = playerGoalSetHtml(pred.player_involve, pred.player_involve_by_pos,
     "ゴール関与期待値", "xGI平均");
-  return `<div class="pgr-group">選手別データ</div>` + pgrModesHtml("player", [
+  return `<div class="pgr-group">選手ランキング</div>` + pgrModesHtml("player", [
     { key: "goal", label: "ゴール", html: goal },
     { key: "involve", label: "ゴールorアシスト", html: involve },
   ]);
@@ -1938,10 +1939,10 @@ function setupPgrModes(box) {
 }
 
 function playerGoalSetHtml(all, byPos, label, avgLabel) {
-  const top = playerGoalTableHtml(all, `【全選手】${label}ランキング TOP10`, avgLabel);
+  const top = playerGoalTableHtml(all, `【全選手】${label} TOP10`, avgLabel);
   if (!top) return "";
   return top + ["FW", "MF", "DF"]
-    .map((pos) => playerGoalTableHtml((byPos || {})[pos], `【${pos}】${label}ランキング TOP5`, avgLabel))
+    .map((pos) => playerGoalTableHtml((byPos || {})[pos], `【${pos}】${label} TOP5`, avgLabel))
     .join("");
 }
 
@@ -1970,33 +1971,6 @@ function playerGoalTableHtml(rows, title, avgLabel) {
       <div class="pgr-head"><span></span><span>選手</span><span>対戦</span><span>${avgLabel}</span><span>期待値</span></div>
       ${items}
     </div>`;
-}
-
-function drawSchedule(box, fx) {
-  const matches = fx.matches || [];
-  if (!matches.length) {
-    box.innerHTML = emptyMessage(
-      "いまは試合の予定がありません（オフシーズンの可能性があります）。<br>新シーズンが始まると、ここに次節の日程が表示されます。"
-    );
-    return;
-  }
-  // カードの作りは予測タブ（.pred-match / .pred-row）と共通にする。
-  // 以前は2チームを1行に並べていたが、最長のチーム名＋「とても強い」2つが1行に
-  // 収まるよう文字を縮める必要があり、予測タブと見比べると明らかに小さかった。
-  // 予測と同じ「1チーム＝1行」にすることで、同じクラス＝同じ文字サイズで揃う。
-  const cards = matches.map((m) => `<div class="pred-match sched-match">
-      <div class="match-time">${esc(m.kickoff)}</div>
-      <div class="pred-row sched-row">
-        <span class="pred-team"><span class="pred-tname">${esc(m.home)}</span></span>
-        ${strengthPill(m.home_opponent_strength)}
-      </div>
-      <div class="pred-row sched-row">
-        <span class="pred-team"><span class="pred-tname">${esc(m.away)}</span></span>
-        ${strengthPill(m.away_opponent_strength)}
-      </div>
-    </div>`);
-  box.innerHTML = gwHeadHtml(fx.event_name, fx.deadline) + twoColumns(cards)
-    + `<p class="note table-note">「相手の強さ」（とても強い／強い／普通／弱い）</p>`;
 }
 
 /* ---------- 補助 ---------- */
