@@ -1561,6 +1561,9 @@ tbody tr:nth-child(even) {
   color: var(--pl-purple);
 }
 .pgr-group + .pgr-title { margin-top: 8px; }
+/* 選手別データの「ゴール／クリーンシート」「ゴール／ゴールorアシスト」の切り替え。見た目は日程／予測のサブタブと共通 */
+.pgr-group + .pgr-modes { margin-top: 8px; }
+.pgr-set > .pgr-title:first-child { margin-top: 0; }
 /* 予測タブの区切り（第◯節・チーム別データ・選手別データの下）。ホームの .profile-section と同じ点線 */
 .gw-head.sec-line,
 .pgr-group {

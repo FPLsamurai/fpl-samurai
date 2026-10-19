@@ -1839,17 +1839,25 @@ function drawPredictions(box, pred) {
     (v) => fmtExpected(v), "");
   const teamCs = teamRankingHtml(rows, "clean_sheet_pct", "クリーンシート確率ランキング TOP5", "CS％",
     (v) => Math.round(v) + "%", " pgr-exp-cs");
-  if (teamGoal || teamCs) html += `<div class="pgr-group">チーム別データ</div>` + teamGoal + teamCs;
+  if (teamGoal || teamCs) {
+    html += `<div class="pgr-group">チーム別データ</div>` + pgrModesHtml("team", [
+      { key: "goal", label: "ゴール", html: teamGoal },
+      { key: "cs", label: "クリーンシート", html: teamCs },
+    ]);
+  }
   html += playerGoalRankingHtml(pred);
   // 計算式の説明は、上の一覧・チーム別・選手別の分をまとめて予測タブの最後に1回だけ出す
   // （「自分」＝チーム別ではそのチーム、選手別ではその選手）
   html += `<p class="note table-note">`
     + `ゴール期待値＝自分の直近5試合平均xG ×（相手の直近5試合平均被xG ÷ リーグ平均xG）<br>`
+    + (pred.player_involve && pred.player_involve.length
+      ? `ゴール関与期待値＝選手の直近5試合平均xGI ×（相手の直近5試合平均被xG ÷ リーグ平均xG）<br>` : "")
     + `クリーンシート%＝e^(−λ)　λ＝相手の直近10試合平均xG ×（自分の直近10試合平均被xG ÷ リーグ平均xG）<br>`
     + `リーグ平均xG（μ）＝${esc(pred.league_avg_xg)}<br>`
     + `それぞれの数値TOP5のセルに色付け`
     + `</p>`;
   box.innerHTML = html;
+  setupPgrModes(box);
 }
 
 /* 選手別ゴール期待値ランキング TOP10（選手の直近5試合の平均xG × 相手の被xG係数）。
@@ -1888,9 +1896,57 @@ function teamRankingHtml(rows, key, title, valueLabel, fmt, expClass) {
     </div>`;
 }
 
+/* 選手別データ：「ゴール」「ゴールorアシスト」の切り替えの下に、【全選手】TOP10 と【FW】【MF】【DF】の各TOP5を並べる。
+   ゴール関与は data.json に player_involve がある時だけ（古いデータでは切り替えを出さずゴールだけ） */
 function playerGoalRankingHtml(pred) {
-  const rows = pred.player_goals || [];
-  if (!rows.length) return "";
+  const goal = playerGoalSetHtml(pred.player_goals, pred.player_goals_by_pos, "ゴール期待値", "xG平均");
+  if (!goal) return "";
+  const involve = playerGoalSetHtml(pred.player_involve, pred.player_involve_by_pos,
+    "ゴール関与期待値", "xGI平均");
+  return `<div class="pgr-group">選手別データ</div>` + pgrModesHtml("player", [
+    { key: "goal", label: "ゴール", html: goal },
+    { key: "involve", label: "ゴールorアシスト", html: involve },
+  ]);
+}
+
+/* 予測タブのランキングの切り替え（チーム別＝ゴール／クリーンシート、選手別＝ゴール／ゴールorアシスト）。
+   見た目は日程／予測のサブタブと共通。全部を最初に描いておき、切り替えは表示／非表示だけ。
+   選んだ方は PGR_MODES に覚え、日程⇄予測で戻っても保つ。中身が1つしか無いときは切り替えを出さない */
+const PGR_MODES = { team: "goal", player: "goal" };
+
+function pgrModesHtml(group, sets) {
+  const ok = sets.filter((x) => x.html);
+  if (ok.length < 2) return ok.length ? ok[0].html : "";
+  const mode = ok.some((x) => x.key === PGR_MODES[group]) ? PGR_MODES[group] : ok[0].key;
+  const btns = ok.map((x) => `<button type="button" class="subtab${x.key === mode ? " is-active" : ""}"`
+    + ` data-pgr-group="${group}" data-pgr-mode="${x.key}">${x.label}</button>`).join("");
+  const panes = ok.map((x) => `<div class="pgr-set" data-pgr-group="${group}" data-pgr-set="${x.key}"`
+    + `${x.key === mode ? "" : " hidden"}>${x.html}</div>`).join("");
+  return `<div class="subtabs pgr-modes">${btns}</div>${panes}`;
+}
+
+/* drawPredict が box.innerHTML を入れた後に呼ぶ */
+function setupPgrModes(box) {
+  box.querySelectorAll("[data-pgr-mode]").forEach((b) => b.addEventListener("click", () => {
+    const group = b.dataset.pgrGroup;
+    PGR_MODES[group] = b.dataset.pgrMode;
+    box.querySelectorAll(`[data-pgr-mode][data-pgr-group="${group}"]`)
+      .forEach((x) => x.classList.toggle("is-active", x === b));
+    box.querySelectorAll(`[data-pgr-set][data-pgr-group="${group}"]`)
+      .forEach((x) => { x.hidden = x.dataset.pgrSet !== PGR_MODES[group]; });
+  }));
+}
+
+function playerGoalSetHtml(all, byPos, label, avgLabel) {
+  const top = playerGoalTableHtml(all, `【全選手】${label}ランキング TOP10`, avgLabel);
+  if (!top) return "";
+  return top + ["FW", "MF", "DF"]
+    .map((pos) => playerGoalTableHtml((byPos || {})[pos], `【${pos}】${label}ランキング TOP5`, avgLabel))
+    .join("");
+}
+
+function playerGoalTableHtml(rows, title, avgLabel) {
+  if (!rows || !rows.length) return "";
   const items = rows.map((r) => {
     const photo = r.photo
       ? `<img class="pgr-photo" loading="lazy" alt="" src="${PHOTO_BASE}${esc(r.photo)}.png" onerror="this.style.visibility='hidden'">`
@@ -1909,10 +1965,9 @@ function playerGoalRankingHtml(pred) {
       <span class="pgr-exp">${fmtExpected(r.expected_goals)}</span>
     </div>`;
   }).join("");
-  return `<div class="pgr-group">選手別データ</div>
-    <h3 class="pgr-title">ゴール期待値ランキング TOP10</h3>
+  return `<h3 class="pgr-title">${title}</h3>
     <div class="pgr">
-      <div class="pgr-head"><span></span><span>選手</span><span>対戦</span><span>xG平均</span><span>期待値</span></div>
+      <div class="pgr-head"><span></span><span>選手</span><span>対戦</span><span>${avgLabel}</span><span>期待値</span></div>
       ${items}
     </div>`;
 }

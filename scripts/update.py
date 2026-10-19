@@ -767,9 +767,11 @@ def compute_team_fixtures(fixtures, team_map):
 
 
 def compute_player_goal_ranking(bootstrap, fixtures, team_matches, team_map, mu,
-                                player_rows, limit=10):
+                                player_rows, limit=10, position=None, stat="xg"):
     """
-    次節の「ゴール期待値ランキング」（選手別TOP10）。
+    次節の「ゴール期待値ランキング」（選手別。全選手TOP10／position指定でそのポジションだけ）。
+    stat="xgi" で「ゴール関与期待値ランキング」（xGの代わりにxGI＝xG+xAで同じ計算）。
+    出力の xg_avg / expected_goals は、stat="xgi" のときは xGI 平均／ゴール関与期待値になる。
     期待ゴール = 選手の直近5試合の平均xG × (相手の直近5試合の平均被xG ÷ リーグ平均xG(μ))
     シーズン序盤で5試合に満たないときは、消化した試合数（1〜4試合）の平均をそのまま使う。
     player_rows には players["last5"]（直近5試合ぶんの集計）を渡すこと。
@@ -798,9 +800,11 @@ def compute_player_goal_ranking(bootstrap, fixtures, team_matches, team_map, mu,
         matches = r.get("matches", 0)
         if pair is None or matches <= 0 or r.get("minutes", 0) < PLAYER_RANK_MIN_MINUTES:
             continue
+        if position is not None and r.get("position") != position:
+            continue
         opp_id, home = pair
         factor = opp_factor(opp_id)
-        xg_avg = r.get("xg", 0) / matches             # 直近5試合（未満なら消化ぶん）の平均xG
+        xg_avg = r.get(stat, 0) / matches             # 直近5試合（未満なら消化ぶん）の平均xG（またはxGI）
         expected = xg_avg * factor
         if expected <= 0:
             continue
@@ -925,6 +929,22 @@ def main():
     # 次節タブ＞予測に出す選手別ランキング（直近5試合の集計＝players["last5"] を土台にする）
     predictions["player_goals"] = compute_player_goal_ranking(
         bootstrap, fixtures, team_matches, team_map, mu, player_tables["last5"])
+    # ポジション別TOP5（FW・MF・DF）。GKは得点がほぼ無いので出さない
+    predictions["player_goals_by_pos"] = {
+        pos: compute_player_goal_ranking(
+            bootstrap, fixtures, team_matches, team_map, mu, player_tables["last5"],
+            limit=5, position=pos)
+        for pos in ("FW", "MF", "DF")
+    }
+    # ゴール関与（xGI）版。画面では「ゴール／ゴールorアシスト」の切り替えで出し分ける
+    predictions["player_involve"] = compute_player_goal_ranking(
+        bootstrap, fixtures, team_matches, team_map, mu, player_tables["last5"], stat="xgi")
+    predictions["player_involve_by_pos"] = {
+        pos: compute_player_goal_ranking(
+            bootstrap, fixtures, team_matches, team_map, mu, player_tables["last5"],
+            limit=5, position=pos, stat="xgi")
+        for pos in ("FW", "MF", "DF")
+    }
 
     latest = find_latest_finished_event(bootstrap, fixtures)
     latest_gw_label = f"第{latest['id']}節" if latest else "未開幕"
