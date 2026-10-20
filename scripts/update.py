@@ -769,7 +769,7 @@ def compute_team_fixtures(fixtures, team_map):
 def compute_player_goal_ranking(bootstrap, fixtures, team_matches, team_map, mu,
                                 player_rows, limit=10, position=None, stat="xg"):
     """
-    次節の「ゴール期待値ランキング」（選手別。全選手TOP10／position指定でそのポジションだけ）。
+    次節の「ゴール期待値ランキング」（選手別。全選手／position指定でそのポジションだけ。画面は全選手TOP10・ポジション別TOP20）。
     stat="xgi" で「ゴール関与期待値ランキング」（xGの代わりにxGI＝xG+xAで同じ計算）。
     出力の xg_avg / expected_goals は、stat="xgi" のときは xGI 平均／ゴール関与期待値になる。
     期待ゴール = 選手の直近5試合の平均xG × (相手の直近5試合の平均被xG ÷ リーグ平均xG(μ))
@@ -928,21 +928,21 @@ def main():
     predictions = compute_predictions(bootstrap, fixtures, team_matches, team_map, mu)
     # 次節タブ＞予測に出す選手別ランキング（直近5試合の集計＝players["last5"] を土台にする）
     predictions["player_goals"] = compute_player_goal_ranking(
-        bootstrap, fixtures, team_matches, team_map, mu, player_tables["last5"])
-    # ポジション別TOP5（FW・MF・DF）。GKは得点がほぼ無いので出さない
+        bootstrap, fixtures, team_matches, team_map, mu, player_tables["last5"], limit=10)
+    # ポジション別TOP20（FW・MF・DF）。GKは得点がほぼ無いので出さない
     predictions["player_goals_by_pos"] = {
         pos: compute_player_goal_ranking(
             bootstrap, fixtures, team_matches, team_map, mu, player_tables["last5"],
-            limit=5, position=pos)
+            limit=20, position=pos)
         for pos in ("FW", "MF", "DF")
     }
     # ゴール関与（xGI）版。画面では「ゴール／ゴールorアシスト」の切り替えで出し分ける
     predictions["player_involve"] = compute_player_goal_ranking(
-        bootstrap, fixtures, team_matches, team_map, mu, player_tables["last5"], stat="xgi")
+        bootstrap, fixtures, team_matches, team_map, mu, player_tables["last5"], limit=10, stat="xgi")
     predictions["player_involve_by_pos"] = {
         pos: compute_player_goal_ranking(
             bootstrap, fixtures, team_matches, team_map, mu, player_tables["last5"],
-            limit=5, position=pos, stat="xgi")
+            limit=20, position=pos, stat="xgi")
         for pos in ("FW", "MF", "DF")
     }
 

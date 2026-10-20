@@ -1561,6 +1561,8 @@ tbody tr:nth-child(even) {
 /* 選手別データの「ゴール／クリーンシート」「ゴール／ゴールorアシスト」の切り替え。見た目は日程／予測のサブタブと共通 */
 .pgr-group + .pgr-modes { margin-top: 8px; }
 .pgr-set > .pgr-title:first-child { margin-top: 0; }
+/* 選手ランキングの ALL／FW／MF／DF（見た目は選手データ「直近」の試合数ボタン .recent-seg と共通） */
+.pgr-pos-pane > .pgr-title:first-child { margin-top: 0; }
 /* ランキングタブの区切り（チーム別データ・選手別データの下）。ホームの .profile-section と同じ点線 */
 .pgr-group {
   padding-bottom: 6px;

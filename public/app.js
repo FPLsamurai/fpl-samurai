@@ -52,7 +52,7 @@ async function init() {
     loadYouTube();          // ホームのYouTube最新動画（data.json の分。取得失敗しても他は動く）
     // 各タブの初期表示
     renderPlayers("all");
-    renderTeams("fdr");
+    renderTeams("totals");
     renderNext("match");
   } catch (err) {
     showLoadError(err);
@@ -87,7 +87,7 @@ async function applyPreseasonFallback() {
    パネルのidを panel-* にしているのは、#players がブラウザ標準の
    アンカージャンプを起こしてスクロール位置が飛ぶのを避けるため。 */
 // ルール解説は /rules/ という独立ページに切り出したので、ここには含めない
-const TABS = ["home", "myteam", "players", "teams", "next"];
+const TABS = ["home", "myteam", "next", "players", "teams"];
 
 // 指定タブへ切り替え（画面を実際に書き換えるのはここだけ）
 function activateTab(target) {
@@ -1436,8 +1436,6 @@ function renderTeams(key) {
     drawTeamRankTable(box, teams.away || []);
   } else if (key === "by_gw") {
     drawTeamByGw(box, teams.by_gw || []);
-  } else if (key === "fdr") {
-    drawFdrTable(box);
   }
 }
 
@@ -1742,6 +1740,9 @@ function renderNext(key) {
     drawMatches(box, DATA.next_fixtures || {}, pred);
   } else if (key === "ranking") {
     drawRankings(box, pred);
+  } else if (key === "fdr") {
+    // FDR（今後1〜10節の対戦難易度）。2026-10-20にチームタブから移した
+    drawFdrTable(box);
   }
 }
 
@@ -1897,36 +1898,48 @@ function teamRankingHtml(rows, key, title, valueLabel, fmt, expClass) {
     </div>`;
 }
 
-/* 選手ランキング：「ゴール」「ゴールorアシスト」の切り替えの下に、【全選手】TOP10 と【FW】【MF】【DF】の各TOP5を並べる。
+/* 選手ランキング：「ゴール」「ゴールorアシスト」の切り替えの下に、ALL／FW／MF／DF の切り替え
+   （見た目は選手データ「直近」の試合数ボタン .recent-seg と共通）を置き、選んだ分を1表で出す（全選手はTOP10、FW・MF・DFはTOP20）。
+   ポジションの選択はゴール／ゴールorアシストで共通（PGR_POS）。
    ゴール関与は data.json に player_involve がある時だけ（古いデータでは切り替えを出さずゴールだけ） */
+const PGR_POSITIONS = [["ALL", "全選手", 10], ["FW", "FW", 20], ["MF", "MF", 20], ["DF", "DF", 20]];
+let PGR_POS = "ALL";
+
 function playerGoalRankingHtml(pred) {
   const goal = playerGoalSetHtml(pred.player_goals, pred.player_goals_by_pos, "ゴール期待値", "xG平均");
   if (!goal) return "";
   const involve = playerGoalSetHtml(pred.player_involve, pred.player_involve_by_pos,
     "ゴール関与期待値", "xGI平均");
+  // データがあるポジションだけボタンを出す（ALL は必ずある）
+  const byPos = pred.player_goals_by_pos || {};
+  const posList = PGR_POSITIONS.filter(([k]) => k === "ALL" || (byPos[k] && byPos[k].length));
+  if (!posList.some(([k]) => k === PGR_POS)) PGR_POS = "ALL";
+  const seg = posList.length < 2 ? "" : `<div class="recent-seg pgr-pos-seg">${posList.map(([k]) =>
+    `<button type="button" data-pgr-pos="${k}" class="${k === PGR_POS ? "is-on" : ""}">${k}</button>`).join("")}</div>`;
   return `<div class="pgr-group">選手ランキング</div>` + pgrModesHtml("player", [
     { key: "goal", label: "ゴール", html: goal },
     { key: "involve", label: "ゴールorアシスト", html: involve },
-  ]);
+  ], seg);
 }
 
 /* 予測タブのランキングの切り替え（チーム別＝ゴール／クリーンシート、選手別＝ゴール／ゴールorアシスト）。
-   見た目は日程／予測のサブタブと共通。全部を最初に描いておき、切り替えは表示／非表示だけ。
-   選んだ方は PGR_MODES に覚え、日程⇄予測で戻っても保つ。中身が1つしか無いときは切り替えを出さない */
+   見た目は対戦／ランキングのサブタブと共通。全部を最初に描いておき、切り替えは表示／非表示だけ。
+   選んだ方は PGR_MODES に覚え、対戦⇄ランキングで戻っても保つ。中身が1つしか無いときは切り替えを出さない。
+   extra は切り替えボタンのすぐ下に置くもの（選手ランキングのポジション切り替え） */
 const PGR_MODES = { team: "goal", player: "goal" };
 
-function pgrModesHtml(group, sets) {
+function pgrModesHtml(group, sets, extra) {
   const ok = sets.filter((x) => x.html);
-  if (ok.length < 2) return ok.length ? ok[0].html : "";
+  if (ok.length < 2) return ok.length ? (extra || "") + ok[0].html : "";
   const mode = ok.some((x) => x.key === PGR_MODES[group]) ? PGR_MODES[group] : ok[0].key;
   const btns = ok.map((x) => `<button type="button" class="subtab${x.key === mode ? " is-active" : ""}"`
     + ` data-pgr-group="${group}" data-pgr-mode="${x.key}">${x.label}</button>`).join("");
   const panes = ok.map((x) => `<div class="pgr-set" data-pgr-group="${group}" data-pgr-set="${x.key}"`
     + `${x.key === mode ? "" : " hidden"}>${x.html}</div>`).join("");
-  return `<div class="subtabs pgr-modes">${btns}</div>${panes}`;
+  return `<div class="subtabs pgr-modes">${btns}</div>${extra || ""}${panes}`;
 }
 
-/* drawPredict が box.innerHTML を入れた後に呼ぶ */
+/* drawRankings が box.innerHTML を入れた後に呼ぶ */
 function setupPgrModes(box) {
   box.querySelectorAll("[data-pgr-mode]").forEach((b) => b.addEventListener("click", () => {
     const group = b.dataset.pgrGroup;
@@ -1936,14 +1949,22 @@ function setupPgrModes(box) {
     box.querySelectorAll(`[data-pgr-set][data-pgr-group="${group}"]`)
       .forEach((x) => { x.hidden = x.dataset.pgrSet !== PGR_MODES[group]; });
   }));
+  box.querySelectorAll("[data-pgr-pos]").forEach((b) => b.addEventListener("click", () => {
+    PGR_POS = b.dataset.pgrPos;
+    box.querySelectorAll("[data-pgr-pos]").forEach((x) => x.classList.toggle("is-on", x === b));
+    box.querySelectorAll("[data-pgr-pos-pane]").forEach((x) => { x.hidden = x.dataset.pgrPosPane !== PGR_POS; });
+  }));
 }
 
+/* ゴール／ゴールorアシストの片方ぶん。ALL・FW・MF・DF の4表を描き、選択中以外は隠す */
 function playerGoalSetHtml(all, byPos, label, avgLabel) {
-  const top = playerGoalTableHtml(all, `【全選手】${label} TOP10`, avgLabel);
-  if (!top) return "";
-  return top + ["FW", "MF", "DF"]
-    .map((pos) => playerGoalTableHtml((byPos || {})[pos], `【${pos}】${label} TOP5`, avgLabel))
-    .join("");
+  if (!all || !all.length) return "";
+  return PGR_POSITIONS.map(([k, name, top]) => {
+    const rows = k === "ALL" ? all : (byPos || {})[k];
+    const table = playerGoalTableHtml(rows, `【${name}】${label} TOP${top}`, avgLabel);
+    if (!table) return "";
+    return `<div class="pgr-pos-pane" data-pgr-pos-pane="${k}"${k === PGR_POS ? "" : " hidden"}>${table}</div>`;
+  }).join("");
 }
 
 function playerGoalTableHtml(rows, title, avgLabel) {
