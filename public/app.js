@@ -1736,6 +1736,14 @@ function renderNext(key) {
   // 説明文はそれぞれの表の下に置くので、表の上の note は空にしておく
   note.textContent = "";
   const pred = DATA.predictions || {};
+  // 見出しは「次節予測【第8節】」、同じ行の中央に移籍締切。
+  // 節番号は next_fixtures.event_name（「第8節」）から取り、無い時期は「次節予測」だけ・締切も空
+  const fx = DATA.next_fixtures || {};
+  const gwNum = /\d+/.exec(fx.event_name || pred.event_name || "");
+  document.getElementById("next-title").textContent =
+    "次節予測" + (gwNum ? `【第${gwNum[0]}節】` : "");
+  const deadline = fx.deadline || pred.deadline;
+  document.getElementById("next-deadline").textContent = deadline ? `移籍締切：${deadline}` : "";
   if (key === "match") {
     drawMatches(box, DATA.next_fixtures || {}, pred);
   } else if (key === "ranking") {
@@ -1744,12 +1752,6 @@ function renderNext(key) {
     // FDR（今後1〜10節の対戦難易度）。2026-10-20にチームタブから移した
     drawFdrTable(box);
   }
-}
-
-/* 節の見出し。第◯節は左、移籍締切は行の中央（公式の deadline_time＝第1戦の1時間半前） */
-function gwHeadHtml(name, deadline, extraClass) {
-  const dl = deadline ? `<span class="gw-deadline">移籍締切：${esc(deadline)}</span>` : "";
-  return `<div class="gw-head${extraClass || ""}"><span class="gw-name">${esc(name || "次節")}</span>${dl}<span></span></div>`;
 }
 
 /* 10試合を2列×5試合に分ける。左上→左下→右上→右下の順（＝前半を左列、後半を右列） */
@@ -1815,7 +1817,7 @@ function drawMatches(box, fx, pred) {
     </div>
     <div class="pred-match">${teamRow(m.home)}${teamRow(m.away)}</div>`);
 
-  let html = gwHeadHtml(fx.event_name || pred.event_name, fx.deadline || pred.deadline);
+  let html = "";
   html += twoColumns(cards);
   html += `<p class="note table-note">`
     + (rows.length
@@ -1828,7 +1830,7 @@ function drawMatches(box, fx, pred) {
   box.innerHTML = html;
 }
 
-/* ランキングタブ：チーム別（ゴール／クリーンシート）と選手別（ゴール／ゴールorアシスト）。
+/* ランキングタブ：チーム別（ゴール／クリーンシート）と選手別（ゴール／ゴール+アシスト）。
    見出しは2段。1段目の「チームランキング」「選手ランキング」の下に切り替えと表が続く */
 function drawRankings(box, pred) {
   const rows = pred.rows || [];
@@ -1851,7 +1853,7 @@ function drawRankings(box, pred) {
     return;
   }
   // 計算式の説明はタブの最後に1回だけ（「自分」＝チーム別ではそのチーム、選手別ではその選手）
-  box.innerHTML = gwHeadHtml(pred.event_name, pred.deadline) + team + player
+  box.innerHTML = team + player
     + `<p class="note table-note">`
     + `ゴール期待値＝自分の直近5試合平均xG ×（相手の直近5試合平均被xG ÷ リーグ平均xG）<br>`
     + (pred.player_involve && pred.player_involve.length
@@ -1898,9 +1900,9 @@ function teamRankingHtml(rows, key, title, valueLabel, fmt, expClass) {
     </div>`;
 }
 
-/* 選手ランキング：「ゴール」「ゴールorアシスト」の切り替えの下に、ALL／FW／MF／DF の切り替え
+/* 選手ランキング：「ゴール」「ゴール+アシスト」の切り替えの下に、ALL／FW／MF／DF の切り替え
    （見た目は選手データ「直近」の試合数ボタン .recent-seg と共通）を置き、選んだ分を1表で出す（全選手はTOP10、FW・MF・DFはTOP20）。
-   ポジションの選択はゴール／ゴールorアシストで共通（PGR_POS）。
+   ポジションの選択はゴール／ゴール+アシストで共通（PGR_POS）。
    ゴール関与は data.json に player_involve がある時だけ（古いデータでは切り替えを出さずゴールだけ） */
 const PGR_POSITIONS = [["ALL", "全選手", 10], ["FW", "FW", 20], ["MF", "MF", 20], ["DF", "DF", 20]];
 let PGR_POS = "ALL";
@@ -1918,11 +1920,11 @@ function playerGoalRankingHtml(pred) {
     `<button type="button" data-pgr-pos="${k}" class="${k === PGR_POS ? "is-on" : ""}">${k}</button>`).join("")}</div>`;
   return `<div class="pgr-group">選手ランキング</div>` + pgrModesHtml("player", [
     { key: "goal", label: "ゴール", html: goal },
-    { key: "involve", label: "ゴールorアシスト", html: involve },
+    { key: "involve", label: "ゴール+アシスト", html: involve },
   ], seg);
 }
 
-/* 予測タブのランキングの切り替え（チーム別＝ゴール／クリーンシート、選手別＝ゴール／ゴールorアシスト）。
+/* 予測タブのランキングの切り替え（チーム別＝ゴール／クリーンシート、選手別＝ゴール／ゴール+アシスト）。
    見た目は対戦／ランキングのサブタブと共通。全部を最初に描いておき、切り替えは表示／非表示だけ。
    選んだ方は PGR_MODES に覚え、対戦⇄ランキングで戻っても保つ。中身が1つしか無いときは切り替えを出さない。
    extra は切り替えボタンのすぐ下に置くもの（選手ランキングのポジション切り替え） */
@@ -1956,7 +1958,7 @@ function setupPgrModes(box) {
   }));
 }
 
-/* ゴール／ゴールorアシストの片方ぶん。ALL・FW・MF・DF の4表を描き、選択中以外は隠す */
+/* ゴール／ゴール+アシストの片方ぶん。ALL・FW・MF・DF の4表を描き、選択中以外は隠す */
 function playerGoalSetHtml(all, byPos, label, avgLabel) {
   if (!all || !all.length) return "";
   return PGR_POSITIONS.map(([k, name, top]) => {

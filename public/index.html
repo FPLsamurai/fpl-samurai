@@ -75,7 +75,7 @@
     <nav class="tabs" id="tabs">
       <button class="tab is-active" data-target="home"><img class="tab-ic" src="icons/home.png" alt="">ホーム</button>
       <button class="tab" data-target="myteam"><img class="tab-ic" src="icons/myteam.png" alt="">スカッド</button>
-      <button class="tab" data-target="next"><img class="tab-ic" src="icons/next.png" alt="">次節</button>
+      <button class="tab" data-target="next"><img class="tab-ic" src="icons/next.png" alt="">次節予測</button>
       <button class="tab" data-target="players"><img class="tab-ic" src="icons/player.png" alt="">選手</button>
       <button class="tab" data-target="teams"><img class="tab-ic" src="icons/team.png" alt="">チーム</button>
       <a class="tab" href="rules/"><img class="tab-ic" src="icons/rule.png" alt="">ルール</a>
@@ -196,7 +196,7 @@
     </section>
 
     <section id="panel-next" class="panel">
-      <h2>次節データ</h2>
+      <div class="next-title-row"><h2 id="next-title">次節予測</h2><span class="gw-deadline" id="next-deadline"></span></div>
       <div class="subtabs" data-group="next">
         <button class="subtab is-active" data-key="match">対戦</button>
         <button class="subtab" data-key="ranking">ランキング</button>

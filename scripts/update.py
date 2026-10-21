@@ -936,7 +936,7 @@ def main():
             limit=20, position=pos)
         for pos in ("FW", "MF", "DF")
     }
-    # ゴール関与（xGI）版。画面では「ゴール／ゴールorアシスト」の切り替えで出し分ける
+    # ゴール関与（xGI）版。画面では「ゴール／ゴール+アシスト」の切り替えで出し分ける
     predictions["player_involve"] = compute_player_goal_ranking(
         bootstrap, fixtures, team_matches, team_map, mu, player_tables["last5"], limit=10, stat="xgi")
     predictions["player_involve_by_pos"] = {

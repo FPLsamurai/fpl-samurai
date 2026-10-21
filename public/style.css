@@ -1450,17 +1450,19 @@ tbody tr:nth-child(even) {
 
 /* ---------- 節の見出し（日程・予測の共通） ---------- */
 /* 第◯節は左、移籍締切は行の中央。右の空セルで中央を画面中央に保つ */
-.gw-head {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+/* 次節タブの見出し行：「次節予測【第8節】」と、行の中央に移籍締切（公式の deadline_time＝第1戦の1時間半前）。
+   スマホは見出しの右の残り幅の中央、PC（721px〜）は行全体の中央。収まらない狭い画面では締切が次の行の中央に回る */
+.next-title-row {
+  display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px;
-  margin: 0 0 10px;
+  column-gap: 8px;
+  margin: 4px 0 6px;
 }
-.gw-name {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--pl-purple);
+.next-title-row h2 { margin: 0; }
+.next-title-row .gw-deadline { flex: 1 1 auto; text-align: center; }
+@media (min-width: 721px) {
+  .next-title-row { display: grid; grid-template-columns: 1fr auto 1fr; }
 }
 .gw-deadline {
   font-size: 0.72rem;
@@ -1558,7 +1560,7 @@ tbody tr:nth-child(even) {
   color: var(--pl-purple);
 }
 .pgr-group + .pgr-title { margin-top: 8px; }
-/* 選手別データの「ゴール／クリーンシート」「ゴール／ゴールorアシスト」の切り替え。見た目は日程／予測のサブタブと共通 */
+/* 選手別データの「ゴール／クリーンシート」「ゴール／ゴール+アシスト」の切り替え。見た目は日程／予測のサブタブと共通 */
 .pgr-group + .pgr-modes { margin-top: 8px; }
 .pgr-set > .pgr-title:first-child { margin-top: 0; }
 /* 選手ランキングの ALL／FW／MF／DF（見た目は選手データ「直近」の試合数ボタン .recent-seg と共通） */
