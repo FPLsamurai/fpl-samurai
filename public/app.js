@@ -2138,6 +2138,21 @@ function startLivePoints(gw, picks) {
   });
 }
 
+/* 直近節タブの「第N節の移籍」。公開APIの entry/{id}/transfers/ は今季の全移籍が1件＝OUT→INの1組で
+   返るので、その節（event）の分だけを古い順に並べる。金額は実際の売値・買値（element_out_cost / element_in_cost）。
+   取れなくてもスカッドは表示済みなので、欄を出さないだけにする */
+function startRecentTransfers(entryId, gw) {
+  if (!entryId || !gw) return;
+  fplFetch(`entry/${entryId}/transfers/`).then((list) => {
+    const rows = (Array.isArray(list) ? list : [])
+      .filter((t) => t.event === gw)
+      .sort((a, b) => String(a.time || "").localeCompare(String(b.time || "")));
+    if (MT && MT.gw === gw) { MT.recentTransfers = rows; if (MT.mode === "recent") renderSquadPitch(); }
+  }).catch((e) => {
+    console.warn("[FPL侍] 移籍履歴の取得に失敗:", e && e.message);
+  });
+}
+
 const SQUAD_CACHE_PREFIX = "fpl_squad_cache_v1_";  // 前回取得したチーム情報（再訪時に即表示）
 
 async function loadMyTeam(id) {
@@ -2150,6 +2165,7 @@ async function loadMyTeam(id) {
   if (cached && cached.entry) {
     renderMyTeam(cached.entry, cached.picks, cached.gw, null);
     startLivePoints(cached.gw, cached.picks);
+    startRecentTransfers(cached.entry.id, cached.gw);
   } else {
     box.innerHTML = `<div class="empty">読み込み中…（10秒ほどかかることがあります）</div>`;
   }
@@ -2178,6 +2194,7 @@ async function loadMyTeam(id) {
     if (freshStr !== cachedStr) {
       renderMyTeam(entry, picks, gw, null);
       startLivePoints(gw, picks);
+      startRecentTransfers(entry.id, gw);
     }
   } catch (err) {
     // キャッシュを表示済みなら、裏の更新失敗は黙って無視（表示はそのまま使える）
@@ -2364,6 +2381,7 @@ function initSquadEditor(entry, picksData, gw, livePoints) {
     eventTransfersCost: eh.event_transfers_cost != null ? eh.event_transfers_cost : 0,  // その節の移籍コスト(-4等)
     chip: picksData.active_chip || null,
     livePoints: livePoints || null,   // {element_id: その節のポイント}
+    recentTransfers: null,            // 直近節に実行した移籍（startRecentTransfers が入れる。未取得は null）
     base: { squad: baseSquad, bank: eh.bank != null ? eh.bank / 10 : 0 },  // 現行GWの実スカッド（直近節タブ＆プランの起点）
     basePlanGw,
     planGw: basePlanGw,   // 計画タブで表示中のGW
@@ -2618,15 +2636,8 @@ function renderSquadPitch() {
 
     // この節の移籍プラン（OUT→IN の一覧）
     const pairs = planDiffPairs(P);
-    const trRows = pairs.map((t) => {
-      const o = t.out ? DATA.elements[String(t.out)] : null;
-      const i = t.in ? DATA.elements[String(t.in)] : null;
-      return `<div class="mt-tr-row">
-        <span class="mt-tr-side out"><span class="mt-tr-tag">OUT</span>${o ? esc(o.j || o.n) : "-"}<span class="sub">£${o ? o.c : "-"}m</span></span>
-        <span class="mt-tr-arrow">→</span>
-        <span class="mt-tr-side in"><span class="mt-tr-tag">IN</span>${i ? esc(i.j || i.n) : "-"}<span class="sub">£${i ? i.c : "-"}m</span></span>
-      </div>`;
-    }).join("") || `<div class="mt-tr-none">この節の移籍はまだありません（カード右上の✕から候補を選べます）</div>`;
+    const trRows = pairs.map((t) => mtTransferRow(t.out, t.in)).join("")
+      || `<div class="mt-tr-none">この節の移籍はまだありません（カード右上の✕から候補を選べます）</div>`;
 
     wrap.innerHTML = `
       <div class="mt-head">
@@ -2765,7 +2776,7 @@ function renderSquadPitch() {
           <div class="mt-pitch">${rows}</div>
           <div class="mt-bench">${bench.map(mtCard).join("")}</div>
         </div>
-      </div>`;
+      </div>${recentTransfersHtml()}`;
     // カードをタップ→黄色枠（計画タブと同じ）＋得点内訳ポップアップ（ポイント取得済みのときだけ）
     if (MT.livePoints) {
       wrap.querySelectorAll(".mt-card").forEach((c) =>
@@ -2778,6 +2789,54 @@ function renderSquadPitch() {
         }));
     }
   }
+}
+
+/* 移籍の1行（OUT→IN）。計画タブの移籍プランと直近節タブの移籍で共通。
+   金額を渡さなければ現在の価格（直近節タブは実際の売値・買値を渡す）。
+   pts（{out, in}）を渡すと、各選手のその節のポイントと差（IN−OUT）を添える（直近節タブ） */
+function mtTransferRow(outId, inId, outCost, inCost, pts) {
+  const o = outId ? DATA.elements[String(outId)] : null;
+  const i = inId ? DATA.elements[String(inId)] : null;
+  const oc = outCost != null ? outCost : (o ? o.c : null);
+  const ic = inCost != null ? inCost : (i ? i.c : null);
+  const pt = (v) => (pts ? `<span class="mt-tr-pt ${ptsClass(v)}">${v}pt</span>` : "");
+  const diff = pts ? pts.in - pts.out : null;
+  return `<div class="mt-tr-row">
+    <span class="mt-tr-side out"><span class="mt-tr-name">${o ? esc(o.j || o.n) : "-"}</span><span class="mt-tr-meta"><span class="mt-tr-tag">OUT</span><span class="sub">£${oc != null ? oc : "-"}m</span>${pts ? pt(pts.out) : ""}</span></span>
+    <span class="mt-tr-arrow">→</span>
+    <span class="mt-tr-side in"><span class="mt-tr-name">${i ? esc(i.j || i.n) : "-"}</span><span class="mt-tr-meta"><span class="mt-tr-tag">IN</span><span class="sub">£${ic != null ? ic : "-"}m</span>${pts ? pt(pts.in) : ""}</span></span>
+    ${pts ? `<span class="mt-tr-diff ${diffClass(diff)}">${fmtDiff(diff)}</span>` : ""}
+  </div>`;
+}
+
+function fmtDiff(n) { return (n > 0 ? "+" : "") + n; }
+function diffClass(n) { return n > 0 ? "up" : n < 0 ? "down" : "even"; }
+
+/* 直近節タブの「第N節の移籍」。見た目は計画タブの移籍プラン欄と同じ（リセットボタンは無し）。
+   ポイント取得後は、選手ごとのその節のポイント（キャプテン倍化なし・ベンチでも加算前の素点）と
+   差（IN−OUT）を出し、見出しの右に合計の差（移籍コストがあれば差し引いた値も）を出す。
+   取得前・取得失敗のときは欄ごと出さない */
+function recentTransfersHtml() {
+  const list = MT.recentTransfers;
+  if (!list) return "";
+  const lp = MT.livePoints;
+  let total = 0;
+  const rows = list.map((t) => {
+    const pts = lp ? { out: lp[t.element_out] || 0, in: lp[t.element_in] || 0 } : null;
+    if (pts) total += pts.in - pts.out;
+    return mtTransferRow(t.element_out, t.element_in,
+      t.element_out_cost != null ? (t.element_out_cost / 10).toFixed(1) : null,
+      t.element_in_cost != null ? (t.element_in_cost / 10).toFixed(1) : null, pts);
+  }).join("") || `<div class="mt-tr-none">この節の移籍はありません</div>`;
+  const cost = MT.eventTransfersCost || 0;
+  const sum = lp && list.length
+    ? `<span class="mt-tr-sum">差 <b class="${diffClass(total)}">${fmtDiff(total)}pt</b>`
+      + (cost > 0 ? `<span class="sub">（コスト込み ${fmtDiff(total - cost)}pt）</span>` : "") + `</span>`
+    : "";
+  return `<div class="mt-transfers">
+      <div class="mt-tr-head"><span>第${MT.gw}節の移籍${list.length ? `（${list.length}件）` : ""}</span>${sum}</div>
+      ${rows}
+    </div>`;
 }
 
 // ポイントバッジの色分け（マイナス=赤 / 0〜3=灰 / 4〜9=薄緑 / 10pt〜=濃緑）

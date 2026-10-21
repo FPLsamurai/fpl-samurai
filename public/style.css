@@ -2015,8 +2015,11 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
   font-weight: 600;
 }
 .mt-tr-side { flex: 1; min-width: 0; }
-.mt-tr-side .sub { margin-left: 4px; }
 .mt-tr-side.in { text-align: right; }
+/* 1行目＝選手名（折り返さず、はみ出たら…）、2行目＝OUT/IN・金額（＋直近節タブはその節のポイント）。
+   OUT/INを名前の行に置くと、8文字の名前（ムハレモビッチ等）がスマホで切れたため2行目に置く */
+.mt-tr-name { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mt-tr-meta { display: block; margin-top: 2px; }
 .mt-tr-tag {
   display: inline-block;
   font-size: 0.62rem;
@@ -2030,6 +2033,33 @@ button.mt-stat-btn:disabled .mt-stat-v { border-bottom-color: transparent; }
 .mt-tr-side.in .mt-tr-tag { background: #e6f7ee; color: var(--easy); }
 .mt-tr-arrow { color: var(--muted); flex: 0 0 auto; }
 .mt-tr-none { font-size: 0.8rem; color: var(--muted); padding: 4px 0; }
+/* 直近節タブの移籍：選手ごとのその節のポイント（色はピッチのptバッジと同じ段階）と差（IN−OUT） */
+.mt-tr-pt {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #1b1b1f;
+  vertical-align: middle;
+}
+.mt-tr-pt.pneg { background: #fe1752; }
+.mt-tr-pt.p23 { background: #e7e7e7; }
+.mt-tr-pt.p49 { background: #12fc7a; }
+.mt-tr-pt.p10 { background: #49b605; }
+.mt-tr-diff {
+  flex: 0 0 auto;
+  min-width: 34px;
+  text-align: right;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.mt-tr-diff.up, .mt-tr-sum b.up { color: var(--easy); }
+.mt-tr-diff.down, .mt-tr-sum b.down { color: var(--hard); }
+.mt-tr-diff.even, .mt-tr-sum b.even { color: var(--muted); }
+.mt-tr-sum { font-size: 0.78rem; color: var(--text); font-weight: 600; }
+.mt-tr-sum .sub { margin-left: 2px; }
 /* 同じクラブ4人以上のときの警告。移籍プラン欄のヘッダー直下に、該当する間ずっと出す */
 .mt-tr-warn {
   text-align: center;
