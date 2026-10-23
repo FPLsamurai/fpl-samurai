@@ -2155,6 +2155,38 @@ function startRecentTransfers(entryId, gw) {
   });
 }
 
+/* 次節の無料移籍数（FT）。公開APIにFT数そのものは無いので、entry/{id}/history/ の節ごとの移籍数と
+   チップから繰り越しルールで数え直す：最初の節（チーム作成時）は移籍無制限で翌節1、以降は毎節
+   「FT − その節の移籍数（0未満は0）＋1」を上限5で繰り越す。WC・FHの節はFTが据え置き
+   （消費もしないが＋1も付かない。計画タブの carryFt と同じ扱い）。
+   取れなければ既定の1のまま（計画タブのステータスから手で直せる） */
+function calcFreeTransfers(history, gw) {
+  const rows = (history && Array.isArray(history.current) ? history.current : [])
+    .slice().sort((a, b) => a.event - b.event);
+  if (!rows.length || rows[rows.length - 1].event !== gw) return null;
+  const chipAt = {};
+  (history.chips || []).forEach((c) => { chipAt[c.event] = c.name; });
+  let ft = null;
+  rows.forEach((r) => {
+    if (ft === null) { ft = 1; return; }
+    if (chipUnlimited(chipAt[r.event])) return;
+    ft = Math.min(5, Math.max(0, ft - (r.event_transfers || 0)) + 1);
+  });
+  return ft;
+}
+
+function startFreeTransfers(entryId, gw) {
+  if (!entryId || !gw) return;
+  fplFetch(`entry/${entryId}/history/`).then((h) => {
+    const ft = calcFreeTransfers(h, gw);
+    if (ft == null || !MT || MT.gw !== gw) return;
+    MT.autoFt = ft;
+    if (applyAutoFt() && MT.mode === "plan") renderSquadPitch();
+  }).catch((e) => {
+    console.warn("[FPL侍] FT数の取得に失敗:", e && e.message);
+  });
+}
+
 const SQUAD_CACHE_PREFIX = "fpl_squad_cache_v1_";  // 前回取得したチーム情報（再訪時に即表示）
 
 async function loadMyTeam(id) {
@@ -2168,6 +2200,7 @@ async function loadMyTeam(id) {
     renderMyTeam(cached.entry, cached.picks, cached.gw, null);
     startLivePoints(cached.gw, cached.picks);
     startRecentTransfers(cached.entry.id, cached.gw);
+    startFreeTransfers(cached.entry.id, cached.gw);
   } else {
     box.innerHTML = `<div class="empty">読み込み中…（10秒ほどかかることがあります）</div>`;
   }
@@ -2197,6 +2230,7 @@ async function loadMyTeam(id) {
       renderMyTeam(entry, picks, gw, null);
       startLivePoints(gw, picks);
       startRecentTransfers(entry.id, gw);
+      startFreeTransfers(entry.id, gw);
     }
   } catch (err) {
     // キャッシュを表示済みなら、裏の更新失敗は黙って無視（表示はそのまま使える）
@@ -2384,6 +2418,7 @@ function initSquadEditor(entry, picksData, gw, livePoints) {
     chip: picksData.active_chip || null,
     livePoints: livePoints || null,   // {element_id: その節のポイント}
     recentTransfers: null,            // 直近節に実行した移籍（startRecentTransfers が入れる。未取得は null）
+    autoFt: null,                     // 次節のFT数（startFreeTransfers が履歴から計算。未取得は null＝既定1）
     base: { squad: baseSquad, bank: eh.bank != null ? eh.bank / 10 : 0 },  // 現行GWの実スカッド（直近節タブ＆プランの起点）
     basePlanGw,
     planGw: basePlanGw,   // 計画タブで表示中のGW
@@ -2457,14 +2492,11 @@ function ensurePlan(gw) {
     const revert = S.chip === "freehit" && S.inh;
     squad = (revert ? S.inh.squad : S.squad).map((p) => ({ ...p }));
     bank = revert ? S.inh.bank : S.bank;
-    // FTは「前節のFT − 使った数 ＋ 経過節数」を1〜5に丸める（FPLの繰り越しルール）。
-    // WC・FHの節は何件移籍してもFTの消費は1つ分として次節へ繰り越す
-    const used = chipUnlimited(S.chip) ? 1 : planMade(S);
-    ft = Math.min(5, Math.max(1, S.ft - used + (gw - src.gw)));
+    ft = carryFt(S, src.gw, gw);
   } else {
     squad = MT.base.squad.map((p) => ({ ...p }));
     bank = MT.base.bank;
-    ft = 1;  // 公開APIでは実FT数が取れないため既定1（ステータスのタップで変更可）
+    ft = MT.autoFt != null ? MT.autoFt : 1;  // 履歴から計算したFT。未取得なら既定1（ステータスのタップで変更可）
   }
   MT.plans[gw] = {
     squad, bank, ft,
@@ -2473,6 +2505,29 @@ function ensurePlan(gw) {
     inh: { squad: squad.map((p) => ({ ...p })), bank },   // FHで戻すための引き継ぎ状態
   };
   return MT.plans[gw];
+}
+
+// FTは「前節のFT − 使った数 ＋ 経過節数」を1〜5に丸める（FPLの繰り越しルール）。
+// WC・FHの節は何件移籍してもFTの消費は1つ分として次節へ繰り越す
+function carryFt(S, srcGw, gw) {
+  const used = chipUnlimited(S.chip) ? 1 : planMade(S);
+  return Math.min(5, Math.max(1, S.ft - used + (gw - srcGw)));
+}
+
+// 履歴からFTが取れたら、手で変えていない節のFTを前の節から順に引き直す（プランの移籍はそのまま）。
+// 変わった節があれば true
+function applyAutoFt() {
+  if (MT.autoFt == null) return false;
+  let changed = false;
+  for (let g = MT.basePlanGw; g <= 38; g++) {
+    const P = MT.plans[g];
+    if (!P || P.ftManual) continue;
+    const src = planSrc(g);
+    const ft = src ? carryFt(src.plan, src.gw, g) : MT.autoFt;
+    if (P.ft !== ft) { P.ft = ft; changed = true; }
+  }
+  if (changed) savePlans();
+  return changed;
 }
 
 // この節を変更したら、これより後の節のプランは前提が崩れるので破棄
@@ -2727,10 +2782,11 @@ function renderSquadPitch() {
       savePlans();
       renderSquadPitch();
     });
-    // 移籍数/FTステータスのタップで無料移籍数を1〜5で切り替え（公開APIから取れないため手動設定）
+    // 移籍数/FTステータスのタップで無料移籍数を1〜5で切り替え（履歴からの計算値を手で直す用。以後は自動で上書きしない）
     wrap.querySelector("#mt-ft-toggle").addEventListener("click", () => {
       clearMtMsg();
       P.ft = (P.ft % 5) + 1;
+      P.ftManual = true;
       savePlans();
       renderSquadPitch();
     });
