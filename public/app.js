@@ -51,8 +51,8 @@ async function init() {
     renderHeader();
     loadYouTube();          // ホームのYouTube最新動画（data.json の分。取得失敗しても他は動く）
     // 各タブの初期表示
-    renderPlayers("all");
-    renderTeams("totals");
+    renderPlayers("ranking");
+    renderTeams("ranking");
     renderNext("match");
   } catch (err) {
     showLoadError(err);
@@ -215,10 +215,12 @@ const RICH_KEYS = ["all", "last1", "last3", "last5", "last10", "home", "away"];
 function renderPlayers(key) {
   if (key === "compare") {
     renderCompare();
-  } else if (key === "recent") {
-    renderPlayerRich(recentWindow);   // 「直近」タブ＝記憶している期間のリッチ表＋期間切替
+  } else if (key === "list") {
+    renderPlayerRich(listPeriod);   // 「一覧表」タブ＝記憶している期間のリッチ表＋期間プルダウン
   } else if (RICH_KEYS.includes(key)) {
     renderPlayerRich(key);
+  } else if (key === "ranking") {
+    renderPlayerRanking();
   } else if (key === "setpiece") {
     renderSetPieces();
   } else {
@@ -258,6 +260,73 @@ function renderPlayerSimple(key) {
 }
 
 /* ---- セットプレー担当者DB ---- */
+/* ---- ランキング（期間×ポジション×スタッツの TOP10） ----
+   見た目は次節予測のランキング（.pgr）と共通で、列は 順位／選手／チーム／値。
+   期間は全試合＝players.all、1・3・5・10試合＝players.last1 等。スタッツの項目はスカッドの移籍候補（STAT_FILTER_OPTS）から価格・無失点を除いたもの。
+   値が0の選手は出さない（PKストップ等で0人が並ぶのを防ぐ）。同じ値は同順位 */
+const PRANK_PERIODS = [["all", "全試合"], ["last1", "1試合"], ["last3", "3試合"], ["last5", "5試合"], ["last10", "10試合"]];
+const PRANK_POSITIONS = [["", "ALL"], ["GK", "GK"], ["DF", "DF"], ["MF", "MF"], ["FW", "FW"]];
+const PRANK_TOP = 10;
+// STAT_FILTER_OPTS はファイル後方で宣言しているので、読み込み時ではなく描画時に絞り込む
+const prankStats = () => STAT_FILTER_OPTS.filter(([k]) => k !== "cost" && k !== "clean_sheets");
+let prank = { period: "all", pos: "", stat: "points" };
+
+function renderPlayerRanking() {
+  document.getElementById("players-note").textContent = "";
+  const box = document.getElementById("players-content");
+  const [, posLabel] = PRANK_POSITIONS.find(([k]) => k === prank.pos) || PRANK_POSITIONS[0];
+  const stats = prankStats();
+  const [, statLabel] = stats.find(([k]) => k === prank.stat) || stats[0];
+  const key = prank.stat;
+
+  const valid = ((DATA.players && DATA.players[prank.period]) || [])
+    .filter((r) => (!prank.pos || r.position === prank.pos) && Number(r[key]) > 0)
+    .sort((a, b) => Number(b[key]) - Number(a[key]) || (b.points || 0) - (a.points || 0));
+  const top = valid.slice(0, PRANK_TOP);
+  const fmt = (v) => SEASON_STAT_FLOAT[key] ? Number(v).toFixed(2) : v;
+
+  let rank = 0;
+  const items = top.map((r, i) => {
+    if (i === 0 || Number(r[key]) !== Number(top[i - 1][key])) rank = i + 1;
+    const photo = r.photo
+      ? `<img class="pgr-photo" loading="lazy" alt="" src="${PHOTO_BASE}${esc(r.photo)}.png" onerror="this.style.visibility='hidden'">`
+      : "";
+    const ja = r.name_ja ? `<span class="pgr-ja">${esc(r.name_ja)}</span>` : "";
+    return `<div class="pgr-row">
+      <span class="pgr-rank ${rankClass(rank)}">${rank}</span>
+      <span class="pgr-who">${photo}<span class="pgr-names"><span class="pgr-name">${esc(r.name)}</span>${ja}</span></span>
+      <span class="pgr-mid">${teamBadgeByName(r.team)}</span>
+      <span class="pgr-exp">${fmt(r[key])}</span>
+    </div>`;
+  }).join("");
+
+  const periodBtns = PRANK_PERIODS.map(([k, l]) =>
+    `<button type="button" class="subtab${k === prank.period ? " is-active" : ""}" data-prank-period="${k}">${l}</button>`).join("");
+  const posOpts = PRANK_POSITIONS.map(([k, l]) =>
+    `<option value="${k}"${k === prank.pos ? " selected" : ""}>${l}</option>`).join("");
+  const statOpts = stats.map(([k, l]) =>
+    `<option value="${k}"${k === prank.stat ? " selected" : ""}>${l}</option>`).join("");
+
+  box.innerHTML = `
+    <div class="prank-tools">
+      <label>ポジション<select id="prank-pos">${posOpts}</select></label>
+      <label>スタッツ<select id="prank-stat">${statOpts}</select></label>
+    </div>
+    <div class="prank-label">試合数</div>
+    <div class="subtabs pgr-modes prank-periods">${periodBtns}</div>
+    <h3 class="pgr-title">【${posLabel}】${statLabel} TOP${PRANK_TOP}</h3>
+    ${items ? `<div class="pgr pgr-stat-rank">
+      <div class="pgr-head"><span></span><span>選手</span><span>チーム</span><span>${statLabel}</span></div>
+      ${items}
+    </div>` : emptyMessage("該当する選手がいません。")}`;
+
+  box.querySelectorAll("[data-prank-period]").forEach((b) => b.addEventListener("click", () => {
+    prank.period = b.dataset.prankPeriod; renderPlayerRanking();
+  }));
+  box.querySelector("#prank-pos").addEventListener("change", (e) => { prank.pos = e.target.value; renderPlayerRanking(); });
+  box.querySelector("#prank-stat").addEventListener("change", (e) => { prank.stat = e.target.value; renderPlayerRanking(); });
+}
+
 function renderSetPieces() {
   const note = document.getElementById("players-note");
   const box = document.getElementById("players-content");
@@ -824,12 +893,14 @@ let playerFilters = { name: "", pos: [], team: [], min: {}, max: {} };
 let colState = loadColState();
 let cmOpen = false;  // 列設定パネルが開いているか
 let currentRichKey = "all";  // 高機能テーブルがいま表示している期間
-// 「直近」タブ内の期間切替（1/3/5/10試合）。選んだ期間はブラウザに記憶
+// 直近N試合の集計（data.json の players.last1 等）
 const RECENT_WINDOWS = [["last1", "1試合"], ["last3", "3試合"], ["last5", "5試合"], ["last10", "10試合"]];
-const RECENT_KEYS = RECENT_WINDOWS.map((w) => w[0]);
-let recentWindow = (() => {
-  try { const s = localStorage.getItem("fpl_recent_window"); if (RECENT_KEYS.includes(s)) return s; } catch (e) {}
-  return "last5";
+// 選手データ「一覧表」の期間（旧サブタブの合計・直近・ホーム・アウェイを1つのプルダウンにまとめた）。選んだ期間はブラウザに記憶
+const LIST_PERIODS = [["all", "全試合"], ...RECENT_WINDOWS.map(([k, l]) => [k, `直近${l}`]),
+  ["home", "ホーム"], ["away", "アウェイ"]];
+let listPeriod = (() => {
+  try { const s = localStorage.getItem("fpl_list_period"); if (LIST_PERIODS.some(([k]) => k === s)) return s; } catch (e) {}
+  return "all";
 })();
 
 /* ---- 列の表示設定の保存・読み込み（ブラウザに記憶） ---- */
@@ -895,26 +966,29 @@ function frozenCss(c) {
     : "";
 }
 
-/* ---- 高機能テーブル：土台を作る（全試合・直近3/5/10共通） ---- */
+/* ---- 高機能テーブル：土台を作る（一覧表。期間＝今季合計・直近1/3/5/10・ホーム・アウェイ共通） ---- */
 function renderPlayerRich(key) {
   currentRichKey = key || "all";
   document.getElementById("players-note").textContent = "";
   const box = document.getElementById("players-content");
   const rows = (DATA.players && DATA.players[currentRichKey]) || [];
-  if (!rows.length) { box.innerHTML = emptyMessage("まだデータがありません。"); return; }
 
-  // 「直近」タブのとき、表の上に期間切替（1/3/5/10試合）を出す
-  const isRecent = RECENT_KEYS.includes(currentRichKey);
-  const segHtml = isRecent ? `
-    <div class="recent-seg" id="recent-seg">
-      <span class="recent-seg-l">直近</span>
-      ${RECENT_WINDOWS.map(([k, lbl]) =>
-        `<button type="button" data-win="${k}" class="${k === currentRichKey ? "is-on" : ""}">${lbl}</button>`).join("")}
-    </div>` : "";
+  // 表の上に期間のプルダウン（見た目はランキングのポジション・スタッツと共通）
+  const periodOpts = LIST_PERIODS.map(([k, l]) =>
+    `<option value="${k}"${k === currentRichKey ? " selected" : ""}>${l}</option>`).join("");
+  const periodHtml = `<div class="prank-tools">
+      <label>集計期間<select id="list-period">${periodOpts}</select></label>
+    </div>`;
+  const bindPeriod = () => box.querySelector("#list-period").addEventListener("change", (e) => {
+    listPeriod = e.target.value;
+    try { localStorage.setItem("fpl_list_period", listPeriod); } catch (err) {}
+    renderPlayerRich(listPeriod);
+  });
+  if (!rows.length) { box.innerHTML = periodHtml + emptyMessage("まだデータがありません。"); bindPeriod(); return; }
 
   box.innerHTML = `
+    ${periodHtml}
     <div id="col-manager"></div>
-    ${segHtml}
     <div class="fullbleed">
       <div class="data-table-wrap">
         <table class="rich">
@@ -924,15 +998,8 @@ function renderPlayerRich(key) {
       </div>
     </div>`;
 
-  // 期間切替（1/3/5/10試合）。選んだ期間を記憶して再描画（並べ替え・絞り込み・列設定は保持）
-  const seg = document.getElementById("recent-seg");
-  if (seg) {
-    seg.querySelectorAll("button[data-win]").forEach((b) => b.addEventListener("click", () => {
-      recentWindow = b.dataset.win;
-      try { localStorage.setItem("fpl_recent_window", recentWindow); } catch (e) {}
-      renderPlayerRich(recentWindow);
-    }));
-  }
+  // 期間を選び直したら記憶して再描画（並べ替え・絞り込み・列設定は保持）
+  bindPeriod();
 
   // イベントは親に1回だけ付ける（中身を作り替えても効く）
   const head = document.getElementById("player-head");
@@ -1413,10 +1480,11 @@ function afterColLayoutChange() {
    =========================================================== */
 // チームランキング表の並び替え状態（選手タブと同じく見出しタップで昇順⇄降順）
 let teamSort = { key: "points", dir: "desc" };
-// 「直近」タブ内の期間切替（選手と共通の RECENT_WINDOWS を使用）。選んだ期間は記憶
-let teamRecentWindow = (() => {
-  try { const s = localStorage.getItem("fpl_team_recent_window"); if (RECENT_KEYS.includes(s)) return s; } catch (e) {}
-  return "last5";
+// 「一覧表」の集計期間（選手の LIST_PERIODS と同じ並び。全試合だけ teams.totals）。選んだ期間は記憶
+const TEAM_LIST_PERIODS = LIST_PERIODS.map(([k, l]) => [k === "all" ? "totals" : k, l]);
+let teamListPeriod = (() => {
+  try { const s = localStorage.getItem("fpl_team_list_period"); if (TEAM_LIST_PERIODS.some(([k]) => k === s)) return s; } catch (e) {}
+  return "totals";
 })();
 
 function renderTeams(key) {
@@ -1426,35 +1494,86 @@ function renderTeams(key) {
 
   note.textContent = "";   // 選手タブと同じく説明文は出さず、表を上に詰める
 
-  if (key === "totals") {
-    drawTeamRankTable(box, teams.totals || []);
-  } else if (key === "recent") {
-    renderTeamRecent(box);
-  } else if (key === "home") {
-    drawTeamRankTable(box, teams.home || []);
-  } else if (key === "away") {
-    drawTeamRankTable(box, teams.away || []);
+  if (key === "ranking") {
+    renderTeamRanking(box);
+  } else if (key === "list") {
+    renderTeamList(box);
   } else if (key === "by_gw") {
     drawTeamByGw(box, teams.by_gw || []);
   }
 }
 
-// 「直近」タブ：期間セグメント（1/3/5/10試合）＋ランキング表
-function renderTeamRecent(box) {
-  const win = teamRecentWindow;
-  const rows = (DATA.teams && DATA.teams[win]) || [];
-  const seg = `<div class="recent-seg" id="team-recent-seg">
-      <span class="recent-seg-l">直近</span>
-      ${RECENT_WINDOWS.map(([k, lbl]) =>
-        `<button type="button" data-win="${k}" class="${k === win ? "is-on" : ""}">${lbl}</button>`).join("")}
+/* ランキング：期間（全試合＝teams.totals／1・3・5・10試合＝teams.last1 等）×スタッツの TOP10。
+   見た目は選手データのランキング（.pgr）と共通で、列は 順位／チーム／値。スタッツの項目は合計の表（TEAM_RANK_COLS）と同じ。
+   失点・被xGは少ない方が良いので昇順。同じ値は同順位 */
+const TRANK_PERIODS = [["totals", "全試合"], ["last1", "1試合"], ["last3", "3試合"], ["last5", "5試合"], ["last10", "10試合"]];
+const TRANK_ASC = { conceded: 1, xgc_total: 1 };
+let trank = { period: "totals", stat: "points" };
+
+function renderTeamRanking(box) {
+  const stats = TEAM_RANK_COLS.filter((c) => !c.noSort);
+  const col = stats.find((c) => c.key === trank.stat) || stats[0];
+  const key = col.key;
+  const asc = !!TRANK_ASC[key];
+  const statLabel = col.kind === "csper" ? "無失点" : col.label;
+
+  const sorted = (((DATA.teams || {})[trank.period]) || [])
+    .filter((r) => isFinite(Number(r[key])))
+    .sort((a, b) => (asc ? Number(a[key]) - Number(b[key]) : Number(b[key]) - Number(a[key]))
+      || (b.points || 0) - (a.points || 0));
+  const top = sorted.slice(0, PRANK_TOP);
+  const fmt = (r) => col.kind === "pct" ? `${r.cs_pct}%`
+    : col.kind === "csper" ? `${r.cs_count} / ${r.matches}`
+    : (key === "xg_total" || key === "xgc_total") ? Number(r[key]).toFixed(2) : r[key];
+
+  let rank = 0;
+  const items = top.map((r, i) => {
+    if (i === 0 || Number(r[key]) !== Number(top[i - 1][key])) rank = i + 1;
+    return `<div class="pgr-row">
+      <span class="pgr-rank ${rankClass(rank)}">${rank}</span>
+      <span class="pgr-who">${teamBadgeByName(r.team)}<span class="pgr-names"><span class="pgr-name">${esc(r.team)}</span></span></span>
+      <span class="pgr-exp">${fmt(r)}</span>
     </div>`;
-  box.innerHTML = seg + `<div id="team-recent-table"></div>`;
-  drawTeamRankTable(document.getElementById("team-recent-table"), rows);
-  box.querySelectorAll("#team-recent-seg button[data-win]").forEach((b) => b.addEventListener("click", () => {
-    teamRecentWindow = b.dataset.win;
-    try { localStorage.setItem("fpl_team_recent_window", teamRecentWindow); } catch (e) {}
-    renderTeamRecent(box);
+  }).join("");
+
+  const statOpts = stats.map((c) =>
+    `<option value="${c.key}"${c.key === key ? " selected" : ""}>${c.kind === "csper" ? "無失点" : esc(c.label)}</option>`).join("");
+  const periodBtns = TRANK_PERIODS.map(([k, l]) =>
+    `<button type="button" class="subtab${k === trank.period ? " is-active" : ""}" data-trank-period="${k}">${l}</button>`).join("");
+
+  box.innerHTML = `
+    <div class="prank-tools">
+      <label>スタッツ<select id="trank-stat">${statOpts}</select></label>
+    </div>
+    <div class="prank-label">試合数</div>
+    <div class="subtabs pgr-modes prank-periods">${periodBtns}</div>
+    <h3 class="pgr-title">${esc(statLabel)} TOP${PRANK_TOP}${asc ? "（少ない順）" : ""}</h3>
+    ${items ? `<div class="pgr pgr-tstat-rank">
+      <div class="pgr-head"><span></span><span>チーム</span><span>${esc(statLabel)}</span></div>
+      ${items}
+    </div>` : emptyMessage("まだデータがありません。")}`;
+
+  box.querySelectorAll("[data-trank-period]").forEach((b) => b.addEventListener("click", () => {
+    trank.period = b.dataset.trankPeriod; renderTeamRanking(box);
   }));
+  box.querySelector("#trank-stat").addEventListener("change", (e) => { trank.stat = e.target.value; renderTeamRanking(box); });
+}
+
+// 「一覧表」タブ：集計期間のプルダウン（旧サブタブの合計・直近・ホーム・アウェイをまとめたもの）＋表
+function renderTeamList(box) {
+  const win = teamListPeriod;
+  const rows = (DATA.teams && DATA.teams[win]) || [];
+  const opts = TEAM_LIST_PERIODS.map(([k, l]) =>
+    `<option value="${k}"${k === win ? " selected" : ""}>${l}</option>`).join("");
+  box.innerHTML = `<div class="prank-tools">
+      <label>集計期間<select id="team-list-period">${opts}</select></label>
+    </div><div id="team-list-table"></div>`;
+  drawTeamRankTable(document.getElementById("team-list-table"), rows);
+  box.querySelector("#team-list-period").addEventListener("change", (e) => {
+    teamListPeriod = e.target.value;
+    try { localStorage.setItem("fpl_team_list_period", teamListPeriod); } catch (err) {}
+    renderTeamList(box);
+  });
 }
 
 // 横長テーブルを全幅スクロールで囲む

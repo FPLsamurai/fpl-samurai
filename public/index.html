@@ -170,13 +170,11 @@
 
     <section id="panel-players" class="panel">
       <h2>選手データ</h2>
-      <div class="subtabs scrollable" data-group="players">
-        <button class="subtab is-active" data-key="all">合計</button>
-        <button class="subtab" data-key="recent">直近</button>
-        <button class="subtab" data-key="home">ホーム</button>
-        <button class="subtab" data-key="away">アウェイ</button>
-        <button class="subtab" data-key="setpiece">セットプレー</button>
+      <div class="subtabs fill" data-group="players">
+        <button class="subtab is-active" data-key="ranking">ランキング</button>
+        <button class="subtab" data-key="list">一覧表</button>
         <button class="subtab" data-key="compare">比較</button>
+        <button class="subtab" data-key="setpiece">セットプレー</button>
       </div>
       <p class="note" id="players-note"></p>
       <div id="players-content"></div>
@@ -184,11 +182,9 @@
 
     <section id="panel-teams" class="panel">
       <h2>チームデータ</h2>
-      <div class="subtabs scrollable" data-group="teams">
-        <button class="subtab is-active" data-key="totals">合計</button>
-        <button class="subtab" data-key="recent">直近</button>
-        <button class="subtab" data-key="home">ホーム</button>
-        <button class="subtab" data-key="away">アウェイ</button>
+      <div class="subtabs fill" data-group="teams">
+        <button class="subtab is-active" data-key="ranking">ランキング</button>
+        <button class="subtab" data-key="list">一覧表</button>
         <button class="subtab" data-key="by_gw">チーム別</button>
       </div>
       <p class="note" id="teams-note"></p>

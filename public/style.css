@@ -687,6 +687,9 @@ main {
   flex: 0 0 auto;
 }
 
+/* 選手・チームデータのサブタブ（4つ・3つ）：1段で横幅いっぱい。等幅だと「セットプレー」が折り返すので文字の長さに合わせて配る */
+.subtabs.fill .subtab { flex: 1 1 auto; white-space: nowrap; }
+
 /* ⚙列の表示・並び替えの下の余白を、上（サブタブとの間＝12px）と同じにする */
 #col-manager { margin-bottom: 12px; }
 
@@ -697,12 +700,6 @@ main {
   gap: 6px;
   margin: 0 0 10px;
   flex-wrap: wrap;
-}
-.recent-seg-l {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--muted);
-  margin-right: 2px;
 }
 .recent-seg button {
   flex: 1 1 0;
@@ -1691,6 +1688,56 @@ tbody tr:nth-child(even) {
   .pgr-team-rank .pgr-head,
   .pgr-team-rank .pgr-row { grid-template-columns: 20px minmax(0, 1fr) 72px 56px; }
   .pgr-team-rank .team-badge { width: 22px; height: 22px; }
+}
+
+/* 選手データ＞ランキング：ポジション・スタッツのプルダウンと、対戦列の無い4列版の表 */
+.prank-tools {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.prank-tools label {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.prank-tools select {
+  padding: 8px 10px;
+  font-size: 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text);
+}
+.prank-periods + .pgr-title { margin-top: 4px; }
+/* 全試合〜10試合のボタンの見出し（ポジション・スタッツのラベルと同じ見た目） */
+.prank-label {
+  margin-bottom: 3px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.pgr-stat-rank .pgr-head,
+.pgr-stat-rank .pgr-row { grid-template-columns: 26px minmax(0, 1fr) 64px 72px; }
+.pgr-stat-rank .team-badge { width: 26px; height: 26px; flex: none; }
+@media (max-width: 480px) {
+  .pgr-stat-rank .pgr-head,
+  .pgr-stat-rank .pgr-row { grid-template-columns: 20px minmax(0, 1fr) 44px 64px; }
+  .pgr-stat-rank .team-badge { width: 22px; height: 22px; }
+}
+
+/* チームデータ＞ランキング：順位／チーム／値の3列 */
+.pgr-tstat-rank .pgr-head,
+.pgr-tstat-rank .pgr-row { grid-template-columns: 26px minmax(0, 1fr) 80px; }
+.pgr-tstat-rank .team-badge { width: 26px; height: 26px; flex: none; }
+@media (max-width: 480px) {
+  .pgr-tstat-rank .pgr-head,
+  .pgr-tstat-rank .pgr-row { grid-template-columns: 20px minmax(0, 1fr) 72px; }
+  .pgr-tstat-rank .team-badge { width: 22px; height: 22px; }
 }
 
 /* ---------- マイチーム検索 ---------- */
