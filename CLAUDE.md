@@ -133,7 +133,7 @@ public/ ──(git push main)──▶ GitHub Actions（.github/workflows/deploy
 
 ### チームデータ（app.js）
 - サブタブは「ランキング／一覧表／チーム別」の3つで、最初に開くのはランキング（選手データと同じ理由）。一覧表は選手データと同じく旧「合計・直近・ホーム・アウェイ」を「集計期間」のプルダウン（`TEAM_LIST_PERIODS`、全試合＝`teams.totals`）にまとめたもの。選んだ期間は `fpl_team_list_period` に記憶
-- ランキングはスタッツのプルダウン→期間（全試合＝`teams.totals`／1・3・5・10試合）のサブタブ→TOP10。項目は合計の表（`TEAM_RANK_COLS`）と同じ。失点・被xGは少ない順（`TRANK_ASC`）。見た目は選手ランキングと共通で、列は順位／チーム／値（`.pgr-tstat-rank`）
+- ランキングは順位（TOP／WORST）・スタッツのプルダウン→期間（全試合＝`teams.totals`／1・3・5・10試合）のサブタブ→TOP10。項目は合計の表（`TEAM_RANK_COLS`）と同じ。失点・被xG・イエロー・レッドはTOPが少ない順（`TRANK_ASC`）。WORSTはTOPの並びを逆にした下位10。見出しは「ポイント WORST10」だけで、並び順の添え書きは付けない。見た目は選手ランキングと共通で、列は順位／チーム／値（`.pgr-tstat-rank`）
 
 ### ルール解説（rules/index.html）
 - title・description・OGPはこのページ専用の文言にする（トップの使い回しにしない）。「FPL ルール」「FPL 初心者」で検索する人向けの独立ページ

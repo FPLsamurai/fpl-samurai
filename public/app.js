@@ -1505,22 +1505,23 @@ function renderTeams(key) {
 
 /* ランキング：期間（全試合＝teams.totals／1・3・5・10試合＝teams.last1 等）×スタッツの TOP10。
    見た目は選手データのランキング（.pgr）と共通で、列は 順位／チーム／値。スタッツの項目は合計の表（TEAM_RANK_COLS）と同じ。
-   失点・被xGは少ない方が良いので昇順。同じ値は同順位 */
+   失点・被xG・イエロー・レッドは少ない方が良いので、TOPは少ない順。順位（TOP／WORST）のWORSTはTOPの並びを丸ごと逆にした下位10。同じ値は同順位 */
 const TRANK_PERIODS = [["totals", "全試合"], ["last1", "1試合"], ["last3", "3試合"], ["last5", "5試合"], ["last10", "10試合"]];
-const TRANK_ASC = { conceded: 1, xgc_total: 1 };
-let trank = { period: "totals", stat: "points" };
+const TRANK_ASC = { conceded: 1, xgc_total: 1, yellow: 1, red: 1 };
+const TRANK_ORDERS = [["top", "TOP"], ["worst", "WORST"]];
+let trank = { period: "totals", stat: "points", order: "top" };
 
 function renderTeamRanking(box) {
   const stats = TEAM_RANK_COLS.filter((c) => !c.noSort);
   const col = stats.find((c) => c.key === trank.stat) || stats[0];
   const key = col.key;
-  const asc = !!TRANK_ASC[key];
+  const worst = trank.order === "worst";
   const statLabel = col.kind === "csper" ? "無失点" : col.label;
 
   const sorted = (((DATA.teams || {})[trank.period]) || [])
     .filter((r) => isFinite(Number(r[key])))
-    .sort((a, b) => (asc ? Number(a[key]) - Number(b[key]) : Number(b[key]) - Number(a[key]))
-      || (b.points || 0) - (a.points || 0));
+    .sort((a, b) => ((TRANK_ASC[key] ? Number(a[key]) - Number(b[key]) : Number(b[key]) - Number(a[key]))
+      || (b.points || 0) - (a.points || 0)) * (worst ? -1 : 1));
   const top = sorted.slice(0, PRANK_TOP);
   const fmt = (r) => col.kind === "pct" ? `${r.cs_pct}%`
     : col.kind === "csper" ? `${r.cs_count} / ${r.matches}`
@@ -1538,16 +1539,19 @@ function renderTeamRanking(box) {
 
   const statOpts = stats.map((c) =>
     `<option value="${c.key}"${c.key === key ? " selected" : ""}>${c.kind === "csper" ? "無失点" : esc(c.label)}</option>`).join("");
+  const orderOpts = TRANK_ORDERS.map(([k, l]) =>
+    `<option value="${k}"${k === trank.order ? " selected" : ""}>${l}</option>`).join("");
   const periodBtns = TRANK_PERIODS.map(([k, l]) =>
     `<button type="button" class="subtab${k === trank.period ? " is-active" : ""}" data-trank-period="${k}">${l}</button>`).join("");
 
   box.innerHTML = `
     <div class="prank-tools">
+      <label>順位<select id="trank-order">${orderOpts}</select></label>
       <label>スタッツ<select id="trank-stat">${statOpts}</select></label>
     </div>
     <div class="prank-label">試合数</div>
     <div class="subtabs pgr-modes prank-periods">${periodBtns}</div>
-    <h3 class="pgr-title">${esc(statLabel)} TOP${PRANK_TOP}${asc ? "（少ない順）" : ""}</h3>
+    <h3 class="pgr-title">${esc(statLabel)} ${worst ? "WORST" : "TOP"}${PRANK_TOP}</h3>
     ${items ? `<div class="pgr pgr-tstat-rank">
       <div class="pgr-head"><span></span><span>チーム</span><span>${esc(statLabel)}</span></div>
       ${items}
@@ -1556,6 +1560,7 @@ function renderTeamRanking(box) {
   box.querySelectorAll("[data-trank-period]").forEach((b) => b.addEventListener("click", () => {
     trank.period = b.dataset.trankPeriod; renderTeamRanking(box);
   }));
+  box.querySelector("#trank-order").addEventListener("change", (e) => { trank.order = e.target.value; renderTeamRanking(box); });
   box.querySelector("#trank-stat").addEventListener("change", (e) => { trank.stat = e.target.value; renderTeamRanking(box); });
 }
 
