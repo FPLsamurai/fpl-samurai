@@ -310,10 +310,10 @@ function renderPlayerRanking() {
     const photo = r.photo
       ? `<img class="pgr-photo" loading="lazy" alt="" src="${PHOTO_BASE}${esc(r.photo)}.png" onerror="this.style.visibility='hidden'">`
       : "";
-    const ja = r.name_ja ? `<span class="pgr-ja">${esc(r.name_ja)}</span>` : "";
+    const ja = r.name_ja ? `<span class="pgr-ja">${esc(r.name_ja)}${injuryMark(r)}</span>` : "";
     return `<div class="pgr-row${injuryClass(r)}">
       <span class="pgr-rank ${rankClass(rank)}">${rank}</span>
-      <span class="pgr-who">${photo}<span class="pgr-names"><span class="pgr-name">${esc(r.name)}${injuryMark(r)}</span>${ja}</span></span>
+      <span class="pgr-who">${photo}<span class="pgr-names"><span class="pgr-name">${esc(r.name)}${r.name_ja ? "" : injuryMark(r)}</span>${ja}</span></span>
       <span class="pgr-mid">${teamBadgeByName(r.team)}</span>
       <span class="pgr-exp">${fmt(r[key])}</span>
     </div>`;
@@ -2118,12 +2118,12 @@ function playerGoalTableHtml(rows, title, avgLabel) {
     const photo = r.photo
       ? `<img class="pgr-photo" loading="lazy" alt="" src="${PHOTO_BASE}${esc(r.photo)}.png" onerror="this.style.visibility='hidden'">`
       : "";
-    const ja = r.name_ja ? `<span class="pgr-ja">${esc(r.name_ja)}</span>` : "";
+    const ja = r.name_ja ? `<span class="pgr-ja">${esc(r.name_ja)}${injuryMark(r)}</span>` : "";
     // 開幕直後で5試合に満たないときは、何試合の平均かを添える
     const n = (r.matches && r.matches < 5) ? `<span class="pgr-xg-n">${r.matches}試合</span>` : "";
     return `<div class="pgr-row${injuryClass(r)}">
       <span class="pgr-rank ${rankClass(r.rank)}">${r.rank}</span>
-      <span class="pgr-who">${photo}<span class="pgr-names"><span class="pgr-name">${esc(r.name)}${injuryMark(r)}</span>${ja}</span></span>
+      <span class="pgr-who">${photo}<span class="pgr-names"><span class="pgr-name">${esc(r.name)}${r.name_ja ? "" : injuryMark(r)}</span>${ja}</span></span>
       <span class="pgr-mid">
         <span class="pgr-team" title="${esc(r.team)}">${esc(teamShortByName(r.team))}</span>
         <span class="pgr-opp">vs ${esc(r.opponent_short)}(${r.home ? "H" : "A"})</span>
