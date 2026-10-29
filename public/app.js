@@ -271,6 +271,19 @@ const PRANK_TOP = 10;
 const prankStats = () => STAT_FILTER_OPTS.filter(([k]) => k !== "cost" && k !== "clean_sheets");
 let prank = { period: "all", pos: "", stat: "points" };
 
+// 出場が不確かな選手の色分け（FPL公式と同じ：75%黄・50%橙・25%濃い橙・0%赤）
+function injuryClass(r) {
+  if (!r.status) return "";
+  const c = Number(r.chance) || 0;
+  return c >= 75 ? " inj-75" : c >= 50 ? " inj-50" : c >= 25 ? " inj-25" : " inj-0";
+}
+// 名前の横の⚠️。マウスを重ねる（スマホはタップ）と出場確率を吹き出しで出す
+function injuryMark(r) {
+  if (!r.status) return "";
+  const text = r.status === "s" ? "出場停止" : r.status === "u" ? "登録外" : r.chance > 0 ? `出場${r.chance}%` : "欠場";
+  return `<span class="inj-mark" tabindex="0" role="img" aria-label="${text}" data-tip="${text}">⚠️</span>`;
+}
+
 function renderPlayerRanking() {
   document.getElementById("players-note").textContent = "";
   const box = document.getElementById("players-content");
@@ -292,9 +305,9 @@ function renderPlayerRanking() {
       ? `<img class="pgr-photo" loading="lazy" alt="" src="${PHOTO_BASE}${esc(r.photo)}.png" onerror="this.style.visibility='hidden'">`
       : "";
     const ja = r.name_ja ? `<span class="pgr-ja">${esc(r.name_ja)}</span>` : "";
-    return `<div class="pgr-row">
+    return `<div class="pgr-row${injuryClass(r)}">
       <span class="pgr-rank ${rankClass(rank)}">${rank}</span>
-      <span class="pgr-who">${photo}<span class="pgr-names"><span class="pgr-name">${esc(r.name)}</span>${ja}</span></span>
+      <span class="pgr-who">${photo}<span class="pgr-names"><span class="pgr-name">${esc(r.name)}${injuryMark(r)}</span>${ja}</span></span>
       <span class="pgr-mid">${teamBadgeByName(r.team)}</span>
       <span class="pgr-exp">${fmt(r[key])}</span>
     </div>`;
@@ -2102,9 +2115,9 @@ function playerGoalTableHtml(rows, title, avgLabel) {
     const ja = r.name_ja ? `<span class="pgr-ja">${esc(r.name_ja)}</span>` : "";
     // 開幕直後で5試合に満たないときは、何試合の平均かを添える
     const n = (r.matches && r.matches < 5) ? `<span class="pgr-xg-n">${r.matches}試合</span>` : "";
-    return `<div class="pgr-row">
+    return `<div class="pgr-row${injuryClass(r)}">
       <span class="pgr-rank ${rankClass(r.rank)}">${r.rank}</span>
-      <span class="pgr-who">${photo}<span class="pgr-names"><span class="pgr-name">${esc(r.name)}</span>${ja}</span></span>
+      <span class="pgr-who">${photo}<span class="pgr-names"><span class="pgr-name">${esc(r.name)}${injuryMark(r)}</span>${ja}</span></span>
       <span class="pgr-mid">
         <span class="pgr-team" title="${esc(r.team)}">${esc(teamShortByName(r.team))}</span>
         <span class="pgr-opp">vs ${esc(r.opponent_short)}(${r.home ? "H" : "A"})</span>

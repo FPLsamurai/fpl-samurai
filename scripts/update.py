@@ -367,8 +367,17 @@ def load_japanese_names():
         return {}
 
 
+def injury_info(el):
+    """出場が不確かな選手だけ出場確率（%）と公式の英文ニュースを返す。問題なしの選手は空"""
+    if el.get("status", "a") == "a":
+        return {}
+    chance = el.get("chance_of_playing_next_round")
+    return {"chance": 0 if chance is None else int(chance), "status": el["status"], "news": el.get("news", "")}
+
+
 def player_base(el, team_map, pos_map, jp_names):
     return {
+        **injury_info(el),
         "name": el["web_name"],
         "name_ja": jp_names.get(el["web_name"], ""),   # カタカナ（無ければ空）
         "team": team_map.get(el["team"], {}).get("name_ja", "?"),
@@ -809,6 +818,7 @@ def compute_player_goal_ranking(bootstrap, fixtures, team_matches, team_map, mu,
         if expected <= 0:
             continue
         rows.append({
+            **{k: r[k] for k in ("chance", "status", "news") if k in r},   # 怪我・出場停止（injury_info）
             "name": r["name"], "name_ja": r.get("name_ja", ""), "photo": r.get("photo", ""),
             "team": r["team"], "team_code": r.get("team_code", 0), "position": r["position"],
             "opponent": team_map.get(opp_id, {}).get("name_ja", "?"),

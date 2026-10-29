@@ -1730,6 +1730,43 @@ tbody tr:nth-child(even) {
   .pgr-stat-rank .team-badge { width: 22px; height: 22px; }
 }
 
+/* 怪我・出場停止の色分け（FPL公式と同じ色味を薄くしたもの）。行の背景を塗り、名前の横の⚠️に出場確率の吹き出し */
+.pgr-row[class*="inj-"] { margin: 0 -10px; padding-left: 10px; padding-right: 10px; }
+.pgr-row.inj-75 { background: #fff8d1; }
+.pgr-row.inj-50 { background: #ffe9c4; }
+.pgr-row.inj-25 { background: #fbdccd; }
+.pgr-row.inj-0 { background: #f8d4d6; }
+.pgr-row[class*="inj-"] + .pgr-row,
+.pgr-row + .pgr-row[class*="inj-"] { border-top-color: transparent; }
+.inj-mark {
+  position: relative;
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.8rem;
+  cursor: help;
+  outline: none;
+}
+.inj-mark::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #1b1b1f;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+  z-index: 5;
+}
+.inj-mark:hover::after,
+.inj-mark:focus::after { opacity: 1; }
+
 /* チームデータ＞ランキング：順位／チーム／値の3列 */
 .pgr-tstat-rank .pgr-head,
 .pgr-tstat-rank .pgr-row { grid-template-columns: 26px minmax(0, 1fr) 80px; }
