@@ -277,10 +277,16 @@ function injuryClass(r) {
   const c = Number(r.chance) || 0;
   return c >= 75 ? " inj-75" : c >= 50 ? " inj-50" : c >= 25 ? " inj-25" : " inj-0";
 }
+function injuryText(r) {
+  return r.status === "s" ? "出場停止" : r.status === "u" ? "登録外" : r.chance > 0 ? `出場${r.chance}%` : "欠場";
+}
+// スカッドの選手辞書（DATA.elements）は短いキー（st=状態, ch=出場確率）なので読み替える
+const elInjury = (el) => ({ status: el.st, chance: el.ch });
+
 // 名前の横の⚠️。マウスを重ねる（スマホはタップ）と出場確率を吹き出しで出す
 function injuryMark(r) {
   if (!r.status) return "";
-  const text = r.status === "s" ? "出場停止" : r.status === "u" ? "登録外" : r.chance > 0 ? `出場${r.chance}%` : "欠場";
+  const text = injuryText(r);
   return `<span class="inj-mark" tabindex="0" role="img" aria-label="${text}" data-tip="${text}">⚠️</span>`;
 }
 
@@ -2763,7 +2769,7 @@ function mtCard(p) {
   const nm = el.j || el.n;
   return `<button type="button" class="mt-card${plan ? " is-plan" : ""}${sel}${outSel}${swapSrc}${swapOk}" data-pos="${p.position}">
     <span class="mt-photo-wrap">${img}${ctrls}${cv}</span>
-    <span class="mt-name">${esc(nm)}</span>
+    <span class="mt-name${injuryClass(elInjury(el))}">${esc(nm)}</span>
     ${foot}
   </button>`;
 }
@@ -3084,7 +3090,7 @@ function openMtPopup({ el, cvTag, headerRight, body, ariaLabel, onWire }) {
           <span class="mt-bd-photo">${img}</span>
           <span class="mt-bd-id">
             <span class="mt-bd-name">${esc(el.j || el.n)}${cvTag || ""}</span>
-            <span class="mt-bd-meta">${esc(el.t)} ・ ${el.p}</span>
+            <span class="mt-bd-meta">${esc(el.t)} ・ ${el.p}${el.st ? `<span class="mt-bd-inj">⚠️${injuryText(elInjury(el))}</span>` : ""}</span>
           </span>
           ${headerRight || ""}
           <button type="button" class="mt-bd-close" aria-label="閉じる">×</button>
@@ -3330,11 +3336,11 @@ function renderMtPicker(query) {
     const kit = kitUrl(e);
     const open = MT.pickOpen === e.id;
     const statCell = MT.pickStat ? `<span class="mt-pick-stat">${pickStatDisplay(e, MT.pickStat)}</span>` : "";
-    return `<div class="mt-pick-item${open ? " is-open" : ""}">
+    return `<div class="mt-pick-item${open ? " is-open" : ""}${injuryClass(elInjury(e))}">
       <div class="mt-pick-row${after < 0 ? " over" : ""}">
         <button type="button" class="mt-pick-main" data-open="${e.id}">
           <span class="mt-pick-kit">${kit ? `<img src="${kit}" loading="lazy" onerror="this.style.visibility='hidden'">` : ""}</span>
-          <span class="mt-pick-name">${esc(e.n)}${e.j ? `<span class="mt-pick-ja">${esc(e.j)}</span>` : ""}</span>
+          <span class="mt-pick-name">${esc(e.n)}${e.j ? `<span class="mt-pick-ja">${esc(e.j)}</span>` : ""}${injuryMark(elInjury(e))}</span>
           ${statCell}
         </button>
         <button type="button" class="mt-pick-add" data-add="${e.id}" aria-label="この選手を入れる">＋</button>
@@ -3448,7 +3454,9 @@ function pickDetailHtml(e) {
     if (v == null) v = "−"; else if (SEASON_STAT_FLOAT[f]) v = Number(v).toFixed(2);
     return `<div class="mt-pick-drow"><span>${SEASON_STAT_LABELS[f]}</span><span>${v}</span></div>`;
   }).join("");
-  return `${info}${statRows}<button type="button" class="mt-pick-do" data-do="${e.id}">この選手を入れる</button>`;
+  // 行の⚠️はボタンの中でスマホのタップでは吹き出しが出ないので、開いた詳細にも出す
+  const inj = e.st ? `<div class="mt-pick-drow"><span>状態</span><span>⚠️${injuryText(elInjury(e))}</span></div>` : "";
+  return `${info}${inj}${statRows}<button type="button" class="mt-pick-do" data-do="${e.id}">この選手を入れる</button>`;
 }
 
 function doMtTransfer(inId) {

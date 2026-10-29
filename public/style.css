@@ -1738,6 +1738,23 @@ tbody tr:nth-child(even) {
 .pgr-row.inj-0 { background: #f8d4d6; }
 .pgr-row[class*="inj-"] + .pgr-row,
 .pgr-row + .pgr-row[class*="inj-"] { border-top-color: transparent; }
+/* スカッドのピッチ上の名札は、公式のピッチ表示と同じく濃い色のまま塗る（薄い色だと白い名札と見分けにくい） */
+.mt-name.inj-75 { background: #ffe65b; }
+.mt-name.inj-50 { background: #ffab1b; }
+.mt-name.inj-25 { background: #d44401; color: #fff; }
+.mt-name.inj-0 { background: #c0020d; color: #fff; }
+/* 計画の移籍候補もランキングと同じ薄い色。吹き出しは候補欄のスクロール枠で上が切れないよう右に出す */
+.mt-picker-list .mt-pick-item.inj-75 { background: #fff8d1; }
+.mt-picker-list .mt-pick-item.inj-50 { background: #ffe9c4; }
+.mt-picker-list .mt-pick-item.inj-25 { background: #fbdccd; }
+.mt-picker-list .mt-pick-item.inj-0 { background: #f8d4d6; }
+.mt-pick-name .inj-mark::after {
+  left: calc(100% + 6px);
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.mt-bd-inj { margin-left: 0.6em; color: var(--text); white-space: nowrap; }
 .inj-mark {
   position: relative;
   display: inline-block;

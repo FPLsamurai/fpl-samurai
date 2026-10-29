@@ -341,10 +341,13 @@ def build_element_map(bootstrap, team_map, pos_map, jp_names):
     選手ID→名前などの変換表（マイチーム検索ページで使用）。
     picks APIは選手IDしか返さないため、全選手ぶん（出場0も含む）を入れる。
     キーを短くしてファイルサイズを抑える: n=名前, j=カタカナ, t=チーム, p=ポジション, c=コスト, ph=写真コード
+    出場が不確かな選手だけ st=状態（d/i/s/u/n）, ch=出場確率（%）も付ける
     """
     out = {}
     for el in bootstrap["elements"]:
+        inj = injury_info(el)
         out[str(el["id"])] = {
+            **({"st": inj["status"], "ch": inj["chance"]} if inj else {}),
             "n": el["web_name"],
             "j": jp_names.get(el["web_name"], ""),
             "t": team_map.get(el["team"], {}).get("name_ja", "?"),
